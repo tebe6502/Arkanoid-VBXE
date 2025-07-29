@@ -1,4 +1,4 @@
-unit service;
+unit service_;
 
 { ------------------------------------------------------------------------- }
                                  interface
@@ -8,35 +8,35 @@ unit service;
 uses crt,dos,graph,mouse,snd;
 
 const
-   SCRMIN     = 10;  { Coordinata X del bordo sinistro dell'area di gioco }
-   SCRMAX     = 216; { Coordinata X del bordo destro dell'area di gioco }
-   SCRTOP     = 12;  { Coordinata Y del bordo superiore dell'area di gioco }
-   SCRBOT     = 200; { Coordinata Y del bordo inferiore dell'area di gioco }
+   SCRMIN     = 10;  { X coordinate of the left edge of the playing area  }
+   SCRMAX     = 216; { X coordinate of the right edge of the playing area }
+   SCRTOP     = 12;  { Y coordinate of the upper edge of the playing area }
+   SCRBOT     = 200; { Y coordinate of the lower edge of the playing area }
 
-   VAUS_W     = 34;  { Larghezza in pixel del VAUS }
-   VAUS_H     = 4;   { Altezza in pixel del VAUS }
-   VAUS_LINE  = 184; { Coordiana Y su cui scorre orizzontalmente il VAUS }
-   EMP        = -1;  { Uso EMP (empty) al posto di -1 }
-   BALLDIM    = 5;   { Diametro della pallina (in pixel) }
-   BALLSPOT   = 3;   { Raggio della pallina (in pixel) = diametro/2 +1 }
-
+   VAUS_W     = 34;  { Width of the VAUS in pixels                        }
+   VAUS_H     = 4;   { Height of the VAUS in pixels                       }
+   VAUS_LINE  = 184; { Y coordinate on which the VAUS moves horizontally  }
+   EMP        = -1;  { Use EMP (empty) instead of -1                      }
+   BALLDIM    = 5;   { Diameter of the ball (in pixels)                   }
+   BALLSPOT   = 3;   { Radius of the ball (in pixels) = diameter/2 +1     }
+ 
    BALLARRAY  : array[0..4,0..4] of byte = ((0,1,1,1,0),
                                             (1,1,2,1,1),
                                             (1,2,1,1,1),
                                             (1,1,1,1,1),
                                             (0,1,1,1,0));
-                                            { Disegno della pallina }
+                                            { Ball design }
 
 
-   BALLDEV    = 30; { Angolo di deviazione quando }
-                    { urta i bordi rossi del VAUS }
-   SPEEDFLASH = 10; { Numero di 50-esimi di secondo che deve aspettare }
-                    { prima di cambiare il colore dei bordi del vaus }
+   BALLDEV    = 30; { Angle of deviation when hitting }
+                    { the red edges of the VAUS       }
+
+   SPEEDFLASH = 10; { Number of 50ths of a second to wait before changing }
+                    { the color of the VAUS borders                       }
 
    FLASH      : array[0..10] of byte = ( 255,212,211,210,209,
                                          208,207,206,205,204,203);
-
-         { Colori che gli estremi del vaus assumono durante il lampeggio }
+           { Colors that the extremes of the VAUS take on during flashing }
 
    SCORE_WALL : array[1..10] of smallint = ( 10,20,30,40,50,100,200,250,500,1000 );
 
@@ -46,8 +46,7 @@ const
 
    COLORBLOCK : array[0..9] of byte = ( 212,211,210,209,208,
                                         207,206,205,204,203 );
-                                         { Colore dei mattoncini }
-
+                                         { Color of the bricks }
 
 
    GRAYDOWN   = 1;   { Numero di colpi-1 per abbattere un mattone grigio }
@@ -79,7 +78,7 @@ const
    LETTER_SBF = 5;   { numero di cicli che deve compiere prima di passare al frame }
                      { successivo }
 
-   {Prob in % di caduta delle lettere }  {  L   E  B   D   S   C  P }
+   { Probability of letter drop in % }    {  L   E  B   D   S   C  P }
    LETTER_DIS : array[1..7] of smallint = ( 16, 20, 3, 18, 20, 20, 3 );
 
    FLUXLEVEL  = 176;
@@ -188,39 +187,42 @@ var
     letters    : BTMTYPE;  { le animazioni delle 7 lettere }
     shoots     : BTMTYPE;  { e il disegno dei laser }
     flux       : BTMTYPE;
-    vaus       : VAUSTYPE; { dati relativi al vaus (vedi sopra) }
+    vaus       : VAUSTYPE; { data relating to the VAUS (see above) }
 
-    row        : array[0..250] of word; { array (vedere initRowArray) }
-    success    : boolean;               { flag di stato per il caric. BTM }
+    row        : array[0..250] of word; { array (see initRowArray) }
+    success    : boolean;               { status flag for BTM loading }
 
     screen     : array[0..65530] of byte absolute $a000:0000;
-               { forzatura della mappa di schermo all'indirizzo della VGA }
-               { a000:0000 inerente alla modalita' grafica 320x200x256 col. }
+               { forcing the screen map to the VGA address }
+               { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
-    wall       : walltype;  { muro }
-    cn         : smallint;   { variabile di servizio usata qua e la' }
+    wall       : walltype;           { wall }
+    cn         : smallint;           { service variable used here and there }
+
     modx       : array[0..319] of smallint;
     mody       : array[0..199] of smallint;
-    all_walls  : WHOLEWALLS;                 { tutti i muri }
-    remain_blk : smallint;                    { mattoni ancora da abbattere }
-    totalwall  : smallint;                    { mattoni in tutto }
-    score      : SCORETYPE;                  { punteggio corrente }
-    cur_player : smallint;                    { giocatore corrente }
-    shinerec   : shrec;                      { tiene i dati dell'blocco }
-                                             { che scintilla in questo }
-                                             { momento }
-    lv         : smallint;                    { livello di gioco }
+
+    all_walls  : WHOLEWALLS;              { all the walls }
+    remain_blk : smallint;                { bricks still to be knocked down }
+    totalwall  : smallint;                { bricks throughout }
+    score      : SCORETYPE;               { current score }
+    cur_player : smallint;                { current player }
+
+    shinerec   : shrec;                   { holds the data of the block }
+                                          { that is currently flashing }
+
+    lv         : smallint;                { level of play }
     trainer    : smallint;
 
-    lett       : LETTERREC;                  { i parametri delle lettere }
-    fire       : FIRETYPE;                   { e dei raggi laser         }
-    balls_in_play : smallint;                 { numero di palline in gioco }
+    lett       : LETTERREC;               { the parameters of the letters }
+    fire       : FIRETYPE;                { and laser beams }
+    balls_in_play : smallint;             { number of balls in play }
     scrflux    : boolean;
     scrfluxcnt : smallint;
 
 { ------------------------------------------------------------------------- }
 
-{ Queste sono le funzioni che devono essere viste dal programma principale }
+{ These are the functions that must be seen by the main program.            }
 
 function  mainscreen : smallint;
 procedure fatal_error(err_type : string);
@@ -238,6 +240,7 @@ procedure closeprogram;
 
 procedure closeprogram;
   begin
+{
   clrscr;
   textcolor(7);
   writeln('Important!');
@@ -252,17 +255,18 @@ procedure closeprogram;
   writeln('Please take a look.');
   writeln;
   writeln('End of message.');
+}
   halt;
   end;
 
-{ ritorna il massimo fra a e b }
+{ return the maximum between a and b }
 function max(a,b : smallint) : smallint;
   begin
   if(a>b) then max:=a
   else max:=b;
   end;
 
-{ idem per il minimo }
+{ same for the minimum }
 function min(a,b : smallint) : smallint;
   begin
   if(a<b) then min:=a
@@ -270,7 +274,7 @@ function min(a,b : smallint) : smallint;
   end;
 
 
-{ chiara, no? }
+{ clear, isn't it? }
 procedure fatal_error(err_type : string);
 
    begin
