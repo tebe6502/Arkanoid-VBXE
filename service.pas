@@ -1,11 +1,11 @@
-unit service_;
+unit service;
 
 { ------------------------------------------------------------------------- }
                                  interface
 { ----------------------------------------------------------------------- }
 
 
-uses crt,dos,graph,mouse,snd;
+uses crt,graph,mouse,snd;//,dos,mouse,snd;
 
 const
    SCRMIN     = 10;  { X coordinate of the left edge of the playing area  }
@@ -38,10 +38,10 @@ const
                                          208,207,206,205,204,203);
            { Colors that the extremes of the VAUS take on during flashing }
 
-   SCORE_WALL : array[1..10] of smallint = ( 10,20,30,40,50,100,200,250,500,1000 );
+   SCORE_WALL : array[0..10] of smallint = (0, 10,20,30,40,50,100,200,250,500,1000 );
 
 
-   EMERG_DEV  : array[1..8] of byte = ( $02,$13,$24,$35,$12,$23,$34,$45 );
+   EMERG_DEV  : array[0..8] of byte = (0, $02,$13,$24,$35,$12,$23,$34,$45 );
 
 
    COLORBLOCK : array[0..9] of byte = ( 212,211,210,209,208,
@@ -58,7 +58,7 @@ const
 
    PATNUMBER  = 4;   { Numero dei fondali disponibili }
 
-   POS_DIGIT  : array[1..3] of smallint = (60,93,128);
+   POS_DIGIT  : array[0..3] of smallint = (0, 60,93,128);
    { Coordinata y dei tre punteggi (player 1, player 2, hiscore) }
 
 
@@ -66,7 +66,7 @@ const
                                           95,97,127,111,0 );
    { Dati per la visualizzazione delle cifre digitali nei punteggi }
 
-   LEVEL      : array[1..5] of smallint = (1000,300,100,60,35);
+   LEVEL      : array[0..5] of smallint = (0, 1000,300,100,60,35);
 
    SBDIR      = 600; { Cicli che deve fare prima che la palla devi (dev. regolare) }
    DEFLEVEL   = 3;   { Livello di gioco di default }
@@ -78,8 +78,8 @@ const
    LETTER_SBF = 5;   { numero di cicli che deve compiere prima di passare al frame }
                      { successivo }
 
-   { Probability of letter drop in % }    {  L   E  B   D   S   C  P }
-   LETTER_DIS : array[1..7] of smallint = ( 16, 20, 3, 18, 20, 20, 3 );
+   { Probability of letter drop in % }       {  L   E  B   D   S   C  P }
+   LETTER_DIS : array[0..7] of smallint = ( 0, 16, 20, 3, 18, 20, 20, 3 );
 
    FLUXLEVEL  = 176;
 
@@ -94,18 +94,18 @@ type
               trasp   : byte;          { trasparenza (non usato) }
               palette : ^arr768;       { puntatore alla palette di colori }
               palused : boolean;       { flag TRUE = la palette esiste }
-              map     : ^arr64k;       { dati contenenti il disegno }
+              map     : cardinal;      { dati contenenti il disegno }
               end;
 
    VAUSTYPE = RECORD                   { per i dati del vaus }
               x,y,                     { attuali coordinate x,y }
               oldx,                    { vecchie coordinate del vaus }
               oldy   : integer;
-              oldlen : smallint;        { e vecchia lunghezza }
+              oldlen : smallint;       { e vecchia lunghezza }
               width,                   { larghezza }
-              height : smallint;        { spessore (o altezza) }
+              height : smallint;       { spessore (o altezza) }
               flash  : byte;           { indica il colore attuale dei bordi }
-              iflash : smallint;        { contatore di ritardo per il }
+              iflash : smallint;       { contatore di ritardo per il }
                                        { il lampeggio dei bordi }
               letter : smallint;
               end;
@@ -120,31 +120,31 @@ type
               speedx,                  { velocita' sull'asse x }
               speedy : integer;        { velocita' sull'asse y }
               sbd    : integer;        { per evitare i loop della pallina }
-              brwhit : smallint;        { n. di blocchi marroni colpiti di seguito }
-              attrib : smallint;        { atributi (non usato)  }
+              brwhit : smallint;       { n. di blocchi marroni colpiti di seguito }
+              attrib : smallint;       { atributi (non usato)  }
               inplay : boolean;        { flag, TRUE se la palla e' in gioco }
               launch : boolean;        { flag, TRUE se la palla deve essere }
                                        { ancora lanciata }
-              onvaus : smallint;        { larghezza in pixel del vaus }
-              stm    : smallint;        { contatore di calamita }
+              onvaus : smallint;       { larghezza in pixel del vaus }
+              stm    : smallint;       { contatore di calamita }
               end;
 
-   WALLTYPE = array[0..12,-1..15] of byte; { per il muro (13x15 mattoncini) }
+   WALLTYPE = array [0..13*16-1] of byte;//array[0..12,-1..15] of byte; { for the wall (13x15 bricks) }
 
-   WHOLEWALLS = array[0..33] of WALLTYPE; { per tutti e 33 i muri }
+   WHOLEWALLS = array[0..33] of WALLTYPE;  { for all 33 walls }
 
-   SCORETYPE  = RECORD                           { tiene i punteggi }
-                player : array[1..2] of integer; { player 1 e 2 }
-                wall_n : array[1..2] of smallint; { muro corrente }
-                wall_p : array[1..2] of WALLTYPE;{ memoriz. del muro stesso }
-                lives  : array[1..2] of smallint; { vite rimaste }
-                hiscore: integer;                { record }
-                pl_numb: smallint;                { giocatore corrente }
-                roundsel : array[1..2] of boolean;
+   SCORETYPE  = RECORD                            { keeps score }
+                player : array[0..2] of integer;  { player 1 and 2 }
+                wall_n : array[0..2] of smallint; { current wall }
+                wall_p : array[0..2] of PByte;//WALLTYPE; { memorization of the wall itself }
+                lives  : array[0..2] of smallint; { remaining lives }
+                hiscore: integer;                 { record }
+                pl_numb: smallint;                { current player }
+                roundsel : array[0..2] of boolean;
                 abortplay : boolean;
                 end;
 
-   SHREC      = RECORD                 { per lo scintillio dei mattoncini }
+   SHREC      = RECORD                 { for the sparkle of the bricks }
                 xb,yb,frame : smallint;
                 block       : smallint;
                 active      : boolean;
@@ -152,15 +152,15 @@ type
 
    LETTERREC  = RECORD                 { dati relativi alla lettera }
                 x,y      : word;       { coord. }
-                typ      : smallint;    { Tipo, B,C,E,L,P,D,S }
-                frame    : smallint;    { numero del frame }
-                subframe : smallint;    { numero di cicli per ogni frame }
+                typ      : smallint;   { Tipo, B,C,E,L,P,D,S }
+                frame    : smallint;   { numero del frame }
+                subframe : smallint;   { numero di cicli per ogni frame }
                 active   : boolean;    { la lettera puo' essere attiva }
                 incoming : integer;    { tiene la somma, >1000 la lettera cade }
                 nextx,                 { coord di dove deve cadere se attivata }
                 nexty,
                 nexttype : word;       { tipo di lettera che dovra' cadere }
-                last     : smallint;    { ultima lettera caduta }
+                last     : smallint;   { ultima lettera caduta }
                 end;
 
    FIRETYPE   = RECORD                 { per i laser }
@@ -192,7 +192,8 @@ var
     row        : array[0..250] of word; { array (see initRowArray) }
     success    : boolean;               { status flag for BTM loading }
 
-    screen     : array[0..65530] of byte absolute $a000:0000;
+    screen     : cardinal;//array[0..0] of byte;// absolute $a000:0000;
+    vscreen    : PByte;
                { forcing the screen map to the VGA address }
                { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
@@ -315,19 +316,20 @@ var y : word;
 { quanto segue fa parte della procedura per installare un driver esterno }
 { come da esempio nell'help di Turbo Pascal.                             }
 
-procedure svgadrv; external; {$L SVGADRV.OBJ}
+//procedure svgadrv; external; {$L SVGADRV.OBJ}
 
-function DetectVGA : smallint;
-  begin
-  DetectVGA := 0;
-  end;
+//function DetectVGA : smallint;
+//  begin
+//  DetectVGA := 0;
+//  end;
 
 procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
-var
-   AutoDetect : pointer;
-   GraphMode, GraphDriver, ErrCode: smallint;
+//var
+//   AutoDetect : pointer;
+//   GraphMode, GraphDriver, ErrCode: smallint;
 
    begin
+ {
 	GraphDriver := InstallUserDriver('SVGA256',@DetectVGA);
    if RegisterBGIDriver(@svgadrv)<0 then
       fatal_error('Unable to register driver');
@@ -347,7 +349,7 @@ var
 		WriteLn('Error during Init: ', GraphErrorMsg(ErrCode));
 		Halt(1);
 		end;
-
+}
    end; { Fine della procedura InitSVGA }
 
 { ------------------------------------------------------------------------ }
@@ -364,10 +366,10 @@ var
     xb   :=shinerec.xb;   { mette in xb,yb le coordinate del blocco }
     yb   :=shinerec.yb;
 
-    if wall[xb,yb]>8 then { se il blocco e grigio o marrone }
+    if wall[xb+yb*16]>8 then { se il blocco e grigio o marrone }
        begin
        frame:=(shinerec.frame shr 1);        { calcola il n. del frame }
-       if wall[xb,yb]<>10 then inc(frame,5);
+       if wall[xb+yb*16]<>10 then inc(frame,5);
 
        xf:= 9+(xb shl 4);  { trova le coordinate sullo shermo del blocco }
        yf:=22+(yb shl 3);  { da far scintillare }
@@ -376,7 +378,7 @@ var
        for y:=0 to 7 do    { e copia il frame n-esimo sullo schermo }
            begin
            og:=y shl 4;      { equivale ad y*16, ma piu' veloce }
-           memcpy(addr(shinewall.map^[fr+og]),addr(screen[xf+row[yf+y]]),16);
+           memcpy(shinewall.map + fr+og, screen + xf+row[yf+y], 16);
            end;
        end;
 
@@ -404,8 +406,8 @@ var t : smallint;
     shinerec.xb    :=xb;  { coordinate del blocco }
     shinerec.yb    :=yb;  { x,y }
     shinerec.frame :=0;   { frame di partenza }
-    shinerec.active:=TRUE;        { scintillio attivo }
-    shinerec.block :=wall[xb,yb]; { tipo di blocco (marrone o grigio) }
+    shinerec.active:=TRUE;           { scintillio attivo }
+    shinerec.block :=wall[xb+yb*16]; { tipo di blocco (marrone o grigio) }
     end;
 
 procedure checkshine; { se lo scintillio e' attivato allora lo esegue }
@@ -448,7 +450,7 @@ var xl,yl,fl,fw,cl : word;
     for yl:=0 to 7 do
         begin
         fw:=yl shl 7;
-        memzerocpy(addr(letters.map^[fw+fl]),addr(screen[lett.x+row[lett.y+yl]]),16);
+        memzerocpy(letters.map + fw+fl, screen + lett.x+row[lett.y+yl], 16);
         end;
     end;
 
@@ -462,7 +464,7 @@ var ad,yl : word;
            begin
            ad:=lett.x+row[lett.y+yl];
            if ad<64000 then
-              memcpy(addr(playscreen.map^[ad]),addr(screen[ad]),16);
+              memcpy(playscreen.map + ad, screen + ad, 16);
            end;
        end;
     end;
@@ -537,15 +539,17 @@ var x,y,ofst : word;
   end;
 
 procedure setpalette(var BTM : BTMTYPE);
-var regs : REGISTERS;
+//var regs : REGISTERS;
 
   begin
+(* 
   regs.ax:=$1012;               { setta i colori usando l'interrupt 10h }
   regs.bx:=0;                   { del BIOS }
   regs.cx:=256;
   regs.es:=SEG(BTM.palette^);
   regs.dx:=OFS(BTM.palette^);
   intr($10,regs);
+ *) 
   end;
 
 procedure loadBTM(name : string; var BTMREC : BTMTYPE; pal : boolean);
@@ -557,6 +561,7 @@ var
   pl   : array[0..767] of byte;
 
   begin
+  
   {$I-}
   assign(h1,name);               { apre il file }
   reset(h1,1);                   { e si pone all'inizio }
@@ -601,7 +606,7 @@ var xp,yp,adr : integer;
   for yp:=0 to BALLDIM-1 do
      begin
      adr:=ball.x-BALLSPOT+row[yp-BALLSPOT+ball.y];
-     memzerocpy(addr(BALLARRAY[yp,0]),addr(screen[adr]),BALLDIM);
+     memzerocpy(@BALLARRAY[yp,0], screen + adr, BALLDIM);
      end;
   end;
 
@@ -618,13 +623,14 @@ var
       begin
       temp:=ball.oldx-BALLSPOT+row[yp-BALLSPOT+ball.oldy];
       if (temp>0) and (temp<64000) then
-         memcpy(addr(playscreen.map^[temp]),addr(screen[temp]),BALLDIM);
+         memcpy(playscreen.map + temp, screen + temp, BALLDIM);
       end;
   end;
 
 procedure Wait_VBL;
-label ALTO,BASSO;
+//label ALTO,BASSO;
    begin
+  (*
       { questa porzione di codice assembler attende che il pennello }
       { elettronico del monitor sia nella posizione di vertical blank }
       { in modo da evitare lo sfarfallamento dell'immagine. }
@@ -648,8 +654,9 @@ label ALTO,BASSO;
       test al,8
       jnz  ALTO
       end;
-
+*)
    end;
+
 
 procedure set_ball(var ball : BALLTYPE);
   begin
@@ -922,8 +929,7 @@ var y,cnt : word;
   { Toglie il vaus e disegna al suo posto lo sfondo          }
 
   for y:=vaus.oldy to (vaus.oldy+vaus.height) do
-     memcpy(addr(playscreen.map^[vaus.oldx+row[y]]),
-            addr(screen[vaus.oldx+row[y]]),vaus.oldlen);
+     memcpy(playscreen.map + vaus.oldx+row[y], screen + vaus.oldx+row[y], vaus.oldlen);
 
   vaus.oldlen:=vaus.width;
   end;
@@ -956,7 +962,7 @@ var
      { questa moltiplicazione viene fatta qui per non ripeterla }
      { vaus.width volte }
      cnt:=y * vaus.width;
-     memzerocpy(addr(playvaus.map^[cnt]),addr(screen[vaus.x+row[y+vaus.y]]),vaus.width);
+     memzerocpy(playvaus.map + cnt, screen + vaus.x+row[y+vaus.y], vaus.width);
 
      if (y>=2) and (y<(vaus.height-2)) then
         begin
@@ -1131,7 +1137,7 @@ var
        if (block and 15)=9 then
           begin
           cl2:=202; { il colore del mattoncino e' quello grigio }
-          wall[xa,ya]:=9+(GRAYDOWN shl 4); { e il numero del mattone e 9+16*n }
+          wall[xa+ya*16]:=9+(GRAYDOWN shl 4); { e il numero del mattone e 9+16*n }
           { dove n+1 e' il numero di colpi necessari per abbatterlo }
           { es. wall[1,2]=9+(1*16)=25 significa che il mattoncino alle }
           { coord. 1,2 cade se colpito 2 volte }
@@ -1176,7 +1182,7 @@ var
     begin
     for y:=0 to 14 do
         for x:=0 to 12 do
-            if wall[x,y]<>0 then place_block(x,y,wall[x,y]);
+            if wall[x+y*16]<>0 then place_block(x,y,wall[x+y*16]);
     end;
 
 procedure set_wall;             { imposta il muro }
@@ -1192,9 +1198,13 @@ var x,y,wl  : smallint;
         for x:=0 to 12 do         { cioe' il blocco deve essere <>0 e <>10 }
                                   { poiche' 0 = nessun blocco, 10 = marrone }
 
-            if (wall[x,y]<>0) and (wall[x,y]<>10) then inc(remain_blk);
+            if (wall[x+y*16]<>0) and (wall[x+y*16]<>10) then inc(remain_blk);
 
-    name:='PATTERN'+chr(48+((wl-1) mod PATNUMBER))+'.BTM';
+    name:=chr(48+((wl-1) mod PATNUMBER));
+    name:=concat('PATTERN', name);
+    name:=concat(name, '.BTM');
+    
+//    name:='PATTERN'+chr(48+((wl-1) mod PATNUMBER))+'.BTM';
     { name e' una stringa che contiene il nome del file di sfondo da caricare }
 
     loadBTM(name,pattern,FALSE);
@@ -1366,16 +1376,16 @@ procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
     { Controlla che le coordinate del blocco siano numeri validi... }
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
        begin
-       if wall[xb,yb]<>0 then { ... che ci sia un blocco da colpire... }
+       if wall[xb+yb*16]<>0 then { ... che ci sia un blocco da colpire... }
           begin
-          if wall[xb,yb]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[xb+yb*16]<10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
 
              { Incrementa lo SCORE del giocatore attuale a seconda }
              { del blocco colpito (i punti sono nell'array in SCORE_WALL) }
-             inc(score.player[cur_player],SCORE_WALL[wall[xb,yb]]);
+             inc(score.player[cur_player],SCORE_WALL[wall[xb+yb*16]]);
 
              inc(lett.incoming,random(LETTER_PROB));
 
@@ -1386,7 +1396,7 @@ procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
                   nexttype:=random_letter_drop;
                   end;
 
-             wall[xb,yb]:=0;          { il blocco viene cancellato        }
+             wall[xb+yb*16]:=0;       { il blocco viene cancellato        }
              ball_block_sound(440,3); { emette un LA (nota musicale)      }
              ball.sbd:=0;             { azzera il contatore di deviazione }
              ball.brwhit:=0;          { e il cont. di dev. di emergenza   }
@@ -1394,10 +1404,10 @@ procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
 
           else    { se il blocco e marrone, o un grigio che non cade subito }
              begin
-             if (wall[xb,yb] and 15)=9 then { ...se e' grigio... }
+             if (wall[xb+yb*16] and 15)=9 then { ...se e' grigio... }
                 begin
                 ball.brwhit:=0;      { azzera il cont. di dev. di emergenza }
-                dec(wall[xb,yb],16); { decrementa la resistenza del blocco  }
+                dec(wall[xb+yb*16],16); { decrementa la resistenza del blocco  }
 
                 ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
                 shine(xb,yb);           { e imposta il luccichio del blocco }
@@ -1420,22 +1430,22 @@ procedure shoot_block_with_fire(xb,yb : smallint);
     begin
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
        begin
-       if wall[xb,yb]<>0 then { ... che ci sia un blocco da colpire... }
+       if wall[xb+yb*16]<>0 then    { ... che ci sia un blocco da colpire... }
           begin
-          if wall[xb,yb]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[xb+yb*16]<10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
-             inc(score.player[cur_player],SCORE_WALL[wall[xb,yb]]);
-             wall[xb,yb]:=0;          { il blocco viene cancellato        }
+             inc(score.player[cur_player],SCORE_WALL[wall[xb+yb*16]]);
+             wall[xb+yb*16]:=0;       { il blocco viene cancellato        }
              ball_block_sound(440,3); { emette un LA (nota musicale)      }
              end
 
           else    { se il blocco e marrone, o un grigio che non cade subito }
              begin
-             if (wall[xb,yb] and 15)=9 then { ...se e' grigio... }
+             if (wall[xb+yb*16] and 15)=9 then { ...se e' grigio... }
                 begin
-                dec(wall[xb,yb],16); { decrementa la resistenza del blocco  }
+                dec(wall[xb+yb*16],16); { decrementa la resistenza del blocco  }
                 ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
                 shine(xb,yb);           { e imposta il luccichio del blocco }
                 end
@@ -1485,7 +1495,7 @@ var x,y,z    : smallint;
     yb:=ny shr 3;     { ipotetico) su cui si trova ora la pallina.          }
                       { Ricordarsi che (0,0) e' il blocco in altro a destra }
 
-    if wall[xb,yb]<>0 then  { ...se il blocco non e' ipotetico ma esiste }
+    if wall[xb+yb*16]<>0 then  { ...se il blocco non e' ipotetico ma esiste }
        begin
        collision:=split_line(ox,oy,nx,ny);
        { calcola l'intersezione del segmento che unisce le vecchie alle    }
@@ -1515,7 +1525,7 @@ var x,y,z    : smallint;
              yb:=((oy+24) shr 3)-3;        { del blocco relative a tale  }
                                            { intersezione.               }
 
-             if wall[xb,yb]=0 then         { Se non vi e' alcun blocco   }
+             if wall[xb+yb*16]=0 then        { Se non vi e' alcun blocco   }
                 begin
                 xb:=min(12,max(0,nx shr 4)); { Allora l'urto avviene sull' }
                 yb:=((ny+24) shr 3)-3;       { altra intersezione. La n.2  }
@@ -1536,7 +1546,7 @@ var x,y,z    : smallint;
              xb:=min(12,max(0,nx shr 4)); { Si calcolano le coord. del blocco }
              yb:=((ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
 
-             if wall[xb,yb]=0 then        { Se il blocco non c'e'... }
+             if wall[xb+yb*16]=0 then     { Se il blocco non c'e'... }
                 begin
                 nx:=ox;                   { allora l'intersezione valida e' }
                 ny:=oy;                   { l'altra, e si procede... }
@@ -1644,7 +1654,7 @@ var x,y,z    : smallint;
 
                   if ((xb+lx)<0 ) or
                      ((xb+lx)>12) or
-                     (wall[mx,my]<>0) then
+                     (wall[mx+my*16]<>0) then
                         adjw[lx+1,ly+1]:=1   { There are bricks }
                   else
                      adjw[lx+1,ly+1]:=0;     { There are no bricks }
@@ -1926,15 +1936,16 @@ var
               begin            { che costituiscono la fila }
               w:=ord(s[x])-96; { Se e' un "a" (codice 97) allora w:=1 }
               if w<0 then w:=0;
-              all_walls[z][x-3,y]:=w;  { Quindi all_walls contiene tutti }
-              end;                     { i muri. z=numerod del muro.     }
+              all_walls[z][x-3+y*16]:=w;  { Quindi all_walls contiene tutti }
+              end;                        { i muri. z=numerod del muro.     }
 
           inc(y); { Passa alla fila successiva }
 
-          for x:=0 to 12 do           { Le due file estreme sono sempre vuote }
-              begin                   { vale a dire [x,-1] e [x,15]           }
-              all_walls[z][x,-1]:=0;
-              all_walls[z][x,15]:=0;
+          for x:=0 to 12 do           { The two outer rows are always empty, }
+              begin                   { i.e., [x,-1] and [x,15]          }
+// !!!!!!!!!!!!!!!
+              //all_walls[z][x,-1]:=0;
+              //all_walls[z][x+15*16]:=0;
               end;
           end
 
@@ -1967,7 +1978,7 @@ var x,y : smallint;            { Stampa la scritta ROUND xx, READY.        }
     begin
     settextstyle(DefaultFont,HorizDir,1);
     str(score.wall_n[cur_player]:2,s);
-    r:='Round '+s;
+    r:=concat('Round ',s);
     sc:='';
     if score.pl_numb=2 then   { Nel caso di 2 giocatori, occorre anche }
        begin                                       { dire a chi tocca. }
@@ -1994,8 +2005,7 @@ procedure remove_round_level;  { Togli la scritta ROUND xx, READY }
 var x,y : word;                { copiandoci sopra il fondale.     }
     begin
     for y:=129 to 160 do
-        memcpy(addr(playscreen.map^[72+row[y]]),
-               addr(screen[72+row[y]]),88);
+        memcpy(playscreen.map + 72+row[y], screen + 72+row[y], 88);
     end;
 
 
@@ -2047,7 +2057,7 @@ var x,y,z,w : word;
     b:=vaus.y-5;     { dell'animazione che e' leggermente spostato }
                      { dall'origine degli assi.                    }
 
-    for w:=0 to 6 do  { w = fotogramma da mostrare, li cicla tutti da 0 a 6 }
+    for w:=0 to 6 do  { w = frame to display, cycles through all frames from 0 to 6 }
         begin
         for y:=0 to 15 do
             begin
@@ -2240,8 +2250,7 @@ var x,y,z : smallint;
 
     { Cancella la scritta ricopiandoci sopra il fondale }
     for y:=129 to 140 do
-        memcpy(addr(playscreen.map^[66+row[y]]),
-               addr(screen[66+row[y]]),textwidth('Game Paused')+1);
+        memcpy(playscreen.map + 66+row[y], screen + 66+row[y], textwidth('Game Paused')+1);
 
     { textwidth('Game Paused') e' una funziona che ritorna la lunghezza }
     { in pixel della scritta 'Game Paused'.                             }
@@ -2299,8 +2308,7 @@ var y,fw : word;
     for y:=0 to shoots.height-1 do
         begin
         fw:=shoots.width*y;
-        memzerocpy(addr(shoots.map^[fw]),
-                   addr(screen[fire.x+row[y+fire.y]]),shoots.width);
+        memzerocpy( shoots.map + fw, screen + fire.x+row[y+fire.y], shoots.width);
         end;
     end;
 
@@ -2310,8 +2318,7 @@ var y,fw : word;
     for y:=0 to shoots.height-1 do
         begin
         fw:=shoots.width*y;
-        memcpy(addr(playscreen.map^[fire.x+row[y+fire.y]]),
-               addr(screen[fire.x+row[y+fire.y]]),shoots.width);
+        memcpy(playscreen.map + fire.x+row[y+fire.y], screen + fire.x+row[y+fire.y], shoots.width);
         end;
     end;
 
@@ -2348,7 +2355,7 @@ var x1,x2,y1,y2 : word;
                  x2:=(fire.x+shoots.width-9) shr 4;
                  y2:=y1;
 
-                 if (wall[x1,y1]<>0) or (wall[x2,y2]<>0) then
+                 if (wall[x1+y1*16]<>0) or (wall[x2+y2*16]<>0) then
                     begin
                     remove_fire;
                     fire.shot:=FALSE;
@@ -2366,8 +2373,7 @@ procedure remove_flux;
 var y : word;
     begin
     for y:=0 to 19 do
-        memcpy(addr(playscreen.map^[217+row[y+FLUXLEVEL]]),
-               addr(screen[217+row[y+FLUXLEVEL]]),8);
+        memcpy(playscreen.map + [217+row[y+FLUXLEVEL], screen + 217+row[y+FLUXLEVEL], 8);
     end;
 
 procedure check_flux;
@@ -2378,8 +2384,7 @@ var y,fx  : word;
    if scrflux then
       begin
       for y:=0 to 19 do
-          memcpy(addr(flux.map^[(y+fx) shl 3]),
-                 addr(screen[217+row[y+FLUXLEVEL]]),8);
+          memcpy(flux.map + (y+fx) shl 3, screen + 217+row[y+FLUXLEVEL], 8);
 
       inc(scrfluxcnt);
       if scrfluxcnt>20 then scrfluxcnt:=0;
@@ -2411,9 +2416,7 @@ var x,y,z : word;
         place_vaus;
 
         for y:=vaus.y to vaus.y+vaus.height do
-            memcpy(addr(playscreen.map^[225+row[y]]),
-                   addr(screen[225+row[y]]),40);
-
+            memcpy(playscreen.map+225+row[y], screen+225+row[y], 40);
 
         end;
 
@@ -2824,26 +2827,27 @@ var
 
      { ---------------------- Trainer Options -------------------- }
 
-     key:=inkey;  { si guarda se viene premuto un tasto }
+     key:=inkey;  { checks whether a key is pressed }
 
-     if (key=ord('p')) or (key=32) then pause_game; { Il tasto P pausa il gioco }
+     if (key=ord('p')) or (key=32) then pause_game; { The P key pauses the game. }
 
-     if key=7680 then score.abortplay:=TRUE;  { ALT+A, la partita e' abortita }
+     if key=7680 then score.abortplay:=TRUE;  { ALT+A, the game is over }
 
-     if (key=ord('T')) then { Se si preme la T (maiuscola) viene generata }
-        begin               { una fila di mattoncini. }
+     if (key=ord('T')) then { Pressing T (uppercase) generates }
+        begin               { a row of bricks.                 }
         for cn:=0 to 12 do
             begin
-            { Chiaramente se il mattoncino indistruttibile deve sostituire }
-            { un altro mattoncino distruttibile, bisogna che il numero totale }
-            { di mattoncini da abbattere per finire il quadro diminuisca di 1 }
-            if (wall[cn,14]>0) and (wall[cn,14]<>10) then
+            { Clearly, if the indestructible brick is to replace }
+            { another destructible brick, the total number       }
+            { of bricks to be knocked down to complete           }
+	    { the picture must decrease by 1                     }
+            if (wall[cn+14*16]>0) and (wall[cn+14*16]<>10) then
                dec(remain_blk);
 
-            wall[cn,14]:=10;  { e il mattoncino in questione diventa indistruttibile }
+            wall[cn+14*16]:=10;  { and the brick in question becomes indestructible }
             end;
 
-        put_wall; { e viene fatto l'aggiornamento sullo schermo }
+        put_wall; { and the update is performed on the screen }
         end;
 
      { La 'R' maiuscola abilita la modalita' automatica del vaus }
@@ -3013,6 +3017,7 @@ var x,y,fl,fw,h : word;
         end;
     end;
 
+
 function mainscreen : smallint;
 var x,y,z : word;
     ps    : smallint;
@@ -3030,7 +3035,7 @@ var x,y,z : word;
 
     { E copia la pagina di presentazione con la scritta ARKANOID sullo schermo }
     { tramite la procedura scritta in assembler. }
-    memcpy(addr(presents.map^),addr(screen),64000);
+    memcpy(presents.map,screen,64000);
 
     soundicon;         { disegna l'icona del suono }
     level_selection;   { e quella del livello }
@@ -3168,14 +3173,3 @@ var nwall : boolean;
     end;
 
 end.
-
-
-
-
-
-
-
-
-
-
-

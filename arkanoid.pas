@@ -42,8 +42,8 @@
 { driver di memoria (es. EMM386, QEMM, ecc.)                              }
 
 program Arkanoid;
-{$F+}
-uses crt,dos,graph,mouse,snd,service,FM;
+
+uses crt,graph,mouse,snd,service;//,FM;
 
 begin
 
@@ -94,7 +94,7 @@ begin
 
    until score.pl_numb<1; { cicla finche' non vale -1 = quit }
 
-   closegraph; { Chiude la grafica }
-   closeprogram;
+//   closegraph; { Chiude la grafica }
+//   closeprogram;
 
 end.
