@@ -2522,13 +2522,12 @@ var temp : smallint;
 
 { ------------------------------------------------------------------------ }
 
-{ Questa e' la procedura principale che durante il gioco chiama tutte le  }
-{ altre. Finche' la palla non viene persa o il quadro viene terminato     }
-{ (o eventualmente viene abortita la partita) la procedura mantiene il    }
-{ controllo. Termina in uno solo in uno dei casi sopra citati o in caso   }
-{ si verifichi un fatal_error a causa del quale il programma e' costretto }
-{ a quittare automaticamente e inevitabilmente.                           }
-
+{ This is the main procedure that during the game calls all          }
+{ others. As long as the ball is not lost or the frame is terminated }
+{ (or possibly the game is aborted) the procedure retains            }
+{ control. It terminates in only one of the above cases or in case   }
+{ a fatal_error occurs due to which the program is forced            }
+{ to quit automatically and inevitably.                              }
 
 function Bounceball : boolean;
 var
@@ -2557,11 +2556,11 @@ var
   { Disegna il quadro di gioco con lo sfondo pocanzi settato}
   showBTMpicture(playscreen);
 
-  { Stampa il numero delle vite del giocatore corrente }
-  { cur_player=1 o 2 a seconda di quale giocatore deve giocare }
+  { Print the number of lives of the current player        }
+  { cur_player=1 or 2 depending on which player is to play }
   plot_lives(score.lives[cur_player]);
 
-  { regola i colori, in teoria dovrebbero gia' essere a posto. }
+  { adjust the colors, in theory they should already be okay. }
   setpalette(playscreen);
 
   { Stampa il punteggio dei 2 giocatori e l'hi-score. }
@@ -2569,30 +2568,30 @@ var
   write_score(253,POS_DIGIT[2],score.player[2]);
   write_score(253,POS_DIGIT[3],score.hiscore);
 
-  { Disegna i mattoncini }
+  { Draw the bricks }
   put_wall;
 
-  { Esegue un reset nel caso il mouse abbia qualche problema, alle volte }
-  { succede. }
+  { Performs a reset in case the mouse has some problem sometimes }
+  { happens. }
   mousereset;
 
-  { La palla e' in gioco e deve essere lanciata }
+  { The ball is in play and must be thrown }
   ball[0].inplay:=TRUE;
   ball[0].launch:=TRUE;
 
-  { Setta le coordinate iniziali della palla }
+  { Set the initial coordinates of the ball }
   ball[0].x:=((SCRMAX+SCRMIN) shr 1)-2;
   ball[0].y:=VAUS_LINE-BALLSPOT;
 
-  { annulla quelle vecchie }
+  { cancel the old ones }
   ball[0].oldx:=EMP;
   ball[0].oldy:=EMP;
 
-  { La deviazione avviene quando questo valore supera una certa soglia }
+  { Deviation occurs when this value exceeds a certain threshold }
   ball[0].sbd:=0;
 
-  { La distanza iniziale della palla quando si trova sul vaus dal bordo }
-  { sinistro del vaus stesso.                                           }
+  { The initial distance of the ball when it is on the VAUS      }
+  { from the edge left of the VAUS itself.                       }
   ball[0].onvaus:=16;
 
   { Tiene il numero di vertical-blank che passano da quando appare   }
@@ -2604,86 +2603,87 @@ var
   { fra 0 e LETTER_DROP (costante definita all'inizio della unit.     }
   lett.incoming:=random(LETTER_DROP);
 
-  { Mostra l'animazione del vaus che si materializza dal nulla }
+  { Shows the animation of the VAUS materializing out of thin air }
   create_vaus;
 
-  { e stampa la scritta ROUND xx, READY. }
+  { and prints the words ROUND xx, READY. }
   write_round_level;
 
-  set_vaus;                       { Regola i parametri iniziali del vaus. }
+  set_vaus;                       { Adjusts the initial VAUS parameters. }
   start_vaus;
-  move_vaus(vaus.x,VAUS_LINE);    { lo porta al centro dell'area di gioco }
-  start_level;                    { Se il suono e' attivo fa la musichetta }
+  move_vaus(vaus.x,VAUS_LINE);    { brings him to the center of the playing area }
+  start_level;                    { If the sound is on, it plays the tune }
   start_vaus;
-  remove_round_level;             { Toglie la scritta ROUND xx, READY }
+  remove_round_level;             { Removes the words ROUND xx, READY}
   set_ball(ball[0]);
 
-  { Questo e' il ciclo principale, puo' uscire da esso solo se : }
-  { - la palla viene persa,                                      }
-  { - il quadro viene terminato (cioe' non restano piu' mattoni  }
-  {   da distruggere.                                            }
-  { - la partita viene in qualche modo abortita.                 }
+  { This is the main cycle, it can only get out of it if : }
+  { - the ball is lost, }
+  { - the picture is ended (i.e., no more bricks are left to be destroyed. }
+  { - the game is somehow aborted.                 }
 
-  set_ball_direction(ball[0],random(15)+60); { angolo di partenza casuale }
-                                             { 60 e 75 gradi }
+  set_ball_direction(ball[0],random(15)+60); { random starting angle }
+                                             { 60 and 75 degrees }
   set_ball_speed(ball[0],BALLSPEED);
 
-  { velocita' iniziale = BALLSPEED costante }
-  ball[0].finespeed:=0; { i sottomultipli della velocita' sono 0  }
+  { initial speed = constant BALLSPEED }
+  ball[0].finespeed:=0; { submultiples of the speed are 0  }
 
   ball[1].inplay:=FALSE;
   ball[2].inplay:=FALSE;
 
   while(ball[0].inplay) and (remain_blk>0) and (not score.abortplay) do
      begin
-     Wait_VBL; { Attende il vertical blank }
+     Wait_VBL; { Waits for the vertical blank }
 
-     mousecoords(x,y);  { legge le coordinate del mouse }
+     mousecoords(x,y);  { reads mouse coordinates }
 
-     { se il trainer (vaus in modalita' automatica) non e' attiva }
-     { muove il vaus alla coord.x del mouse.                      }
+     {  if trainer (VAUS in automatic mode) is not active }
+     { moves VAUS to mouse coord.x }
+
      if trainer=0 then move_vaus(x,VAUS_LINE)
 
-     { se invece e' attivo impone che la x del vaus sia uguale alla x della }
-     { palla, con un opportuno coefficiente di traslazione per far si che   }
-     { la palla batta al centro del vaus e non sul bordo sinistro.          }
+     { if it is active, however, it dictates that the x of the VAUS is equal }
+     { to the x of the ball, with an appropriate translation coefficient    }
+     { so that the ball hits the center of the vaus and not the left edge.  }
+
      else if trainer=1 then
           move_vaus(min(SCRMAX-32,max(ball[0].x-ball[0].onvaus,SCRMIN)),VAUS_LINE);
 
-     { ball[0].launch vale TRUE se la palla e' attaccata al vaus e deve }
-     { essere lanciata. Altrimenti quando e' in gioco vale false.       }
+     { ball[0].launch is worth TRUE if the ball is attached to the VAUS and }
+     { is to be thrown. Otherwise, when it is in play it is worth false.    }
+     
      if ball[0].launch=TRUE then
         begin
-        inc(ball[0].stm);  { se la palla e' attaccata il contatore di scatti }
-                           { viene continuamente incrementato.               }
+        inc(ball[0].stm);  { if the ball is attached the shot counter }
+                           { is continuously incremented.             }
 
 
-        { Quando raggiunge quota 250 la palla parte automaticamente }
+        { When it reaches 250 the ball automatically starts }
         if ball[0].stm=250 then ball[0].launch:=FALSE;
 
-        { Fa in modo che la palla segua il vaus se questo viene spostato }
+        { Makes the ball follow the vaus if it is moved }
         start_ball(ball[0]);
 
-        { Se si preme il tasto del mouse allora la palla parte }
+        { If you press the mouse button then the ball starts }
         if mouseclick=1 then ball[0].launch:=FALSE;
         end
 
      else
-        { altrimenti se la palla non e' attaccata occorre semplicemente   }
-        { muoverla. Chiaramente se le palle sono 3 bisogna muoverle tutte }
-        { e tre.                                                          }
-        for cn:=1 to 3 do
+        { Otherwise if the ball is not attached one simply needs to move it. }
+	{ Clearly if there are 3 balls you need to move all 3.               }
+
+        for cn:=0 to 2 do
             if ball[cn].inplay then move_ball(ball[cn]);
 
-     { Se le coord. della pallina cn sono comprese fra 22 e 142 (rispettivamente }
-     { massima e minima coord. in cui si puo' urtare un mattoncino) allora }
-     { occorre controllare se la palla ha effettivamente urtato un mattoncino }
-     { oppure no. }
+     { If the coordinates of the ball cn are between 22 and 142 (respectively}
+     { maximum and minimum coordinates at which a brick can be bumped) then  }
+     { you need to check whether the ball actually bumped a brick or not.    }
 
-     for cn:=1 to 3 do
+     for cn:=0 to 2 do
          begin
-         if (ball[cn].inplay) then   { tutte le considerazioni valgono se }
-                                     { la palla e' in gioco.              }
+         if (ball[cn].inplay) then  { all considerations apply if the ball }
+                                    { is in play.                          }
             begin
             if (ball[cn].y>=22) and (ball[cn].y<142) then
                ball_hit_block(ball[cn]);
@@ -2693,36 +2693,36 @@ var
             end;
          end;
 
-     checkshine;     { controlla se c'e' da far scintillare un mattoncino }
-     check_letter;   { se sta scendendo una lettera }
-     check_bonus_type(ball[0],ball[1],ball[2]); { se viene raccolta una lettera }
-     check_fire;     { se e' stato sparato un colpo di laser }
+     checkshine;     { check to see if there is a brick to be sparked }
+     check_letter;   { If a letter is coming down }
+     check_bonus_type(ball[0],ball[1],ball[2]); { If a letter is collected }
+     check_fire;     { whether a laser shot was fired }
      check_flux;
 
      if ((vaus.x+vaus.width)=(SCRMAX-1)) and (scrflux) then vaus_out;
 
-     if vaus.letter=4 then   { nel caso sia stata raccolta una D le palle }
-        begin                { diventano 3.                               }
+     if vaus.letter=4 then   { In case a D has been collected the balls }
+        begin                { become 3.                                }
         balls_in_play:=3;
 
-        ball[1]:=ball[0];    { la palla 2 e 3 vengono poste uguale alla 1 }
+        ball[1]:=ball[0];    { ball 2 and 3 are placed equal to 1 }
         ball[2]:=ball[0];
 
         t1:=get_ball_direction(ball[0]) div 90;
-        { si il quadrante in cui si trova il vettore velocita' }
-        t2:=ball[0].speed;  { nonche' il modulo del vettore stesso }
+        { you the quadrant in which the velocity vector is located }
+        t2:=ball[0].speed;  { as well as the modulus of the vector itself } 
+     
+        { you impose a 30-degree tilt to the quadrant at }
+        { first ball, 45 at the second, and 60 at the third.              }
 
-        { si impone un inclinazione di 30 gradi rispetto al quadrante alla }
-        { prima palla, di 45 alla seconda e di 60 alla terza.              }
-
-        { A questo punto le tre palle sono costrette a dividersi. }
+        { At this point the three balls are forced to split up. }
 
         set_ball_direction(ball[0],(t1*90+30));
         set_ball_direction(ball[1],(t1*90+45));
         set_ball_direction(ball[2],(t1*90+60));
 
 
-        { Le tre velocita' invece rimangono quella della prima palla }
+        { Instead, the three velocities remain that of the first ball }
         set_ball_speed(ball[0],t2);
         set_ball_speed(ball[1],t2);
         set_ball_speed(ball[2],t2);
@@ -2730,26 +2730,26 @@ var
         vaus.letter:=0;
         end;
 
-     { finche' c'e' piu' di una palla in gioco, nessuna lettera deve arrivare }
+     { As long as there is more than one ball in play, no letter should come }
      if balls_in_play>1 then lett.incoming:=0;
 
-     { Aggiorna lo score del giocatore }
+     { Update player's score }
      write_score(253,POS_DIGIT[cur_player],score.player[cur_player]);
 
-     { Se lo score del giocatore e maggiore dell'hi-score }
+     { If the player's score is greater than the hi-score }
      if score.player[cur_player]>score.hiscore then
         begin
-        { pone l'hi-score uguale allo score del giocatore }
+        { places the hi-score equal to the player's score }
         score.hiscore:=score.player[cur_player];
-        { e stampa l'hi-score sullo schermo }
+        { And prints the hi-score on the screen }
         write_score(253,POS_DIGIT[3],score.hiscore);
         end;
 
-     { Questo ciclo aumenta la velocita' di tutte le palle in gioco        }
-     { il valore di LEVEL[lv] dipende ovviamente dal lv, cioe' dal livello }
-     { selezionato prima di cominciare la partita.                         }
-
-     for cn:=1 to 3 do
+     { This cycle increases the speed of all balls in play the value        }
+     { of LEVEL[lv] obviously depends on the lv, that is, the level         }
+     { selected before starting the game.                                   }     
+      
+     for cn:=0 to 2 do
          begin
          if ball[cn].inplay then
             begin
@@ -2758,18 +2758,18 @@ var
                begin
                ball[cn].finespeed:=0;
 
-               { se la velocita' e' inferiore a quella massima }
-               if ball[cn].speed<MAXSPEED then
+               { If the speed is less than the maximum speed }
+               if ball[cn].speed < MAXSPEED then
                   begin
-                  inc(ball[cn].speed,10);  { la si incrementa }
-                  set_ball_speed(ball[cn],ball[cn].speed); { e la si aggiorna }
+                  inc(ball[cn].speed,10);  { you increase it }
+                  set_ball_speed(ball[cn],ball[cn].speed); { and you update it }
                   end;
                end;
 
-            inc(ball[cn].sbd); { questo e' il contatore di deviazione regolare }
+            inc(ball[cn].sbd); { this is the regular deviation counter }
 
-            { se supera una certa soglia (SBDIR) viene imposta una deviazione }
-            { casuale di un angolo compreso fra i -BALLDEV/2 e +BALLDEV/2 }
+            { if it exceeds a certain threshold (SBDIR) a deviation is set }
+            { random by an angle between -BALLDEV/2 and +BALLDEV/2 }
             if (ball[cn].sbd>=SBDIR) and (ball[cn].speedy<0) then
                deviate_ball(ball[cn]);
             end;
@@ -2787,7 +2787,7 @@ var
      { in this way, if ball no. 1 is not in play at the end          }
      { of the cycle, it means that all three have fallen.            }
 
-//     for cn:=1 to 3 do
+//     for cn:=0 to 2 do
          if not ball[0].inplay then
             begin
             ball[0]:=ball[1];
@@ -2795,30 +2795,30 @@ var
             ball[2].inplay:=FALSE;
             end;
 
-     balls_in_play:=0;  { Si ricalcola ogni volta il numero delle palle in }
-     for cn:=1 to 3 do  { gioco. }
+     balls_in_play:=0;  { The number of balls in play is recalculated each time. }
+     for cn:=0 to 2 do
          if ball[cn].inplay then inc(balls_in_play);
 
 
-     if (not ball[0].inplay) then   { Se la palla n.1 non e' piu' in gioco }
+     if (not ball[0].inplay) then   { If the No. 1 ball is no longer in play. }
         begin
         ball[0].launch:=TRUE;
-        remove_ball(ball[0]);         { la si toglie dallo schermo }
-        destroy_vaus;                 { mostra la sequenza di distruzione }
-        dec(score.lives[cur_player]); { decrementa di 1 il numero delle vite }
-        score.wall_p[cur_player]:=wall; { memorizza il una variabile assegnata }
-                                        { al giocatore il muro corrente }
-        { Questo accade perche' se i giocatori sono due, occorre passare }
-        { all'altro giocatore che probabilmente non si trovera nella stessa }
-        { posizione. I mattoncini devono poi essere riportati tali e quali }
-        { quando il turno passa di nuovo al giocatore che ora a perso una  }
-        { vita. }
-
-        nosound; { e disabilita' il suono }
+        remove_ball(ball[0]);           { takes it off the screen }
+        destroy_vaus;                   { shows the destruction sequence }
+        dec(score.lives[cur_player]);   { decreases the number of lives by 1 }
+        score.wall_p[cur_player]:=wall; { stores the an assigned variable }
+                                        { to the player the current wall }
+					
+        { This happens because if there are two players, one must pass }
+        { to the other player who will probably not be in the same }
+        { position. The bricks must then be returned as such }
+        { when the turn passes back to the player who has now lost one }
+        { life. }
+        nosound; { and disable the sound }
         end;
 
 
-     { Se la nota corrente dura finche' snd_delay non diventa 0 }
+     { If the current note lasts until snd_delay becomes 0 }
      if snd_delay>0 then dec(snd_delay)
      else nosound;
 
