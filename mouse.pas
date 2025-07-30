@@ -6,9 +6,8 @@ unit mouse; { and other interesting stuff }
 interface
 
 procedure hidemouse;
-procedure memcpy(source,destination : cardinal; size : word);
-procedure memzerocpy(source,destination : cardinal; size : word); overload;
-procedure memzerocpy(source: pointer; destination : cardinal; size : word); overload;
+procedure memcpy(source,destination : pointer; size : word);
+procedure memzerocpy(source,destination : pointer; size : word);
 procedure mousecoords(var x,y : smallint);
 procedure mousemove(x,y : smallint);
 procedure mousereset;
@@ -31,7 +30,7 @@ implementation
 (* where:   source,destination : array[...] of bytes;        *)
 (*          200 is the number of bytes to be copied          *)
 
-procedure memcpy(source,destination : cardinal; size : word);
+procedure memcpy(source,destination : pointer; size : word);
 //label LP;
    begin
 {  
@@ -58,41 +57,8 @@ procedure memcpy(source,destination : cardinal; size : word);
 (* those bytes whose value is 0. It's useful to put on the screen *)
 (* drawings using color 0 as trasparent.                          *)
 
-procedure memzerocpy(source: pointer; destination : cardinal; size : word); overload;
-//label LP,L1,L2,L3;
-   begin
-{ 
- asm
-     push ds
-     push si
 
-     mov cx,size
-     mov dx,0
-     lds si,source
-     les di,destination
-
-     LP:
-     lodsb
-     cmp al,dl
-     je  L2
-
-     L1:
-     stosb
-     jmp L3
-
-     L2:
-     inc di
-
-     L3:
-     loop LP
-
-     pop si
-     pop ds
-     end;
-}  
-  end;
-
-procedure memzerocpy(source,destination : cardinal; size : word); overload;
+procedure memzerocpy(source,destination : pointer; size : word);
 //label LP,L1,L2,L3;
    begin
 { 

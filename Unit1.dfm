@@ -1,0 +1,42 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 664
+  ClientWidth = 969
+  Color = clBtnFace
+  DoubleBuffered = True
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  KeyPreview = True
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Image321: TImage32
+    Left = 0
+    Top = 0
+    Width = 960
+    Height = 600
+    Bitmap.ResamplerClassName = 'TNearestResampler'
+    BitmapAlign = baTopLeft
+    Scale = 1.000000000000000000
+    ScaleMode = smStretch
+    TabOrder = 0
+    OnMouseDown = Image321MouseDown
+    OnMouseMove = Image321MouseMove
+    OnMouseUp = Image321MouseUp
+  end
+  object Button1: TButton
+    Left = 864
+    Top = 624
+    Width = 75
+    Height = 25
+    Caption = 'start'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+end

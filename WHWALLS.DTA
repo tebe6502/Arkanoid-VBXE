@@ -22,17 +22,16 @@ I caratteri sopra indicati hanno il seguente significato.
 
 Tabella dei colori
 
-a = bianco    { normale cade con un colpo }
-b = arancione             ''
-c = ciano                 ''
-d = verde                 ''
-e = rosso                 ''
-f = blu                   ''
-g = porpora               ''
-h = giallo                ''
-i = grigio    { occorrono piu' colpi per abbatterlo }
-j = marrone   { indistruttibile                     }
-
+a = white    { normal falls with one blow }
+b = orange                ‘’
+c = cyan                  ‘’
+d = green                 ‘’
+e = red                   ‘’
+f = blue                  ‘’
+g = purple                ‘’
+h = yellow                ‘’
+i = gray    { takes more hits to knock down }
+j = brown   { indestructible                }
 
 
 Seguono i livelli.
