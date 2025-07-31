@@ -53,7 +53,7 @@ const
 
    PATNUMBER  = 4;   { Number of available backdrops }
 
-   POS_DIGIT  : array[0..3] of smallint = (0, 60,93,128);
+   POS_DIGIT  : array[0..3] of byte = (0, 60,93,128);
    { Y coordinate of the three scores (player 1, player 2, hiscore) }
 
 
@@ -84,9 +84,9 @@ type
    BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
               width   : word;          { larghezza disegno       }
               height  : word;          { altezza                 }
-              trasp   : byte;          { trasparenza (non usato) }
-              //palette : arr768;      { puntatore alla palette di colori }
-              palused : boolean;       { flag TRUE = la palette esiste }
+//              trasp   : byte;        { trasparenza (non usato) }
+//              palette : arr768;      { puntatore alla palette di colori }
+//              palused : boolean;     { flag TRUE = la palette esiste }
               map     : arr64k;        { dati contenenti il disegno }
               end;
 
@@ -192,10 +192,9 @@ var
                { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
     wall       : walltype;           { wall }
-//    cn         : smallint;           { service variable used here and there }
 
-    modx       : array[0..319] of smallint;
-    mody       : array[0..199] of smallint;
+    modx       : array[0..319] of byte;
+    mody       : array[0..199] of byte;
 
     all_walls  : WHOLEWALLS;              { all the walls }
     remain_blk : byte;                    { bricks still to be knocked down }
@@ -618,16 +617,16 @@ var
   if pal = TRUE then begin
     blockread(h1,DEF_PAL,768,cnt);      { legge la palette dei colori }
 
-    BTMREC.palused:=TRUE;
+//    BTMREC.palused:=TRUE;
   end else begin
     blockread(h1,pl,768,cnt);      { legge la palette dei colori }
 
-    BTMREC.palused:=FALSE;
+//    BTMREC.palused:=FALSE;
   end;
 
   BTMREC.width :=s[6]+s[7]*256;  { legge la larghezza, byte 6 e 7 }
   BTMREC.height:=s[8]+s[9]*256;  { l'altezza, byte 8 e 9 }
-  BTMREC.trasp :=s[10];          { e il colore di trasparenza }
+//  BTMREC.trasp :=s[10];          { e il colore di trasparenza }
 
   size:=(BTMREC.width)*(BTMREC.height); { calcola dimensione immagine }
 
@@ -2894,7 +2893,7 @@ var
 //     else nosound;
 
      { ---------------------- Trainer Options -------------------- }
-
+  (*
      key:=inkey;  { checks whether a key is pressed }
 
      if (key=ord('p')) or (key=32) then pause_game; { The P key pauses the game. }
@@ -2935,7 +2934,7 @@ var
         nosound;
         closeprogram;
         end;
-
+*)
      end;
 
   { BounceBall esce con false se la palla e' stata persa, con true se }
@@ -2964,8 +2963,9 @@ var x,y : smallint;
     sc    : string[20];
 
     begin
-    st:=1;  { Si comincia a scegliere partendo dal muro n.1 }
 
+    st:=1;  { Si comincia a scegliere partendo dal muro n.1 }
+(*
     //settextstyle(DefaultFont,HorizDir,1);
     setcolor(0);
 
@@ -3021,7 +3021,7 @@ var x,y : smallint;
        oldy:=newy;
 
        end;
-
+  *)
     choose_start_wall:=st;  { e ritorna il numero selezionato }
     end;
 
@@ -3047,8 +3047,8 @@ var x : byte;
 
 procedure soundicon;
 var x,y,fl,fw,h : word;
-
     begin
+(*
     { Altezza dell'icona (l'icona e' alta il doppio perche' il brush }
     { e' composto dall'icona con la nota e l'icona con la X una sopra l'altra }
     h:=soundfx.height div 2;
@@ -3068,6 +3068,7 @@ var x,y,fl,fw,h : word;
         for x:=0 to soundfx.width-1 do
             screen[320-soundfx.width+x+row[y+200-h]]:=soundfx.map[x+fw+fl];
         end;
+*)
     end;
 
 
@@ -3110,16 +3111,16 @@ var x,y,z : word;
     { via the procedure written in assembler. }
     memcpy(presents.map, screen, 64000);
 
-    soundicon;         { draw the sound icon }
+//    soundicon;         { draw the sound icon }
     level_selection;   { and that of the level }
-    mousereset;        { reset the mouse as a precaution }
+//    mousereset;        { reset the mouse as a precaution }
 
 //    repeat             { It cycles until something is done }
        { K holds the status of the mouse, IK any keys pressed }
-
+(*
        k:=mouseclick;
        ik:=inkey;
-(*
+
        if ik=11520 then k:=-1;   { ALT+X = quit }  { k<>0 breaks the cycle }
 
 
@@ -3147,6 +3148,7 @@ var x,y,z : word;
 
     mainscreen:=1;//k; { thus returns: -1=quit, 1=one player, 2=two players }
     end;
+
 
 procedure start_game(players : smallint);
 var nwall : boolean;
