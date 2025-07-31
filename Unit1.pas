@@ -11,21 +11,16 @@ type
     Image321: TImage32;
     Button1: TButton;
 
-    procedure Image321MouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer; Layer: TCustomLayer);
-    procedure Image321MouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
+    procedure Image321MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
+    procedure Image321MouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
 
     procedure show_play;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure Image321MouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
+    procedure Image321MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
 
   private
     { Private declarations }
-
-      procedure TestKeyDown(Var Msg:TMsg; var Handled:Boolean);
 
   public
     { Public declarations }
@@ -50,7 +45,7 @@ implementation
 
 {$R *.dfm}
 
-uses snd;//,FM;
+//uses snd;//,FM;
 
 
 procedure memcpy(const source; var destination; size : word);
@@ -84,6 +79,22 @@ begin
 end;
 
 
+procedure start_level;
+begin
+
+
+end;
+
+procedure death_sound(a: word);
+begin
+
+end;
+
+
+procedure ball_block_sound(a,b: word);
+begin
+
+end;
 
 
 
@@ -268,18 +279,18 @@ end;
 procedure Arkanoid;
 begin
 
-   { Questa porzione contiene solo il caricamento in memoria dei files dati }
+   { This portion contains only the in-memory loading of data files }
 
-   DetectFM;
-   success:=TRUE;  { Success viene messo a FALSE se si verifica un errore da disco }
+   //DetectFM;
+   success:=TRUE;  { Success is set to FALSE if an error occurs from disk }
 
-   load_all_walls; { Carica i 32 muri di gioco }
+   load_all_walls; { Upload the 32 game walls }
 
-   initSVGA;       { Attiva la modalita grafica 320x200x256 col. }
-   initRowArray;   { Inizializza un array utile per evitare le moltiplicazioni }
-                   { per 320. }
+   initSVGA;       { Activates 320x200x256 col. graphics mode. }
+   initRowArray;   { Initializes a useful array to avoid multiplications }
+                   { by 320. }
 
-   { Carica uno dopo l'altro tutti i disegni grafici di cui necessita }
+   { Upload one after another all the graphic designs it needs }
 
    loadBTM('PLAYGR.BTM'  ,playscreen,TRUE);  { lo schermo virtuale }
    loadBTM('PRESENT.BTM' ,presents,false);   { la scritta ARKANOID }
@@ -300,54 +311,23 @@ begin
      Application.MessageBox('Program cant find some BTM files','Error' ,MB_ICONEXCLAMATION);
 
    score.hiscore:=50000;
-   { il punteggio record viene settato inizialmente a 50000 per default }
+   { the record score is initially set to 50000 by default }
 
-   sound_on:=TRUE;      { per default all'inizio il suono e' attivo }
-   lv:=DEFLEVEL;        { e il livello viene settato a DEFLEVEL     }
+   sound_on:=TRUE;      { by default at the beginning the sound is ON }
+   lv:=DEFLEVEL;        { and the level is set to DEFLEVEL            }
 
    repeat
 
       mousereset;
 
-      { mainscreen restituisce 1,2 (numero gioc. ) o -1 = quit }
+      { mainscreen returns 1,2 (play number ) or -1 = quit }
       score.pl_numb:=mainscreen;
       if score.pl_numb>0 then start_game(1);//score.pl_numb);
 
-   until score.pl_numb<1; { cicla finche' non vale -1 = quit }
+   until score.pl_numb<1; { cycle until it's worth -1 = quit }
 
-//   closegraph; { Chiude la grafica }
+//   closegraph; { Closing graphics }
 //   closeprogram;
-
-end;
-
-
-
-procedure TForm1.TestKeyDown(Var Msg:TMsg; var Handled:Boolean);
-begin
-
-
- if Msg.message=WM_KEYUP then
-  if (Msg.wParam in [VK_SHIFT, VK_CONTROL]) then begin
-
-   ShiftCtrl:=false
-
-  end;
-
-
- if Msg.message=WM_KEYDOWN then
-
- if (Msg.wParam in [VK_SHIFT, VK_CONTROL]) then begin
-
-  ShiftCtrl:=true;
-
- end else
-
- if (Msg.wParam in [VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, vk_NUMPAD2, vk_NUMPAD4, vk_NUMPAD6, vk_NUMPAD8{, vk_SPACE}]) then begin
-
-
-    KeyMove:=Msg.wParam;
-
-  end;
 
 end;
 

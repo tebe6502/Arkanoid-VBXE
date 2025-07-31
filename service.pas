@@ -4,9 +4,6 @@
 //                                 interface
 { ----------------------------------------------------------------------- }
 
-
-//uses mouse,snd;//,dos,mouse,snd;
-
 const
    SCRMIN     = 10;  { X coordinate of the left edge of the playing area  }
    SCRMAX     = 216; { X coordinate of the right edge of the playing area }
@@ -47,33 +44,32 @@ const
                                          { Color of the bricks }
 
 
-   GRAYDOWN   = 1;   { Numero di colpi-1 per abbattere un mattone grigio }
-   STARTWALL  = 01;  { Livello di partenza }
-   BALLSPEED  = 500; { Velocita' della pallina (256 = 70 pixel al secondo  }
-   MAXSPEED   = 2000;{ Velocita' massima raggiungibile dalla pallina       }
-   MAXBRWHIT  = 100; { Numero massimo di blocchi indistr. che puo' colpire }
-                     { prima di schizzare via cambiando velocita'          }
+   GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
+   STARTWALL  = 01;  { Starting level }
+   BALLSPEED  = 500; { Ball speed (256 = 70 pixels per second }
+   MAXSPEED   = 2000;{ Maximum speed attainable by the ball }
+   MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
+                     { before splashing off changing speed          }
 
-   PATNUMBER  = 4;   { Numero dei fondali disponibili }
+   PATNUMBER  = 4;   { Number of available backdrops }
 
    POS_DIGIT  : array[0..3] of smallint = (0, 60,93,128);
-   { Coordinata y dei tre punteggi (player 1, player 2, hiscore) }
+   { Y coordinate of the three scores (player 1, player 2, hiscore) }
 
 
    DIGITS     : array[0..10] of byte = ( 125,96,55,103,106,79, 95,97,127,111,0 );
-   { Dati per la visualizzazione delle cifre digitali nei punteggi }
+   { Data for displaying digital digits in scores }
 
    LEVEL      : array[0..5] of word = (0, 1000,300,100,60,35);
 
-   SBDIR      = 600; { Cicli che deve fare prima che la palla devi (dev. regolare) }
-   DEFLEVEL   = 3;   { Livello di gioco di default }
+   SBDIR      = 600; { Cycles it must do before the ball you have to (dev. adjust) }
+   DEFLEVEL   = 3;   { Default game level }
 
-   LETTER_PROB= 300; { range in cui viene estratto il numero casuale della lettera }
-   LETTER_DROP= 1000;{ numero che deve raggiungere la somma per far cadere la lettera }
-   LETTER_NUMB= 8;   { numero di lettere+1 }
-   LETTER_FRM = 8;   { numero dei frames che costituiscono l'animazione della lettera }
-   LETTER_SBF = 5;   { numero di cicli che deve compiere prima di passare al frame }
-                     { successivo }
+   LETTER_PROB= 300; { range in which the random number of the letter is drawn }
+   LETTER_DROP= 1000;{ Number that must reach the sum to drop the letter }
+   LETTER_NUMB= 8;   { number of letters+1 }
+   LETTER_FRM = 8;   { Number of frames that constitute the animation of the letter }
+   LETTER_SBF = 5;   { Number of cycles it must complete before moving to the next frame }
 
    { Probability of letter drop in % }       {  L   E  B   D   S   C  P }
    LETTER_DIS : array[0..7] of byte = ( 0, 16, 20, 3, 18, 20, 20, 3 );
@@ -82,8 +78,8 @@ const
 
 type
 
-   arr768   = array[0..767] of byte;   { per i 256 colori in RGB (x3) }
-   arr64k   = array[0..320*250-1] of byte; { per la schermata di 320x200  }
+   arr768   = array[0..767] of byte;       { For the 256 colors in RGB (x3) }
+   arr64k   = array[0..320*250-1] of byte; { for the 320x200 screen }
 
    BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
               width   : word;          { larghezza disegno       }
@@ -147,24 +143,24 @@ type
                 active      : boolean;
                 end;
 
-   LETTERREC  = RECORD                 { dati relativi alla lettera }
+   LETTERREC  = RECORD                 { data related to the letter }
                 x,y      : word;       { coord. }
-                typ      : word;       { Tipo, B,C,E,L,P,D,S }
-                frame    : byte;       { numero del frame }
-                subframe : smallint;   { numero di cicli per ogni frame }
-                active   : boolean;    { la lettera puo' essere attiva }
-                incoming : smallint;   { tiene la somma, >1000 la lettera cade }
-                nextx,                 { coord di dove deve cadere se attivata }
+                typ      : word;       { Type, B,C,E,L,P,D,S }
+                frame    : byte;       { frame number }
+                subframe : smallint;   { number of cycles per frame }
+                active   : boolean;    { the letter can be active }
+                incoming : smallint;   { holds the sum, >1000 the letter falls out }
+                nextx,                 { Coordination of where it should fall if activated }
                 nexty,
-                nexttype : smallint;   { tipo di lettera che dovra' cadere }
-                last     : smallint;   { ultima lettera caduta }
+                nexttype : smallint;   { type of letter that will have to fall }
+                last     : smallint;   { last letter dropped }
                 end;
 
-   FIRETYPE   = RECORD                 { per i laser }
+   FIRETYPE   = RECORD                 { for lasers }
                 x,y  : word;           { coord. }
-                shot : boolean;        { se il colpo e' partito }
-                avl  : boolean;        { se e' dispoibile (grazie alla L) }
-                nw   : boolean;        { se e' appena partito dal VAUS }
+                shot : boolean;        { if the shot went off }
+                avl  : boolean;        { if it's available (thanks to L) }
+                nw   : boolean;        { if he just left VAUS }
                 end;
 
 var
@@ -218,6 +214,8 @@ var
     balls_in_play : byte;                 { number of balls in play }
     scrflux    : boolean;
     scrfluxcnt : byte;
+
+    sound_on   : Boolean;
 
 { ------------------------------------------------------------------------- }
 
@@ -1428,9 +1426,9 @@ var
     split_line:=collision;
     end;
 
-{ Considera colpito il blocco xb,yb: se e' un blocco normale lo toglie,
-  se e' un grigio che resiste a piu' colpi ne decrementa la resistenza.
-  Se il blocco non viene abbattuto allora lo fa luccicare. }
+{ Consider hit the xb,yb block: if it is a normal block it takes it down,  }
+{ if it is a gray that withstands multiple hits it decreases its strength. }
+{ If the block is not knocked down then it makes it shimmer.               }
 
 procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
 
@@ -1523,7 +1521,7 @@ procedure shoot_block_with_fire(xb,yb : smallint);
 
 
 procedure ball_hit_block(var ball : BALLTYPE);
-var x,y    : smallint;
+var x,y      : smallint;
     xb,yb    : smallint;
     ox,oy,
     lx,ly,
@@ -1744,7 +1742,7 @@ var x,y    : smallint;
           { Deflect contains a value that represents in hexadecimal       }
           { the changes to be made to vx (first hexadecimal digit)        }
           { and y (second hexadecimal digit).                             }
-	  { According to the following table.                             }
+	        { According to the following table.                             }
 
           { 0 = coordinate unchanged }
           { 1 =     ‘’     negative  }
@@ -1752,14 +1750,14 @@ var x,y    : smallint;
           { 3 =     ‘’     inverted  }
 
           { Example: 
-	  {     Deflect:=$13 means set vx negative and invert vy          }
+	        {     Deflect:=$13 means set vx negative and invert vy          }
           {     Deflect:=$20 means set vx positive and leave vy unchanged }
 	  
           { ------------------------------------------------------------- }
 
           { The combinations of the edge hit, the bricks around it,       }
-	  { and the resulting direction of the ball are calculated        }
-	  { on a case-by-case basis.                                      }
+	        { and the resulting direction of the ball are calculated        }
+	        { on a case-by-case basis.                                      }
 
           { The logical AND means that only bricks whose sum              }
           { equals the number that follows are considered.                }
@@ -1844,8 +1842,8 @@ var x,y    : smallint;
        end;
 
 
-    { Nel caso che il numero di mattoni indistruttibili urtati consecutivamente }
-    { prima di urtare un mattone di un altro tipo superi una determinata soglia }
+    { In case the number of indestructible bricks bumped consecutively   }
+    { before bumping a brick of another type exceeds a certain threshold }
 
     if ball.brwhit>MAXBRWHIT then
        begin
@@ -1922,16 +1920,14 @@ var x,y    : smallint;
     end;
 
 
-{ Disegna il fondale sul terreno di gioco }
+{ Draw the backdrop on the playing field }
 procedure fill_picture_with_pattern(var patt : BTMTYPE);
-var x,y,
-    cl,
-    yb      : smallint;
-    shadow: byte;
+var x, yb : word;
+    y, cl, shadow: byte;
 
     begin
-    { Si calcola a priori tutti i valori di x mod patt.width }
-    { patt.width = larghezza del quadrattino che definisce lo sfondo }
+    { It computes a priori all values of x mod patt.width            }
+    { patt.width = width of the small square defining the background }
 
     for x:=0 to 319 do
         modx[x]:=x mod patt.width;
@@ -1941,16 +1937,16 @@ var x,y,
     for y:=0 to 199 do
         mody[y]:=y mod patt.height;
 
-    { Esegue il ciclo principale e il ciclo secondario che riempiono lo }
-    { schermo con tanti quadretti di sfondo quanti sono necessari }
+    { Runs the main loop and the secondary loop filling the }
+    { screen with as many background squares as needed      }
 
     for y:=SCRTOP-2 to SCRBOT-2 do
         begin
         yb:=mody[y]*patt.width;
         for x:=SCRMIN-1 to SCRMAX-1 do
             begin
-            cl:=patt.map[modx[x]+yb]; { Prende il pixel dallo sfondo }
-            shadow:=128;               { Shadow = 128 -> ombra non presente }
+            cl:=patt.map[modx[x]+yb]; { Takes the pixel from the background }
+            shadow:=128;              { Shadow = 128 -> shadow not present }
 
             { Fa l'ombra sul fianco sinistro e superiore dello schermo  }
             { E' l'ombra proiettata dal bordo metallico sullo sfondo di }
@@ -1964,7 +1960,7 @@ var x,y,
 
     end;
 
-{ Carica tutti i muri contenuti nel file WHWALLS.BTM }
+{ Loads all the walls contained in the WHWALLS.BTM file. }
 procedure load_all_walls;
 var
     s    : string[255];
@@ -2022,8 +2018,8 @@ var
        { lo slash indica la fine logica del file, tutto cio' che segue }
        { viene ignorato.                                               }
 
-       { Qualunque riga incominci con un carattere diverso da ";" "*" "/"  }
-       { viene considerata una linea di commento e viene pertanto ignorata }
+       { Any line beginning with a character other than ";" "*" "/" }
+       { is considered a comment line and is therefore ignored      }
 
        end;
 
@@ -2070,7 +2066,7 @@ var y : byte;                  { copiandoci sopra il fondale.     }
     end;
 
 
-{ Stampa la scitta GAME OVER }
+{ Print the GAME OVER script }
 procedure Game_over;
 var x,y : smallint;
     sc  : string[20];
@@ -2103,7 +2099,7 @@ var x,y : smallint;
     end;
 
 
-{ Mostra in sequenza i fotogrammi del vaus che si distrugge. }
+{ It shows in sequence the frames of the vaus being destroyed. }
 procedure destroy_vaus;
 var x,y,z,w : word;
     a,b     : word;
@@ -2144,8 +2140,8 @@ var x,y,z,w : word;
                           { la toglie.                                    }
     end;
 
-{ E' esattamente come quella di prima, soltanto che mostra l'animazione }
-{ del vaus che si costruisce.                                           }
+{ It's exactly like the one before, only it shows the animation }
+{ of the vaus being built.                                      }
 procedure create_vaus;
 var x,y,z,w : word;
     a,b     : word;
@@ -2172,6 +2168,7 @@ var x,y,z,w : word;
         mydelay(1);
         end;
     end;
+
 
 procedure put_digit(px,py,num : word);  { Stampa la cifra digitale num }
                                         { alle coord. px,py.           }
@@ -2247,7 +2244,7 @@ var x,y,a : word;
     end;
 
 
-{ Stampa le 5 cifre del punteggio alle coordinate px,py }
+{ Print the 5 digits of the score at coordinates px,py }
 procedure write_score(px,py : smallint; sc : integer);
 var n1 : integer;
     f  : boolean;
@@ -2257,40 +2254,40 @@ var n1 : integer;
              { Questo per far si che' all'inizio il punteggio sia 0 e non }
              { 000000 che sta male.                                       }
 
-   { prima cifra digitale }
+   { first digital digit }
    n1:=(sc div 100000) mod 10;
    if n1>0 then f:=true;          { Se la prima cifra e' >0 allora }
    if f then put_digit(px,py,n1)  { occorre stamparla }
    else put_digit(px,py,10);      { altrimenti stampa un numero spento }
 
-   { seconda cifra digitale }
-   n1:=(sc div 10000) mod 10;     { Idem per i restanti blocchi }
+   { second digital digit }
+   n1:=(sc div 10000) mod 10;     { Ditto for the remaining blocks }
    if n1>0 then f:=true;
    if f then put_digit(px+7,py,n1)
    else put_digit(px+7,py,10);
 
-   { terza cifra digitale }
+   { third digital digit }
    n1:=(sc div 1000) mod 10;
    if n1>0 then f:=true;
    if f then put_digit(px+14,py,n1)
    else put_digit(px+14,py,10);
 
-   { quarta cifra digitale }
+   { fourth digital digit }
    n1:=(sc div 100) mod 10;
    if n1>0 then f:=true;
    if f then put_digit(px+21,py,n1)
    else put_digit(px+21,py,10);
 
-   { quinta cifra digitale }
+   { fifth digital digit }
    n1:=(sc div 10) mod 10;
    put_digit(px+28,py,n1);
 
-   { sesta e ultima cifra digitale (che ovviamente e' sempre 0 perche' }
-   { il punteggio viaggia a multipli di 10 punti.                      }
+   { sixth and last digital digit (which of course is always 0 because }
+   { the score travels in multiples of 10 points.                      }
    put_digit(px+35,py,0);
    end;
 
-{ Quando si richiama la pausa il controllo passa a questa procedura }
+{ When the pause is invoked, the control switches to this procedure }
 procedure pause_game;
 var x,y,z : smallint;
 
@@ -2309,17 +2306,17 @@ var x,y,z : smallint;
     until (z=ord('p')) or (z=32);    { o la "p" o lo spazio (z=32)         }
 
 
-    { Cancella la scritta ricopiandoci sopra il fondale }
+    { Erase the writing by copying the background over it }
     for y:=129 to 140 do
         memcpy(playscreen.map[66+row[y]], screen[66+row[y]], textwidth('Game Paused')+1);
 
-    { textwidth('Game Paused') e' una funziona che ritorna la lunghezza }
-    { in pixel della scritta 'Game Paused'.                             }
+    { textwidth('Game Paused') is a function that returns the length }
+    { in pixels of the text 'Game Paused'.                           }
     end;
 
 
-{ Stampa i vaus piccolini in basso a sinistra che indicano il numero di }
-{ vite che restano disponibili (senza contare quella in gioco).         }
+{ Print the small vaus in the lower left corner indicating the number of }
+{ lives remaining available (not counting the one in play).              }
 procedure plot_lives(lives : smallint);
 
 const XLIVES = 11;
@@ -2331,10 +2328,10 @@ var x,y,cn,
     shadow  : byte;
 
     begin
-    dec(lives); { Il numero di vite deve essere decrementato di uno }
-                { perche' non va contata quella in gioco.           }
+    dec(lives); { The number of lives must be decreased by one   }
+                { because the one in play should not be counted. }
 
-    for cn:=0 to 7 do                       { al massimo ne disegna 8 }
+    for cn:=0 to 7 do                       { at most he draws 8 }
         for y:=0 to minivaus.height-1 do
             for x:=0 to minivaus.width-1 do
                 begin
@@ -2344,16 +2341,16 @@ var x,y,cn,
                 xp:=modx[xl];
                 yp:=mody[yl]*pattern.width;
 
-                { se il numero di vite e maggiore del contatore }
-                { allora disegna un vaus.                       }
+                { if the number of lives is greater than the counter }
+                { then draw a vaus.                                  }
                 if (lives>cn) and (minivaus.map[x+y*minivaus.width]<>0) then
                    begin
                    screen[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
                    playscreen.map[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
                    end
 
-                { altrimenti ricopia il fondale dello schermo in modo che }
-                { se il vaus era presente viene ora cancellato.           }
+                { otherwise it copies the background of the screen so that }
+                { if vaus was present it is now deleted.                   }
                 else
                   begin
                   shadow:=playscreen.map[xl+row[yl]] and 128;
@@ -2512,7 +2509,7 @@ var x : smallint;
 
       case vaus.letter of
 
-        1: begin                              { Lettera L }
+        1: begin                              { Letter L }
            if fire.shot then remove_fire;
            playvaus:=lasers;
            modify_vaus;
@@ -2521,7 +2518,7 @@ var x : smallint;
            fire.shot:=FALSE;
            end;
 
-        2: begin                              { Lettera E }
+        2: begin                              { Letter E }
            if fire.shot then remove_fire;
            playvaus:=enlarged;
            modify_vaus;
@@ -2529,7 +2526,7 @@ var x : smallint;
            fire.avl:=FALSE;
            end;
 
-        3: begin                              { Lettera B }
+        3: begin                              { Letter B }
            if fire.shot then remove_fire;
            playvaus:=normal;
            modify_vaus;
@@ -2538,14 +2535,14 @@ var x : smallint;
            scrflux:=TRUE;
            end;
 
-        4: begin                              { Lettera D }
+        4: begin                              { Letter D }
            if fire.shot then remove_fire;
            playvaus:=normal;
            modify_vaus;
            fire.avl:=FALSE;
            end;
 
-        5: begin                              { Lettera S }
+        5: begin                              { Letter S }
            if fire.shot then remove_fire;
            playvaus:=normal;
            modify_vaus;
@@ -2555,14 +2552,14 @@ var x : smallint;
            fire.avl:=FALSE;
            end;
 
-        6: begin                              { Lettera C }
+        6: begin                              { Letter C }
            if fire.shot then remove_fire;
            playvaus:=normal;
            modify_vaus;
            fire.avl:=FALSE;
            end;
 
-        7: begin                              { Lettera P }
+        7: begin                              { Letter P }
            if fire.shot then remove_fire;
            playvaus:=normal;
            modify_vaus;
@@ -2745,7 +2742,7 @@ var
 
      else
         { Otherwise if the ball is not attached one simply needs to move it. }
-	{ Clearly if there are 3 balls you need to move all 3.               }
+        { Clearly if there are 3 balls you need to move all 3.               }
 
         for cn:=0 to 2 do
             if ball[cn].inplay then move_ball(ball[cn]);
@@ -2893,8 +2890,8 @@ var
 
 
      { If the current note lasts until snd_delay becomes 0 }
-     if snd_delay>0 then dec(snd_delay)
-     else nosound;
+//     if snd_delay>0 then dec(snd_delay)
+//     else nosound;
 
      { ---------------------- Trainer Options -------------------- }
 
@@ -2911,7 +2908,7 @@ var
             { Clearly, if the indestructible brick is to replace }
             { another destructible brick, the total number       }
             { of bricks to be knocked down to complete           }
-	    { the picture must decrease by 1                     }
+	          { the picture must decrease by 1                     }
             if (wall[cn+14*16]>0) and (wall[cn+14*16]<>10) then
                dec(remain_blk);
 
@@ -3101,32 +3098,32 @@ var x,y,z : word;
     k,ik  : smallint;
 
     begin
-    nosound;                { spegne il cicalino }
-    score.abortplay:=FALSE; { e' imposta il flag di partita abortita a FALSE }
+    nosound;                { turns off the buzzer }
+    score.abortplay:=FALSE; { is set the aborted match flag to FALSE }
 
-    for x:=0 to 63999 do    { Cancella lo schermo }
+    for x:=0 to 63999 do    { Clear the screen }
         screen[x]:=0;
 
-    setpalette(playscreen); { Imposta i colori }
+    setpalette(playscreen); { Set colors }
 
-    { E copia la pagina di presentazione con la scritta ARKANOID sullo schermo }
-    { tramite la procedura scritta in assembler. }
+    { And copies the presentation page with ARKANOID written on the screen }
+    { via the procedure written in assembler. }
     memcpy(presents.map, screen, 64000);
 
-    soundicon;         { disegna l'icona del suono }
-    level_selection;   { e quella del livello }
-    mousereset;        { resetta il mouse per precauzione }
+    soundicon;         { draw the sound icon }
+    level_selection;   { and that of the level }
+    mousereset;        { reset the mouse as a precaution }
 
-//    repeat             { cicla finche' non viene fatto qualcosa }
-       { k tiene lo stato del mouse, ik gli eventuali tasti premuti }
+//    repeat             { It cycles until something is done }
+       { K holds the status of the mouse, IK any keys pressed }
 
        k:=mouseclick;
        ik:=inkey;
 (*
-       if ik=11520 then k:=-1;   { ALT+X = quit }  { k<>0 interrompe il ciclo }
+       if ik=11520 then k:=-1;   { ALT+X = quit }  { k<>0 breaks the cycle }
 
 
-       if ik=32 then             { SPACE BAR = switch del suono on/off }
+       if ik=32 then             { SPACE BAR = sound on/off switch }
           begin
           sound_on:=sound_on XOR TRUE;    { x xor 1 inverte il valore di x }
           soundicon; { e disegna l'icona} { 0 xor 1 = 1; 1 xor 1 = 0 }
@@ -3146,9 +3143,9 @@ var x,y,z : word;
           level_selection;     { e stampa il numero sullo schermo }
           end;
    *)
-    //until k<>0;    { il ciclo si interrompe se k e' diverso da 0 }
+    //until k<>0;    { the cycle breaks if k is different from 0 }
 
-    mainscreen:=1;//k; { ritorna dunque: -1=quit, 1=un giocatore, 2=due giocatori }
+    mainscreen:=1;//k; { thus returns: -1=quit, 1=one player, 2=two players }
     end;
 
 procedure start_game(players : smallint);
@@ -3170,83 +3167,79 @@ var nwall : boolean;
 
     setpalette(playscreen);               { si impostano i colori. }
 
-    { si stampano i tre punteggi, player 1, 2 e hi-score }
+    { you print the three scores, player 1, 2 and hi-score }
     write_score(253,POS_DIGIT[1],score.player[1]);
     write_score(253,POS_DIGIT[2],score.player[2]);
     write_score(253,POS_DIGIT[3],score.hiscore);
 
-    { e si disegnano i mattoncini del muro }
+    { And you draw the bricks of the wall }
     put_wall;
 
     repeat
 
           repeat
-             { se non e' ancora stato scelto il muro da cui partire }
-             { viene fatto scegliere al giocatore (cur_player) ora  }
+             { if the wall to start from has not yet been chosen }
+             { the player (cur_player) is made to choose now }
              if not score.roundsel[cur_player] then
                 begin
                 score.wall_n[cur_player]:=choose_start_wall;
 
-                { viene assegnato il muro scelto al giocatore }
+                { the chosen wall is assigned to the player }
                 score.wall_p[cur_player]:=
                       all_walls[score.wall_n[cur_player]-1];
 
-                { a questo punto e' stato scelto il muro }
+                { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
                 end;
 
-             { viene messo il muro del giocatore nel muro corrente }
+             { the player's wall is put in the current wall }
              wall:=score.wall_p[cur_player];
              set_wall;
 
-             { Si parte, questa assegnazione chiama bounceball, che non }
-             { termina finche ho vieen perso il vaus o viene terminato  }
-             { il quadro.                                               }
+             { It starts, this assignment calls bounceball, which does not }
+             { end until I vieen lost the vaus or is terminated }
+             { the picture. }
              nwall:=BounceBall;
 
 
-             { Se viene terminato il quadro nwall vale TRUE }
+             { If the NWALL framework is terminated, it is TRUE }
              if nwall then
                 begin
-                { quindi si incrementa il numero del muro a cui si trova }
-                { il giocatore cur_player }
+                { so you increment the number of the wall it is at the cur_player }
                 inc(score.wall_n[cur_player]);
 
-                { e se viene superato il numero massimo si riparte dal n.1 }
+                { And if the maximum number is exceeded, it starts from No.1 again }
                 if score.wall_n[cur_player]>totalwall then
                    score.wall_n[cur_player]:=1;
 
-                { e viene prelevato in nuovo muro dalla matrice generale }
+                { and is taken in new wall from the general matrix }
                 score.wall_p[cur_player]:=
                       all_walls[score.wall_n[cur_player]-1];
                 end
              else
-                 { se non e' stato completato il muro si guarda se il numero }
-                 { delle vite e' sceso a zero }
-                 { nel qual caso si stampa la scritta GAME OVER }
+                 { if the wall has not been completed you look to see if the number }
+                 { of lives has dropped to zero in which case you print GAME OVER }
                  if score.lives[cur_player]=0 then Game_Over;
 
-          { il ciclo si ripete finche bounceball dice che non e' stato }
-          { completato il muro (nwall=FALSE) il che significa che e' stata }
-          { persa una vita }
+          { the loop repeats until bounceball says it was not }
+          { completed the wall (nwall=FALSE) which means it was }
+          { lost a life }
           until nwall=FALSE;
 
-          { allora il controllo passa all'altro giocatore }
+          { then control passes to the other player }
           inc(cur_player);
           if cur_player>players then cur_player:=1;
 
-          { a meno che un giocatore non abbia terminato il numero di vite    }
-          { a disposizione, nel qual caso il controllo resta del giocatore   }
-          { che ha perso la vita. Notare che questo funziona benissimo anche }
-          { se c'e' un giocatore solo, poiche' l'altro giocatore ha le vite  }
-          { a 0.                                                             }
+          { unless one player has run out of lives available, in which }
+          { case control remains with the player who has lost lives. }
+          { Note that this also works just fine if there is only one player, }
+          { since the other player has lives to 0. }
           if score.lives[cur_player]=0 then cur_player:=3-cur_player;
 
 
-    { il ciclo si ripete finche entrambi i giocatori non esauriscono le vite }
-    { o la partita viene abortita con ALT+A }
+    { the cycle repeats until both players run out of lives }
+    { or the game is aborted with ALT+A }
     until ((score.lives[1]=0) and (score.lives[2]=0)) or (score.abortplay);
     end;
 
 //end.
-
