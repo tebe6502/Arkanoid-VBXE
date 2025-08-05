@@ -24,7 +24,8 @@ const
    BALLDIM    = 5;   { Diameter of the ball (in pixels)                   }
    BALLSPOT   = 3;   { Radius of the ball (in pixels) = diameter/2 +1     }
 
-   BALLARRAY  : array[0..4,0..4] of byte = ((0,1,1,1,0),
+   BALLARRAY  : packed array[0..4,0..4] of byte =
+                                           ((0,1,1,1,0),
                                             (1,1,2,1,1),
                                             (1,2,1,1,1),
                                             (1,1,1,1,1),
@@ -178,7 +179,6 @@ var
     normal     : BTMTYPE;  { vaus normale }
     enlarged   : BTMTYPE;  { allargato }
     lasers     : BTMTYPE;  { traformato per sparare }
-    pattern    : BTMTYPE;  { sfondo }
     explosion  : BTMTYPE;  { esplosione vaus }
     newvaus    : BTMTYPE;  { sequenza di animazione di partenza }
     presents   : BTMTYPE;  { scritta ARKANOID }
@@ -190,6 +190,13 @@ var
     shoots     : BTMTYPE;  { e il disegno dei laser }
     flux       : BTMTYPE;
     vaus       : VAUSTYPE; { data relating to the VAUS (see above) }
+    pattern    : BTMTYPE;  { sfondo }
+
+    pattern0   : BTMTYPE;  { sfondo }
+    pattern1   : BTMTYPE;  { sfondo }
+    pattern2   : BTMTYPE;  { sfondo }
+    pattern3   : BTMTYPE;  { sfondo }
+    pattern4   : BTMTYPE;  { sfondo }
 
     success    : boolean;               { status flag for BTM loading }
 
@@ -245,17 +252,6 @@ procedure closeprogram;
 { ------------------------------------------------------------------------- }
 //                              implementation
 { ------------------------------------------------------------------------- }
-
-procedure blitBOX(src, dst: cardinal; w,h: word);
-var x,y: word;
-begin
-
- for y := 0 to h-1 do
-  for x := 0 to w-1 do
-   screen[dst+x+y*320] := screen[src+x+y*w];
-
-end;
-
 
 procedure blitZERO(src, dst: cardinal; size : word);
 var i: word;
@@ -659,8 +655,7 @@ var x,y,ofst : word;
 
   begin
 
-    blitBox(BTM.ofs, vram, BTM.width, BTM.height);
-
+    blitROW(BTM.ofs, vram, BTM.width*BTM.height);
 
 (*
   for y:=0 to BTM.height-1 do   { la y varia da 0 all'altezza-1 del disegno }
@@ -751,6 +746,7 @@ procedure place_ball(var ball : BALLTYPE);
 var yp : byte;
     adr : word;
   begin
+
   for yp:=0 to BALLDIM-1 do
      begin
      adr:=ball.x-BALLSPOT+row[yp-BALLSPOT+ball.y];
@@ -1195,7 +1191,7 @@ var
 
                { prende il pixel di sfondo e ci aggiunge l'ombra se necessario }
                //cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
-               cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and 127) or shadow;
+               cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and $7f) or shadow;
 
                { dopodiche' mette il colore sia sullo schermo della VGA sia }
                //screen[x+xs+row[y+ys]]:=cl;
@@ -1273,7 +1269,7 @@ var
                 { se si tratta dell'interno del mattoncino, lo disegna del }
                 { colore specificato in block }
 
-                cl:=(COLORBLOCK[(block-1) and 15] and 127) or shadow;
+                cl:=(COLORBLOCK[(block-1) and 15] and $7f) or shadow;
 
                 //screen[xs+x+row[ys+y]]:=cl;
                 putBYTE(vram + xs+x+row[ys+y], cl);
@@ -1357,7 +1353,7 @@ var
            //cl:=playscreen.map[xs+x+row[ys]] and 128;
            cl:=getBYTE(playscreen.ofs + xs+x+row[ys]) and $80;
 
-           cl2:=(cl2 and 127) or cl;
+           cl2:=(cl2 and $7f) or cl;
 
            //screen[xs+x+row[ys]]:=cl2;
            putBYTE(vram + xs+x+row[ys], cl2);
@@ -1377,6 +1373,7 @@ var
         for x:=0 to 12 do
             if wall[x+y*16]<>0 then place_block(x,y,wall[x+y*16]);
     end;
+
 
 procedure set_wall;             { imposta il muro }
 var x,y,wl  : smallint;
@@ -1861,7 +1858,7 @@ var x,y      : smallint;
 
           { Example:                                                      }
           { if bricks 1, 2, and 128 are located around U, the valu e'     }
-          { of around is 1+2+128=131.                                     }      
+          { of around is 1+2+128=131.                                     }
 	  
           around:=adjw[0,0]+(adjw[1,0] shl 1)+
                             (adjw[2,0] shl 2)+(adjw[2,1] shl 3)+
@@ -2089,9 +2086,10 @@ var x, yb, k : word;
             tmp[k]:=(cl and $7f) or shadow;
             inc(k);
             end;
-        end;
 
         blitTMP(playscreen.ofs+SCRMIN-1+y*320, k);
+
+        end;
 
     end;
 
