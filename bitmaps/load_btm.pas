@@ -3,6 +3,15 @@
 const
     vbxe_data = $5000 + 320*200;
 
+
+   BALLARRAY  : packed array[0..4,0..4] of byte =
+                                           ((0,1,1,1,0),
+                                            (1,1,2,1,1),
+                                            (1,2,1,1,1),
+                                            (1,1,1,1,1),
+                                            (0,1,1,1,0));
+                                            { Ball design }
+
 type
 
    arr768   = array[0..767] of byte;       { For the 256 colors in RGB (x3) }
@@ -36,6 +45,7 @@ var
     letters    : BTMTYPE;  { le animazioni delle 7 lettere }
     shoots     : BTMTYPE;  { e il disegno dei laser }
     flux       : BTMTYPE;
+    balldata   : BTMTYPE;
     
     pattern0   : BTMTYPE;
     pattern1   : BTMTYPE;
@@ -64,6 +74,25 @@ var
   pl: arr768;
 
   begin
+  
+  
+  if name = 'ball' then begin
+
+   BTMREC.width:=5;
+   BTMREC.height:=5;
+     
+   BTMREC.ofs:=ofset - vbxe_data;
+   blockwrite(f,BALLARRAY,sizeof(BALLARRAY));   { e si legge l'immagine da disco }
+  
+   inc(ofset, sizeof(BALLARRAY));
+   
+   exit;
+  
+  end;
+  
+  
+  
+  
 
   {$I-}
   assign(h1,name);               { apre il file }
@@ -130,6 +159,8 @@ begin
    loadBTM('..\ENLARGED.BTM',enlarged,FALSE);   { il vaus allargato }
    loadBTM('..\FIRE.BTM'    ,shoots,FALSE);     { il vaus coi laser montati }
    loadBTM('..\SCRFLUX.BTM' ,flux,FALSE);       { l'onda di flusso (per la lett. B) }
+
+   loadBTM('ball' ,balldata,FALSE);   
 
    loadBTM('..\pattern0.BTM' ,pattern,FALSE);   
    
@@ -221,6 +252,11 @@ begin
  writeln(t, #9'flux.width := ', flux.width , ';');
  writeln(t, #9'flux.height := ', flux.height , ';');
  writeln(t);
+ 
+ writeln(t, #9'balldata.ofs := VBXE_DATA + ', balldata.ofs , ';');
+ writeln(t, #9'balldata.width := ', balldata.width , ';');
+ writeln(t, #9'balldata.height := ', balldata.height , ';');
+ writeln(t);
 
  writeln(t, #9'pattern.ofs := VBXE_DATA + ', pattern.ofs , ';');
  writeln(t, #9'pattern.width := ', pattern.width , ';');
@@ -265,6 +301,12 @@ begin
  Arkanoid;
   
  close(f);
+
+
+ assign(f, 'btm.pal'); rewrite(f, 1);
+ blockwrite(f, def_pal, 768);
+ close(f);
+
 
  repeat until keypressed;
 

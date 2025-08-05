@@ -288,7 +288,7 @@ begin
    //DetectFM;
    success:=TRUE;  { Success is set to FALSE if an error occurs from disk }
 
-   load_all_walls; { Upload the 32 game walls }
+//   load_all_walls; { Upload the 32 game walls }
 
    initSVGA;       { Activates 320x200x256 col. graphics mode. }
    initRowArray;   { Initializes a useful array to avoid multiplications }
@@ -296,8 +296,8 @@ begin
 
    { Upload one after another all the graphic designs it needs }
 
-//   loadBTM('PLAYGR.BTM'  ,playscreen,TRUE);  { lo schermo virtuale }
 (*
+   loadBTM('PLAYGR.BTM'  ,playscreen,TRUE);  { lo schermo virtuale }
    loadBTM('PRESENT.BTM' ,presents,false);   { la scritta ARKANOID }
    loadBTM('EXPLODE.BTM' ,explosion,FALSE);  { l'esplosione del vaus }
    loadBTM('NEWVAUS.BTM' ,newvaus,FALSE);    { la creazione del vaus }
@@ -311,10 +311,19 @@ begin
    loadBTM('ENLARGED.BTM',enlarged,FALSE);   { il vaus allargato }
    loadBTM('FIRE.BTM'    ,shoots,FALSE);     { il vaus coi laser montati }
    loadBTM('SCRFLUX.BTM' ,flux,FALSE);       { l'onda di flusso (per la lett. B) }
-           *)
+*)
 
    if not success then// fatal_error('Program can''t find some BTM files');
      Application.MessageBox('Program cant find some BTM files','Error' ,MB_ICONEXCLAMATION);
+
+   assign(f, 'level\walls.dat'); reset(f, 1);
+   blockread(f, all_walls, sizeof(all_walls), e);
+   close(f);
+
+
+   assign(f, 'bitmaps\btm.pal'); reset(f, 1);
+   blockread(f, def_pal, sizeof(def_pal), e);
+   close(f);
 
 
    assign(f, 'bitmaps\btm.dat'); reset(f, 1);
@@ -322,11 +331,6 @@ begin
    close(f);
 
    {$i bitmaps\btm.inc}
-
-   balldata.ofs:=320*200;   // omijamy pamiêæ SCREEN
-
-   for i := 0 to 4 do
-     move(BALLARRAY[i,0], screen[balldata.ofs+i*BALLDIM], BALLDIM);
 
 
    score.hiscore:=50000;

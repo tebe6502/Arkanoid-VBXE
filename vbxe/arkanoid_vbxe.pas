@@ -1,0 +1,164 @@
+program arkanoid: $1000;
+
+uses crt, vbxe;
+
+var
+
+  mous: record
+          x,y: smallint;
+          fire: Boolean;
+        end;
+
+
+procedure start_level;
+begin
+
+
+end;
+
+procedure death_sound(a: word);
+begin
+
+end;
+
+
+procedure ball_block_sound(a,b: word);
+begin
+
+end;
+
+
+
+(* Follow the common procedures based on interrupt $33 *)
+
+procedure mousereset;
+//var regs : REGISTERS;
+   begin
+{
+   regs.ax:=0;
+   intr($33,regs);
+}
+   end;
+
+procedure showmouse;
+//var regs : REGISTERS;
+   begin
+{
+   regs.ax:=1;
+   intr($33,regs);
+}
+   end;
+
+procedure hidemouse;
+//var regs : REGISTERS;
+   begin
+{
+   regs.ax:=2;
+   intr($33,regs);
+}
+  end;
+
+function mouseclick:smallint;
+//var regs : REGISTERS;
+   begin
+{
+   regs.ax:=3;
+   regs.bx:=0;
+   intr($33,regs);
+   mouseclick:=regs.bx;
+}
+     result:=ord(mous.fire);
+
+     mous.fire:=not mous.fire;
+   end;
+
+procedure mousecoords(var x,y : smallint);
+//var regs : REGISTERS;
+   begin
+{
+	regs.ax:=3;
+	regs.bx:=0;
+   intr($33,regs);
+   x:=regs.cx shr 1;
+   y:=regs.dx;
+}
+  x:=mous.x;
+  y:=190;//mous.y;
+ end;
+
+procedure mouse_x_limit(mn,mx : smallint);
+//var regs : REGISTERS;
+   begin
+{
+	regs.ax:=7;
+	regs.cx:=mn;
+	regs.dx:=mx;
+   intr($33,regs);
+}
+ end;
+
+procedure mouse_y_limit(mn,mx : smallint);
+//var regs : REGISTERS;
+   begin
+{
+	regs.ax:=8;
+	regs.cx:=mn;
+	regs.dx:=mx;
+   intr($33,regs);
+}
+ end;
+
+procedure mousemove(x,y : smallint);
+//var regs : REGISTERS;
+   begin
+{
+	regs.ax:=4;
+	regs.cx:=x;
+	regs.dx:=y;
+   intr($33,regs);
+}
+   end;
+
+
+
+{$i vservice.pas}
+
+
+
+
+procedure init_game;
+begin
+
+   initSVGA;       { Activates 320x200x256 col. graphics mode. }
+   initRowArray;   { Initializes a useful array to avoid multiplications }
+                   { by 320. }
+
+
+   {$i ..\bitmaps\btm.inc}
+
+
+   score.hiscore:=50000;
+   { the record score is initially set to 50000 by default }
+
+   sound_on:=TRUE;      { by default at the beginning the sound is ON }
+   lv:=DEFLEVEL;        { and the level is set to DEFLEVEL            }
+
+   repeat
+
+      mousereset;
+
+      { mainscreen returns 1,2 (play number ) or -1 = quit }
+     { score.pl_numb:=mainscreen;
+      if score.pl_numb>0 then} start_game(1);//score.pl_numb);
+
+   until score.pl_numb<1; { cycle until it's worth -1 = quit }
+
+end;
+
+
+
+begin
+
+ init_game;
+
+end.

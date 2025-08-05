@@ -1,4 +1,4 @@
-﻿//unit service;
+//unit service;
 
 { ------------------------------------------------------------------------- }
 //                                 interface
@@ -96,7 +96,7 @@ type
    TText = string[31];
 
    arr768   = array[0..767] of byte;       { For the 256 colors in RGB (x3) }
-   arr64k   = array[0..320*250-1] of byte; { for the 320x200 screen }
+   //arr64k   = array[0..320*250-1] of byte; { for the 320x200 screen }
 
    BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
               width   : word;          { larghezza disegno       }
@@ -110,7 +110,8 @@ type
               end;
 
    VAUSTYPE = RECORD                   { per i dati del vaus }
-              x,y,                     { attuali coordinate x,y }
+              x,y: byte;               { attuali coordinate x,y }
+
               oldx,                    { vecchie coordinate del vaus }
               oldy   : smallint;
               oldlen : smallint;       { e vecchia lunghezza }
@@ -162,7 +163,7 @@ type
                 end;
 
    LETTERREC  = RECORD                 { data related to the letter }
-                x,y      : word;       { coord. }
+                x,y      : byte;       { coord. }
                 typ      : word;       { Type, B,C,E,L,P,D,S }
                 frame    : byte;       { frame number }
                 subframe : byte;       { number of cycles per frame }
@@ -211,7 +212,6 @@ var
 
     success    : boolean;               { status flag for BTM loading }
 
-    all_walls  : WHOLEWALLS;              { all the walls }
     remain_blk : byte;                    { bricks still to be knocked down }
     totalwall  : byte;                    { bricks throughout }
     score      : SCORETYPE;               { current score }
@@ -233,6 +233,8 @@ var
 
     def_pal: arr768;
 
+    all_walls  : WHOLEWALLS absolute $d800;              { all the walls }
+
     wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
 
     wall       : WALLTYPE;           { wall }
@@ -244,7 +246,7 @@ var
     modx       : array[0..319] of byte;
     mody       : array[0..199] of byte;
 
-    screen     : array [0..256*1024] of byte;
+    screen     : array [0..255] of byte;
                { forcing the screen map to the VGA address }
                { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
@@ -435,7 +437,7 @@ function inkey : word;   { restituisce il codice del tasto premuto }
 
 
 procedure initRowArray;  { inizializza l'array ROW; row[n]:=320*n }
-var y : word;
+var y : byte;
   begin
   for y:=0 to 199 do
     row[y]:=y*320;
@@ -490,9 +492,10 @@ procedure shine_block;    { esegue lo scintillio di un blocco }
 var
     xb,yb,                { i parametri del blocco sono contenuti nella }
     frame : word;         { variabile globale SHINEREC }
-    y,
     xf,yf,
     fr,og : word;
+    
+    y: byte;
 
     begin
     xb   :=shinerec.xb;   { mette in xb,yb le coordinate del blocco }
@@ -576,7 +579,8 @@ var rn,sum,letter : word;
 
 
 procedure put_letter;
-var yl,fl,fw : word;
+var fl,fw : word;
+    yl: byte;
 
     begin
     fl:=(lett.typ shl 10)+(lett.frame shl 4);
@@ -591,11 +595,12 @@ var yl,fl,fw : word;
 
 
 procedure remove_letter;
-var ad,yl : word;
+var ad: word;
+    yl: byte;
 
     begin
-    if (lett.x>=0) and (lett.x<320) and (lett.y>0) and (lett.y<240) then
-       begin
+//    if (lett.x>=0) and (lett.x<320) and (lett.y>0) and (lett.y<240) then
+//       begin
        for yl:=0 to 7 do
            begin
            ad:=lett.x+row[lett.y+yl];
@@ -604,7 +609,7 @@ var ad,yl : word;
 
               blitROW(playscreen.ofs+ad, vram+ad, 16);
            end;
-       end;
+//       end;
     end;
 
 
@@ -845,7 +850,7 @@ procedure set_ball(var ball : BALLTYPE);
 procedure set_ball_speed(var ball : BALLTYPE; speed : smallint);
 var
   sx,sy : smallint;  { imposta la velocita' della palla in base al modulo }
-  vm    : real;     { del vettore velocita' passato in SPEED : integer.  }
+  vm    : single;     { del vettore velocita' passato in SPEED : integer.  }
 
   begin
   sx:=ball.speedx;  { memorizza le componenti x e y della velocita' }
@@ -1179,7 +1184,8 @@ procedure move_vaus(x,y : smallint);
 { togli un mattoncino dallo schermo }
 procedure remove_block(xa,ya : byte);
 var
-    x,y,
+    x,y: byte;
+    
     xs,ys : word;
     yh : word;
     cl, shadow: byte;
@@ -1266,7 +1272,8 @@ var
 
 procedure place_block(xa,ya,block : byte);
 var
-    x,y,
+    x,y: byte;
+    
     xs,ys : word;
     cl,cl2: byte;
     shadow: byte;
@@ -1691,7 +1698,7 @@ var x,y      : smallint;
     mimax,
     angle,
     myx,myy  : smallint;
-
+    
     emergency: shortint;
 
     collision: byte;
@@ -2082,15 +2089,15 @@ var x,y      : smallint;
 
 { Draw the backdrop on the playing field }
 procedure fill_picture_with_pattern(var patt : BTMTYPE);
-var x, yb, k : word;
-    y, cl, shadow: byte;
+var yb, k : word;
+    x, y, cl, shadow: byte;
 
     begin
     { It computes a priori all values of x mod patt.width            }
     { patt.width = width of the small square defining the background }
 
-    for x:=0 to 319 do
-        modx[x]:=x mod patt.width;
+    for k:=0 to 319 do
+        modx[k]:=k mod patt.width;
 
     { analogamente per y mod patt.height }
 
@@ -2281,8 +2288,8 @@ var x,y : smallint;
 
 { It shows in sequence the frames of the vaus being destroyed. }
 procedure destroy_vaus;
-var x,y,z,w : word;
-    a,b     : word;
+var z,a,b  : word;
+    w,x,y  : byte;
 
     begin
     playvaus:=normal;
@@ -2325,8 +2332,8 @@ var x,y,z,w : word;
 { It's exactly like the one before, only it shows the animation }
 { of the vaus being built.                                      }
 procedure create_vaus;
-var x,y,z,w : word;
-    a,b     : word;
+var x,y,w  : byte;
+    z,a,b  : word;
 
     begin
     nosound;
@@ -2473,7 +2480,7 @@ var n1 : integer;
 
 { When the pause is invoked, the control switches to this procedure }
 procedure pause_game;
-var x,y,z : smallint;
+var x,y,z : byte;
 
     begin
     nosound;                    { disattiva qualunque suono del cicalino }
@@ -2809,6 +2816,8 @@ var
   key  : smallint;
 //  ball : array[0..2] of BALLTYPE;
   t1,t2: smallint;
+  hlp: smallint;
+
   cn: byte;
 
   ball0: BALLTYPE;
@@ -2837,7 +2846,8 @@ var
          if ball.inplay then
             begin
             inc(ball.finespeed);
-            if ball.finespeed>LEVEL[lv] then
+
+            if ball.finespeed > LEVEL[lv] then
                begin
                ball.finespeed:=0;
 
@@ -2959,7 +2969,7 @@ var
      begin
      Wait_VBL; { Waits for the vertical blank }
 
-     form1.show_play;
+     //form1.show_play;
 
      mous.x:=ball0.x;
 
@@ -3049,10 +3059,12 @@ var
         { first ball, 45 at the second, and 60 at the third.              }
 
         { At this point the three balls are forced to split up. }
+	
+	hlp:=t1*90;
 
-        set_ball_direction(ball0,(t1*90+30));
-        set_ball_direction(ball1,(t1*90+45));
-        set_ball_direction(ball2,(t1*90+60));
+        set_ball_direction(ball0,(hlp+30));
+        set_ball_direction(ball1,(hlp+45));
+        set_ball_direction(ball2,(hlp+60));
 
 
         { Instead, the three velocities remain that of the first ball }
@@ -3070,7 +3082,7 @@ var
      write_score(253,POS_DIGIT[cur_player],score.player[cur_player]);
 
      { If the player's score is greater than the hi-score }
-     if score.player[cur_player]>score.hiscore then
+     if score.player[cur_player] > score.hiscore then
         begin
         { places the hi-score equal to the player's score }
         score.hiscore:=score.player[cur_player];
@@ -3209,8 +3221,8 @@ var
   { BounceBall esce con false se la palla e' stata persa, con true se }
   { il quadro e' stato finito. }
 
-  Bounceball:=FALSE;
-  if remain_blk=0 then Bounceball:=TRUE;
+  Result:=FALSE;
+  if remain_blk=0 then Result:=TRUE;
   end;
 
 { ------------------------------------------------------------- }

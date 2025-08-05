@@ -54,26 +54,30 @@
 	flux.width := 8;
 	flux.height := 41;
 
-	pattern.ofs := VBXE_DATA + 153370;
+	balldata.ofs := VBXE_DATA + 153370;
+	balldata.width := 5;
+	balldata.height := 5;
+
+	pattern.ofs := VBXE_DATA + 153395;
 	pattern.width := 26;
 	pattern.height := 24;
 
-	pattern0.ofs := VBXE_DATA + 153994;
+	pattern0.ofs := VBXE_DATA + 154019;
 	pattern0.width := 26;
 	pattern0.height := 24;
 
-	pattern1.ofs := VBXE_DATA + 154618;
+	pattern1.ofs := VBXE_DATA + 154643;
 	pattern1.width := 14;
 	pattern1.height := 14;
 
-	pattern2.ofs := VBXE_DATA + 154814;
+	pattern2.ofs := VBXE_DATA + 154839;
 	pattern2.width := 38;
 	pattern2.height := 35;
 
-	pattern3.ofs := VBXE_DATA + 156144;
+	pattern3.ofs := VBXE_DATA + 156169;
 	pattern3.width := 28;
 	pattern3.height := 29;
 
-	pattern4.ofs := VBXE_DATA + 156956;
+	pattern4.ofs := VBXE_DATA + 156981;
 	pattern4.width := 30;
 	pattern4.height := 30;
