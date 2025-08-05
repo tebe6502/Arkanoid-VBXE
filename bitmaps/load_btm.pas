@@ -1,5 +1,8 @@
 ﻿uses crt;
 
+const
+    vbxe_data = $5000 + 320*200;
+
 type
 
    arr768   = array[0..767] of byte;       { For the 256 colors in RGB (x3) }
@@ -11,6 +14,7 @@ type
 //              trasp   : byte;        { trasparenza (non usato) }
 //              palette : arr768;      { puntatore alla palette di colori }
 //              palused : boolean;     { flag TRUE = la palette esiste }
+              ofs: cardinal;
               map     : arr64k;        { dati contenenti il disegno }
               end;
 
@@ -38,6 +42,8 @@ var
     success: Boolean;
     
     ofset: cardinal;
+    
+    dum: array [0..320*256] of byte;
     
     f: file;
 
@@ -80,7 +86,7 @@ var
   blockread(h1,BTMREC.map,size,cnt);   { e si legge l'immagine da disco }
 
 
-  writeln(ofset);
+  BTMREC.ofs:=ofset - vbxe_data;
   blockwrite(f,BTMREC.map,size);   { e si legge l'immagine da disco }
   
   inc(ofset, size);
@@ -93,29 +99,8 @@ var
   end;
 
 
-{
-  VBXE_OVRADR = $5000;
-
-   playscreen.ofs := 0;
-   presents.ofs := 64000;
-
-   explosion := 128000;
-   newvaus :=
-   soundfx :=
-   shinewall :=
-   minivaus :=
-   levelsel :=
-   letters :=
-   normal :=
-   lasers :=
-   enlarged :=
-   shoots :=
-   flux :=
-}   
-
-
-
 procedure arkanoid;
+var t: text;
 begin
 
    success:=TRUE;  { Success viene messo a FALSE se si verifica un errore da disco }
@@ -142,13 +127,60 @@ begin
 
    if not success then writeln('Program can''t find some BTM files');
 
+
+
+{
+  VBXE_OVRADR = $5000;
+
+   playscreen.ofs := 0;
+   presents.ofs := 64000;
+
+   explosion := 128000;
+   newvaus :=
+   soundfx :=
+   shinewall :=
+   minivaus :=
+   levelsel :=
+   letters :=
+   normal :=
+   lasers :=
+   enlarged :=
+   shoots :=
+   flux :=
+}   
+
+ assign(t, 'btm.inc'); rewrite(t);
+
+ writeln(t, #9'playscreen.ofs := VBXE_DATA + ', playscreen.ofs , ';');
+ writeln(t, #9'presents.ofs := VBXE_DATA + ', presents.ofs , ';');
+ writeln(t, #9'explosion.ofs := VBXE_DATA + ', explosion.ofs , ';');
+ writeln(t, #9'newvaus.ofs := VBXE_DATA + ', newvaus.ofs , ';');
+ writeln(t, #9'soundfx.ofs := VBXE_DATA + ', soundfx.ofs , ';');
+ writeln(t, #9'shinewall.ofs := VBXE_DATA + ', shinewall.ofs , ';');
+ writeln(t, #9'minivaus.ofs := VBXE_DATA + ', minivaus.ofs , ';');
+ writeln(t, #9'levelsel.ofs := VBXE_DATA + ', levelsel.ofs , ';'); 
+ writeln(t, #9'letters.ofs := VBXE_DATA + ', letters.ofs , ';');
+ writeln(t, #9'normal.ofs := VBXE_DATA + ', normal.ofs , ';');
+ writeln(t, #9'lasers.ofs := VBXE_DATA + ', lasers.ofs , ';');
+ writeln(t, #9'enlarged.ofs := VBXE_DATA + ', enlarged.ofs , ';');
+ writeln(t, #9'shoots.ofs := VBXE_DATA + ', shoots.ofs , ';');
+ writeln(t, #9'flux.ofs := VBXE_DATA + ', flux.ofs , ';');
+ 
+ flush(t);
+ close(t);
+   
 end;
 
 
 
 begin
 
+ ofset := vbxe_data;
+
+
  assign(f, 'btm.dat'); rewrite(f, 1);
+ 
+ blockwrite(f, dum, ofset);
  
  Arkanoid;
   

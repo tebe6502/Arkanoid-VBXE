@@ -1,0 +1,14 @@
+	playscreen.ofs := VBXE_DATA + 0;
+	presents.ofs := VBXE_DATA + 64000;
+	explosion.ofs := VBXE_DATA + 128000;
+	newvaus.ofs := VBXE_DATA + 132788;
+	soundfx.ofs := VBXE_DATA + 140701;
+	shinewall.ofs := VBXE_DATA + 141499;
+	minivaus.ofs := VBXE_DATA + 142779;
+	levelsel.ofs := VBXE_DATA + 142879;
+	letters.ofs := VBXE_DATA + 144874;
+	normal.ofs := VBXE_DATA + 152042;
+	lasers.ofs := VBXE_DATA + 152266;
+	enlarged.ofs := VBXE_DATA + 152490;
+	shoots.ofs := VBXE_DATA + 152938;
+	flux.ofs := VBXE_DATA + 153042;

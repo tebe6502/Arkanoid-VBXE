@@ -47,7 +47,7 @@ implementation
 
 //uses snd;//,FM;
 
-
+{
 procedure memcpy(const source; var destination; size : word);
 var i: word;
     src, dst: PByte;
@@ -60,11 +60,12 @@ begin
     dst[i] := src[i];
 
 end;
-
+}
 
 (* Does exactly the same as memcpy except that it does not copies *)
 (* those bytes whose value is 0. It's useful to put on the screen *)
 (* drawings using color 0 as trasparent.                          *)
+{
 procedure memzerocpy(const source; var destination; size : word);
 var i: word;
     src, dst: PByte;
@@ -77,7 +78,7 @@ begin
   if src[i] <> 0 then dst[i] := src[i];
 
 end;
-
+}
 
 procedure start_level;
 begin
@@ -277,6 +278,9 @@ end;
 
 
 procedure Arkanoid;
+var f: file;
+    e: integer;
+    i: byte;
 begin
 
    { This portion contains only the in-memory loading of data files }
@@ -310,6 +314,19 @@ begin
    if not success then// fatal_error('Program can''t find some BTM files');
      Application.MessageBox('Program cant find some BTM files','Error' ,MB_ICONEXCLAMATION);
 
+
+   assign(f, 'bitmaps\btm.dat'); reset(f, 1);
+   blockread(f, screen, sizeof(screen), e);
+   close(f);
+
+   {$i bitmaps\btm.inc}
+
+   balldata.ofs:=$1000;
+
+   for i := 0 to 4 do
+     move(BALLARRAY[i,0], screen[balldata.ofs+i*BALLDIM], BALLDIM);
+
+
    score.hiscore:=50000;
    { the record score is initially set to 50000 by default }
 
@@ -321,8 +338,8 @@ begin
       mousereset;
 
       { mainscreen returns 1,2 (play number ) or -1 = quit }
-      score.pl_numb:=mainscreen;
-      if score.pl_numb>0 then start_game(1);//score.pl_numb);
+     { score.pl_numb:=mainscreen;
+      if score.pl_numb>0 then} start_game(1);//score.pl_numb);
 
    until score.pl_numb<1; { cycle until it's worth -1 = quit }
 

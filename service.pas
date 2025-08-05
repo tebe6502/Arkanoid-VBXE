@@ -7,7 +7,7 @@
 const
 
    VBXE_OVRADR = $5000;
-   vbxe_data = 0;//VBXE_OVRADR + 320*200;
+   VBXE_DATA = VBXE_OVRADR + 320*200;
 
    vram = 0; // screen[0]
 
@@ -172,6 +172,7 @@ type
                 end;
 
 var
+    balldata   : BTMTYPE;
     playscreen : BTMTYPE;  { area di gioco (320x200) }
     playvaus   : BTMTYPE;  { vaus }
     normal     : BTMTYPE;  { vaus normale }
@@ -190,16 +191,7 @@ var
     flux       : BTMTYPE;
     vaus       : VAUSTYPE; { data relating to the VAUS (see above) }
 
-    def_pal: arr768;
-
-    row        : array[0..250] of word; { array (see initRowArray) }
     success    : boolean;               { status flag for BTM loading }
-
-
-    wall       : walltype;           { wall }
-
-    modx       : array[0..319] of byte;
-    mody       : array[0..199] of byte;
 
     all_walls  : WHOLEWALLS;              { all the walls }
     remain_blk : byte;                    { bricks still to be knocked down }
@@ -221,7 +213,18 @@ var
 
     sound_on   : Boolean;
 
-    screen     : array [0..200*1024] of byte;
+    def_pal: arr768;
+
+    wall       : walltype;           { wall }
+
+    tmp        : array [0..255] of byte;
+
+    row        : array[0..250] of word; { array (see initRowArray) }
+
+    modx       : array[0..319] of byte;
+    mody       : array[0..199] of byte;
+
+    screen     : array [0..256*1024] of byte;
                { forcing the screen map to the VGA address }
                { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
@@ -243,7 +246,7 @@ procedure closeprogram;
 //                              implementation
 { ------------------------------------------------------------------------- }
 
-procedure blitBox(src, dst: cardinal; w,h: word);
+procedure blitBOX(src, dst: cardinal; w,h: word);
 var x,y: word;
 begin
 
@@ -253,6 +256,63 @@ begin
 
 end;
 
+
+procedure blitZERO(src, dst: cardinal; size : word);
+var i: word;
+begin
+
+ for i := 0 to size-1 do
+  if screen[src + i] <> 0 then screen[dst + i] := screen[src + i];
+
+end;
+
+
+procedure blitTMP(dst: cardinal; size: byte);
+var x: byte;
+begin
+
+ for x := 0 to size-1 do
+  screen[dst+x] := tmp[x];
+
+end;
+
+
+procedure blitROW(src, dst: cardinal; size: word);
+var x: word;
+begin
+
+ for x := 0 to size-1 do
+  screen[dst+x] := screen[src+x];
+
+end;
+
+
+procedure blitBYTE(src, dst: cardinal);
+begin
+
+  screen[dst] := screen[src];
+
+end;
+
+
+procedure putBYTE(dst: cardinal; v: byte);
+begin
+
+  screen[dst] := v;
+
+end;
+
+
+function getBYTE(src: cardinal): byte;
+begin
+
+  result := screen[src];
+
+end;
+
+
+{ ------------------------------------------------------------------------- }
+{ ------------------------------------------------------------------------- }
 
 
 procedure setcolor(c: byte);
@@ -436,7 +496,9 @@ var
        for y:=0 to 7 do    { e copia il frame n-esimo sullo schermo }
            begin
            og:=y shl 4;      { equivale ad y*16, ma piu' veloce }
-           memcpy(shinewall.map[fr+og], screen[xf+row[yf+y]], 16);
+//           memcpy(shinewall.map[fr+og], screen[xf+row[yf+y]], 16);
+
+           blitROW(shinewall.ofs+fr+og, vram + xf+row[yf+y], 16);
            end;
        end;
 
@@ -508,7 +570,8 @@ var yl,fl,fw : word;
     for yl:=0 to 7 do
         begin
         fw:=yl shl 7;
-        memzerocpy(letters.map[fw+fl], screen[lett.x+row[lett.y+yl]], 16);
+        //memzerocpy(letters.map[fw+fl], screen[lett.x+row[lett.y+yl]], 16);
+        blitZERO(letters.ofs + fw+fl, vram + lett.x+row[lett.y+yl], 16);
         end;
     end;
 
@@ -523,7 +586,9 @@ var ad,yl : word;
            begin
            ad:=lett.x+row[lett.y+yl];
            if ad<64000 then
-              memcpy(playscreen.map[ad], screen[ad], 16);
+              //memcpy(playscreen.map[ad], screen[ad], 16);
+
+              blitROW(playscreen.ofs+ad, vram+ad, 16);
            end;
        end;
     end;
@@ -596,8 +661,8 @@ var x,y,ofst : word;
 
     blitBox(BTM.ofs, vram, BTM.width, BTM.height);
 
-(*
 
+(*
   for y:=0 to BTM.height-1 do   { la y varia da 0 all'altezza-1 del disegno }
      begin
      ofst:=y*BTM.width;         { calcola l'indirizzo nella matrice del dis.}
@@ -689,7 +754,10 @@ var yp : byte;
   for yp:=0 to BALLDIM-1 do
      begin
      adr:=ball.x-BALLSPOT+row[yp-BALLSPOT+ball.y];
-     memzerocpy(BALLARRAY[yp,0], screen[adr], BALLDIM);
+
+     //mzerocpy(BALLARRAY[yp,0], screen[adr], BALLDIM);
+     blitZERO(balldata.ofs + yp * BALLDIM, vram + adr, BALLDIM);
+
      end;
   end;
 
@@ -705,8 +773,11 @@ var
   for yp:=0 to BALLDIM-1 do
       begin
       temp:=ball.oldx-BALLSPOT+row[yp-BALLSPOT+ball.oldy];
+
       if (temp>0) and (temp<64000) then
-         memcpy(playscreen.map[temp], screen[temp], BALLDIM);
+         //memcpy(playscreen.map[temp], screen[temp], BALLDIM);
+
+         blitROW(playscreen.ofs+temp, vram+temp, BALLDIM);
       end;
   end;
 
@@ -1016,7 +1087,9 @@ var y : byte;
   { Toglie il vaus e disegna al suo posto lo sfondo          }
 
   for y:=vaus.oldy to (vaus.oldy+vaus.height) do
-     memcpy(playscreen.map[vaus.oldx+row[y]], screen[vaus.oldx+row[y]], vaus.oldlen);
+     //memcpy(playscreen.map[vaus.oldx+row[y]], screen[vaus.oldx+row[y]], vaus.oldlen);
+
+     blitROW(playscreen.ofs+vaus.oldx+row[y], vram + vaus.oldx+row[y], vaus.oldlen);
 
   vaus.oldlen:=vaus.width;
   end;
@@ -1051,12 +1124,16 @@ var
      { questa moltiplicazione viene fatta qui per non ripeterla }
      { vaus.width volte }
      cnt:=y * vaus.width;
-     memzerocpy(playvaus.map[cnt], screen[vaus.x+row[y+vaus.y]], vaus.width);
+     //memzerocpy(playvaus.map[cnt], screen[vaus.x+row[y+vaus.y]], vaus.width);
+     blitZERO(playvaus.ofs + cnt, vram + vaus.x+row[y+vaus.y], vaus.width);
 
      if (y>=2) and (y<(vaus.height-2)) then
         begin
-        screen[vaus.x+row[y+vaus.y]]:=FLASH[vaus.flash];
-        screen[vaus.x+vaus.width-1+row[y+vaus.y]]:=FLASH[vaus.flash];
+        //screen[vaus.x+row[y+vaus.y]]:=FLASH[vaus.flash];
+        putBYTE(vram + vaus.x+row[y+vaus.y], FLASH[vaus.flash]);
+
+        //screen[vaus.x+vaus.width-1+row[y+vaus.y]]:=FLASH[vaus.flash];
+        putBYTE(vram + vaus.x+vaus.width-1+row[y+vaus.y], FLASH[vaus.flash]);
         end;
      end;
   end;
@@ -1086,7 +1163,7 @@ procedure move_vaus(x,y : smallint);
 
 
 { togli un mattoncino dallo schermo }
-procedure remove_block(xa,ya : smallint);
+procedure remove_block(xa,ya : byte);
 var
     x,y,
     xs,ys : word;
@@ -1112,17 +1189,22 @@ var
                begin
                { calocla l'eventuale ombra proiettata da un altro mattoncino }
                { shadow:=128 nessuna ombra, shadow:=0 c'e' l'ombra }
-               shadow:=playscreen.map[x+xs+row[y+ys]] and 128;
+
+               //shadow:=playscreen.map[x+xs+row[y+ys]] and 128;
+               shadow:=getBYTE(playscreen.ofs + x+xs+row[y+ys]) and $80;
 
                { prende il pixel di sfondo e ci aggiunge l'ombra se necessario }
-               cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
+               //cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
+               cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and 127) or shadow;
 
                { dopodiche' mette il colore sia sullo schermo della VGA sia }
-               screen[x+xs+row[y+ys]]:=cl;
+               //screen[x+xs+row[y+ys]]:=cl;
+               putBYTE(vram + x+xs+row[y+ys], cl);
 
                { sullo schermo ausiliario dove sono presenti solo gli oggetti }
                { statici e non quelli in movimento tipo pallina o vaus.}
-               playscreen.map[x+xs+row[y+ys]]:=cl;
+               //playscreen.map[x+xs+row[y+ys]]:=cl;
+               putBYTE(playscreen.ofs + x+xs+row[y+ys], cl);
                end;
         end;
 
@@ -1152,16 +1234,18 @@ var
             if x<SCRMAX then
                begin
                { prende il colore di sfondo e toglie l'ombra }
-               cl:=playscreen.map[x+row[y]] or 128;
+               //cl:=playscreen.map[x+row[y]] or 128;
+               cl:=getBYTE(playscreen.ofs + x+row[y]) or $80;
 
                { e lo memorizza sia sullo schermo fisico ...}
-               screen[x+row[y]]:=cl;
+               //screen[x+row[y]]:=cl;
+               putBYTE(vram + x+row[y], cl);
 
                { che su quello virtuale (cioe' quello che tiene solo }
                { gli oggetti fissi }
-               playscreen.map[x+row[y]]:=cl;
+               //playscreen.map[x+row[y]]:=cl;
+               putBYTE(playscreen.ofs + x+row[y], cl);
                end;
-
 
     end;
 
@@ -1181,7 +1265,8 @@ var
             begin
             { controlla se alle coordinate specificate qualche mattoncino }
             { proietta un ombra }
-            shadow:=playscreen.map[xs+x+row[ys+y]] and 128;
+            //shadow:=playscreen.map[xs+x+row[ys+y]] and 128;
+            shadow:=getBYTE(playscreen.ofs + xs+x+row[ys+y]) and $80;
 
             if (y<7) and (x<15) then
                 begin
@@ -1189,16 +1274,23 @@ var
                 { colore specificato in block }
 
                 cl:=(COLORBLOCK[(block-1) and 15] and 127) or shadow;
-                screen[xs+x+row[ys+y]]:=cl;
-                playscreen.map[xs+x+row[ys+y]]:=cl;
+
+                //screen[xs+x+row[ys+y]]:=cl;
+                putBYTE(vram + xs+x+row[ys+y], cl);
+
+                //playscreen.map[xs+x+row[ys+y]]:=cl;
+                putBYTE(playscreen.ofs + xs+x+row[ys+y], cl);
                 end
             else
                begin
                { nel caso le coordinate si trovino sul bordo destro o }
                { inferiore, disegna i pixel in nero }
 
-               screen[xs+x+row[ys+y]]:=shadow; { sarebbe shadow or 0 }
-               playscreen.map[xs+x+row[ys+y]]:=shadow; {...quindi shadow }
+               //screen[xs+x+row[ys+y]]:=shadow; { sarebbe shadow or 0 }
+               putBYTE(vram + xs+x+row[ys+y], shadow);
+
+               //playscreen.map[xs+x+row[ys+y]]:=shadow; {...quindi shadow }
+               putBYTE(playscreen.ofs + xs+x+row[ys+y], shadow);
                end;
             end;
 
@@ -1211,13 +1303,16 @@ var
                begin
                { preleva il pixel x,y dallo schermo e ci proietta sopra }
                { l'ombra. }
-               cl:=playscreen.map[x+row[y]] and 127;
+               //cl:=playscreen.map[x+row[y]] and 127;
+               cl:=getBYTE(playscreen.ofs + x+row[y]) and $7f;
 
                { dopo di che lo rimette sullo schermo fisico... }
-               screen[x+row[y]]:=cl;
+               //screen[x+row[y]]:=cl;
+               putBYTE(vram + x+row[y], cl);
 
                { e su quello virtuale }
-               playscreen.map[x+row[y]]:=cl;
+               //playscreen.map[x+row[y]]:=cl;
+               putBYTE(playscreen.ofs + x+row[y], cl);
                end;
 
     if block>8 then { ma se il blocco e' grigio (=9) o marrone (=10) ... }
@@ -1241,25 +1336,34 @@ var
 
            { preleva il pixel xs,y+ys dallo schermo, ci mette l'ombra }
            { cioe' fa in modo che il colore sia di tonalita' scura }
-           cl:=playscreen.map[xs+row[y+ys]] and 128;
+           //cl:=playscreen.map[xs+row[y+ys]] and 128;
+           cl:=getBYTE(playscreen.ofs + xs+row[y+ys]) and $80;
+
            cl2:=(cl2 and 127) or cl;
 
            { ... e lo rimette sullo schermo fisico }
-           screen[xs+row[ys+y]]:=cl2;
+           //screen[xs+row[ys+y]]:=cl2;
+           putBYTE(vram + xs+row[ys+y], cl2);
 
            { ... e su quello virtuale }
-           playscreen.map[xs+row[ys+y]]:=cl2;
+           //playscreen.map[xs+row[ys+y]]:=cl2;
+           putBYTE(playscreen.ofs + xs+row[ys+y], cl2);
            end;
 
        { disegna il bordo destro del mattoncino }
        for x:=0 to 14 do
            begin
            { commenti analoghi a sopra }
-           cl:=playscreen.map[xs+x+row[ys]] and 128;
+           //cl:=playscreen.map[xs+x+row[ys]] and 128;
+           cl:=getBYTE(playscreen.ofs + xs+x+row[ys]) and $80;
+
            cl2:=(cl2 and 127) or cl;
 
-           screen[xs+x+row[ys]]:=cl2;
-           playscreen.map[xs+x+row[ys]]:=cl2;
+           //screen[xs+x+row[ys]]:=cl2;
+           putBYTE(vram + xs+x+row[ys], cl2);
+
+           //playscreen.map[xs+x+row[ys]]:=cl2;
+           putBYTE(playscreen.ofs + xs+x+row[ys], cl2);
            end;
        end;
     end;
@@ -1947,7 +2051,7 @@ var x,y      : smallint;
 
 { Draw the backdrop on the playing field }
 procedure fill_picture_with_pattern(var patt : BTMTYPE);
-var x, yb : word;
+var x, yb, k : word;
     y, cl, shadow: byte;
 
     begin
@@ -1968,6 +2072,7 @@ var x, yb : word;
     for y:=SCRTOP-2 to SCRBOT-2 do
         begin
         yb:=mody[y]*patt.width;
+        k:=0;
         for x:=SCRMIN-1 to SCRMAX-1 do
             begin
             cl:=patt.map[modx[x]+yb]; { Takes the pixel from the background }
@@ -1979,9 +2084,14 @@ var x, yb : word;
             if (y<16) or (x<18) then shadow:=0; { Shadow=0 -> ombra presente }
 
             { Disegna il pixel sullo schermo con l'eventuale ombra }
-            playscreen.map[x+row[y]]:=(cl and 127) or shadow;
+            //playscreen.map[x+row[y]]:=(cl and 127) or shadow;
+
+            tmp[k]:=(cl and $7f) or shadow;
+            inc(k);
             end;
         end;
+
+        blitTMP(playscreen.ofs+SCRMIN-1+y*320, k);
 
     end;
 
@@ -2087,7 +2197,9 @@ procedure remove_round_level;  { Togli la scritta ROUND xx, READY }
 var y : byte;                  { copiandoci sopra il fondale.     }
     begin
     for y:=129 to 160 do
-        memcpy(playscreen.map[72+row[y]], screen[72+row[y]], 88);
+        //memcpy(playscreen.map[72+row[y]], screen[72+row[y]], 88);
+
+        blitROW(playscreen.ofs+72+row[y], vram + 72+row[y], 88);
     end;
 
 
@@ -2148,10 +2260,12 @@ var x,y,z,w : word;
                 begin
                 { Se il colore e' trasparente o il fotogramma e' il 6 }
                 { allora viene usato il colore del fondale.           }
-                if (w=6) or (explosion.map[x+z]=0) then
-                   screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
+                if (w=6) or (getBYTE(explosion.ofs + x+z) = 0) then
+                   //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
+                   blitBYTE(playscreen.ofs + x+a+row[y+b], vram + x+a+row[y+b])
                 else
-                   screen[x+a+row[y+b]]:=explosion.map[x+z];
+                   //screen[x+a+row[y+b]]:=explosion.map[x+z];
+                   blitBYTE(explosion.ofs + x+z, vram + x+a+row[y+b])
                 end;
             end;
 
@@ -2183,10 +2297,12 @@ var x,y,z,w : word;
             z:=y*newvaus.width+w*(newvaus.width*16);
             for x:=0 to newvaus.width-1 do
                 begin
-                if (newvaus.map[x+z]=0) then
-                   screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
+                if (getBYTE(newvaus.ofs + x+z) = 0) then
+                   //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
+                   blitBYTE(playscreen.ofs + x+a+row[y+b], vram + x+a+row[y+b])
                 else
-                   screen[x+a+row[y+b]]:=newvaus.map[x+z];
+                   //screen[x+a+row[y+b]]:=newvaus.map[x+z];
+                   blitBYTE(newvaus.ofs + x+z, vram + x+a+row[y+b])
                 end;
             end;
 
@@ -2333,7 +2449,8 @@ var x,y,z : smallint;
 
     { Erase the writing by copying the background over it }
     for y:=129 to 140 do
-        memcpy(playscreen.map[66+row[y]], screen[66+row[y]], textwidth('Game Paused')+1);
+        //memcpy(playscreen.map[66+row[y]], screen[66+row[y]], textwidth('Game Paused')+1);
+        blitROW(playscreen.ofs + 66+row[y], vram + 66+row[y], textwidth('Game Paused')+1);
 
     { textwidth('Game Paused') is a function that returns the length }
     { in pixels of the text 'Game Paused'.                           }
@@ -2392,7 +2509,8 @@ var fw : word;
     for y:=0 to shoots.height-1 do
         begin
         fw:=shoots.width*y;
-        memzerocpy(shoots.map[fw], screen[fire.x+row[y+fire.y]], shoots.width);
+        //memzerocpy(shoots.map[fw], screen[fire.x+row[y+fire.y]], shoots.width);
+        blitZERO(shoots.ofs + fw, vram + fire.x+row[y+fire.y], shoots.width);
         end;
     end;
 
@@ -2403,7 +2521,8 @@ var //fw : word;
     for y:=0 to shoots.height-1 do
         begin
         //fw:=shoots.width*y;
-        memcpy(playscreen.map[fire.x+row[y+fire.y]], screen[fire.x+row[y+fire.y]], shoots.width);
+        //memcpy(playscreen.map[fire.x+row[y+fire.y]], screen[fire.x+row[y+fire.y]], shoots.width);
+        blitROW(playscreen.ofs + fire.x+row[y+fire.y], vram + fire.x+row[y+fire.y], shoots.width);
         end;
     end;
 
@@ -2459,7 +2578,8 @@ procedure remove_flux;
 var y : byte;
     begin
     for y:=0 to 19 do
-        memcpy(playscreen.map[217+row[y+FLUXLEVEL]], screen[217+row[y+FLUXLEVEL]], 8);
+        //memcpy(playscreen.map[217+row[y+FLUXLEVEL]], screen[217+row[y+FLUXLEVEL]], 8);
+        blitROW(playscreen.ofs + 217+row[y+FLUXLEVEL], vram + 217+row[y+FLUXLEVEL], 8);
     end;
 
 
@@ -2471,7 +2591,8 @@ var y,fx  : byte;
    if scrflux then
       begin
       for y:=0 to 19 do
-          memcpy(flux.map[(y+fx) shl 3], screen[217+row[y+FLUXLEVEL]], 8);
+          //memcpy(flux.map[(y+fx) shl 3], screen[217+row[y+FLUXLEVEL]], 8);
+          blitROW(flux.ofs + (y+fx) shl 3, vram + 217+row[y+FLUXLEVEL], 8);
 
       inc(scrfluxcnt);
       if scrfluxcnt>20 then scrfluxcnt:=0;
@@ -2504,7 +2625,8 @@ var x,y,z : word;
         place_vaus;
 
         for y:=vaus.y to vaus.y+vaus.height do
-            memcpy(playscreen.map[225+row[y]], screen[225+row[y]], 40);
+            //memcpy(playscreen.map[225+row[y]], screen[225+row[y]], 40);
+            blitROW(playscreen.ofs + 225+row[y], vram + 225+row[y], 40);
 
         end;
 
@@ -2730,7 +2852,7 @@ var
 
      form1.show_play;
 
-     mous.x:=ball[0].x;
+     //mous.x:=ball[0].x;
 
      mousecoords(x,y);  { reads mouse coordinates }
 
@@ -3135,7 +3257,9 @@ var x,y,z : word;
 
     { And copies the presentation page with ARKANOID written on the screen }
     { via the procedure written in assembler. }
-    memcpy(presents.map, screen, 64000);
+    //memcpy(presents.map, screen, 64000);
+
+    blitROW(presents.ofs, vram, 320*200);
 
 //    soundicon;         { draw the sound icon }
     level_selection;   { and that of the level }
