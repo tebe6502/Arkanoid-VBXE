@@ -5,6 +5,13 @@
 { ----------------------------------------------------------------------- }
 
 const
+
+   VBXE_OVRADR = $5000;
+   vbxe_data = 0;//VBXE_OVRADR + 320*200;
+
+   vram = 0; // screen[0]
+
+
    SCRMIN     = 10;  { X coordinate of the left edge of the playing area  }
    SCRMAX     = 216; { X coordinate of the right edge of the playing area }
    SCRTOP     = 12;  { Y coordinate of the upper edge of the playing area }
@@ -87,6 +94,7 @@ type
 //              trasp   : byte;        { trasparenza (non usato) }
 //              palette : arr768;      { puntatore alla palette di colori }
 //              palused : boolean;     { flag TRUE = la palette esiste }
+              ofs : cardinal;
               map     : arr64k;        { dati contenenti il disegno }
               end;
 
@@ -187,9 +195,6 @@ var
     row        : array[0..250] of word; { array (see initRowArray) }
     success    : boolean;               { status flag for BTM loading }
 
-    screen     : arr64k; // absolute $a000:0000;
-               { forcing the screen map to the VGA address }
-               { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
     wall       : walltype;           { wall }
 
@@ -216,6 +221,10 @@ var
 
     sound_on   : Boolean;
 
+    screen     : array [0..200*1024] of byte;
+               { forcing the screen map to the VGA address }
+               { a000:0000 inherent to the 320x200x256 col. graphics mode }
+
 { ------------------------------------------------------------------------- }
 
 { These are the functions that must be seen by the main program.            }
@@ -233,6 +242,17 @@ procedure closeprogram;
 { ------------------------------------------------------------------------- }
 //                              implementation
 { ------------------------------------------------------------------------- }
+
+procedure blitBox(src, dst: cardinal; w,h: word);
+var x,y: word;
+begin
+
+ for y := 0 to h-1 do
+  for x := 0 to w-1 do
+   screen[dst+x+y*320] := screen[src+x+y*w];
+
+end;
+
 
 
 procedure setcolor(c: byte);
@@ -573,12 +593,18 @@ procedure showBTMpicture(BTM : BTMTYPE);
 var x,y,ofst : word;
 
   begin
+
+    blitBox(BTM.ofs, vram, BTM.width, BTM.height);
+
+(*
+
   for y:=0 to BTM.height-1 do   { la y varia da 0 all'altezza-1 del disegno }
      begin
      ofst:=y*BTM.width;         { calcola l'indirizzo nella matrice del dis.}
      for x:=0 to BTM.width-1 do
         screen[x+row[y]]:=BTM.map[x+ofst]; { mette il disegno sullo schermo }
      end;
+*)
 
   end;
 
