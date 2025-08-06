@@ -155,6 +155,8 @@ begin
    {$i ..\bitmaps\btm.inc}
 
 
+   totalwall:=32;
+
    score.hiscore:=50000;
    { the record score is initially set to 50000 by default }
 

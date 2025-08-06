@@ -840,6 +840,13 @@ procedure Wait_VBL;
       end;
 *)
 
+{$IFDEF ATARI}
+
+	pause;
+
+{$ENDIF}
+
+
 //  form1.show_play;
 end;
 
@@ -1409,7 +1416,7 @@ var
     begin
     for y:=0 to 14 do
         for x:=0 to 12 do
-            if wall[x+y*16]<>0 then place_block(x,y,wall[x+y*16]);
+            if wall[byte(x+y*16)]<>0 then place_block(x,y,wall[byte(x+y*16)]);
     end;
 
 
@@ -1426,7 +1433,7 @@ var x,y,wl  : byte;
         for x:=0 to 12 do         { cioe' il blocco deve essere <>0 e <>10 }
                                   { poiche' 0 = nessun blocco, 10 = marrone }
 
-            if (wall[x+y*16]<>0) and (wall[x+y*16]<>10) then inc(remain_blk);
+            if (wall[byte(x+y*16)]<>0) and (wall[byte(x+y*16)]<>10) then inc(remain_blk);
 
     wl:=(wl-1) mod PATNUMBER;
 
@@ -2410,45 +2417,52 @@ var x,y,a : byte;
     { Bit 0 }
     if (DIGITS[num] and 1)=1 then a:=223;   { Se il bit 0 e' 1 allora    }
     for x:=1 to 4 do                        { il colore del led in altro }
-        screen[px+x+row[py]]:=a;            { e' rosso vivo, altrimenti  }
+        //screen[px+x+row[py]]:=a;          { e' rosso vivo, altrimenti  }
+	putBYTE(vram + px+x+row[py], a);
                                             { rosso scuro.               }
 
     { Bit 1 }
-    a:=222;                             { "a" viene assunto come rosso scuro }
+    a:=222;                               { "a" viene assunto come rosso scuro }
     if (DIGITS[num] and 2)=2 then a:=223; { eventualmente viene poi cambiato }
     for x:=1 to 4 do
-        screen[px+x+row[py+5]]:=a;    { py+5 perche' il trattino in mezzo }
+        //screen[px+x+row[py+5]]:=a;    { py+5 perche' il trattino in mezzo }
+	putBYTE(vram + px+x+row[py+5], a);
                                       { e' 5 pixel piu' sotto di quello   }
                                       { in altro.                         }
     { Bit 2 }
     a:=222;
     if (DIGITS[num] and 4)=4 then a:=223;
     for x:=1 to 4 do
-        screen[px+x+row[py+10]]:=a;
+        //screen[px+x+row[py+10]]:=a;
+	putBYTE(vram + px+x+row[py+10], a);
 
     { Bit 3 }
     a:=222;
     if (DIGITS[num] and 8)=8 then a:=223;
     for y:=1 to 4 do
-        screen[px+row[py+y]]:=a;
+        //screen[px+row[py+y]]:=a;
+	putBYTE(vram + px+row[py+y], a);
 
     { Bit 4 }
     a:=222;
     if (DIGITS[num] and 16)=16 then a:=223;
     for y:=1 to 4 do
-        screen[px+row[py+y+5]]:=a;
+        //screen[px+row[py+y+5]]:=a;
+	putBYTE(vram + px+row[py+y+5], a);
 
     { Bit 5 }
     a:=222;
     if (DIGITS[num] and 32)=32 then a:=223;
     for y:=1 to 4 do
-        screen[px+5+row[py+y]]:=a;
+        //screen[px+5+row[py+y]]:=a;
+	putBYTE(vram + px+5+row[py+y], a);
 
     { Bit 6 }
     a:=222;
     if (DIGITS[num] and 64)=64 then a:=223;
     for y:=1 to 4 do
-        screen[px+5+row[py+y+5]]:=a;
+        //screen[px+5+row[py+y+5]]:=a;
+	putBYTE(vram + px+5+row[py+y+5], a);
 
     end;
 
@@ -2989,12 +3003,13 @@ var
 
 {$IFDEF ATARI}
 
+
 {$ELSE}
      form1.show_play;
 {$ENDIF}
 
      mous.x:=ball0.x;
-
+     
      mousecoords(x,y);  { reads mouse coordinates }
 
      {  if trainer (VAUS in automatic mode) is not active }
@@ -3263,7 +3278,7 @@ var x,y : smallint;
     oldy,
     newx,
     newy  : smallint;
-    sc    : string[20];
+    //sc    : string[20];
 
     begin
 
@@ -3339,7 +3354,7 @@ var x : byte;
        score.player[x]:=0;
        score.lives[x] :=5;
        score.wall_n[x]:=STARTWALL;
-       wall_p[x]:=all_walls[STARTWALL-1];		// !!! MP za duzo kopiuje
+       wall_p[x]:=all_walls[STARTWALL-1];
 
        score.roundsel[x]:=FALSE;
        end;
@@ -3466,7 +3481,7 @@ var nwall : boolean;
                                           { seconda non ha neanche una vita }
 
     trainer:=0;                           { il trainer viene disattivato }
-    wall:=wall_p[cur_player];       { si copia nel muro corrente }
+    wall:=wall_p[cur_player];             { si copia nel muro corrente }
                                           { quello del giocatore corrente }
     set_wall;                             { e lo si disegna }
 
@@ -3482,7 +3497,7 @@ var nwall : boolean;
     write_score(253,POS_DIGIT[3],score.hiscore);
 
     { And you draw the bricks of the wall }
-    put_wall;
+    //put_wall;
 
     repeat
 
@@ -3491,11 +3506,11 @@ var nwall : boolean;
              { the player (cur_player) is made to choose now }
              if not score.roundsel[cur_player] then
                 begin
-                score.wall_n[cur_player]:=choose_start_wall;
+                score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
                 wall_p[cur_player]:=
-                      all_walls[choose_start_wall-1];
+                      all_walls[score.wall_n[cur_player]-1];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
@@ -3510,15 +3525,14 @@ var nwall : boolean;
              { the picture. }
              nwall:=BounceBall;
 
-
              { If the NWALL framework is terminated, it is TRUE }
              if nwall then
                 begin
                 { so you increment the number of the wall it is at the cur_player }
-                inc(score.wall_n[cur_player]);
+                inc(score.wall_n[cur_player]); 
 
                 { And if the maximum number is exceeded, it starts from No.1 again }
-                if score.wall_n[cur_player]>totalwall then
+                if score.wall_n[cur_player] > totalwall then
                    score.wall_n[cur_player]:=1;
 
                 { and is taken in new wall from the general matrix }

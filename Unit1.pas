@@ -239,7 +239,7 @@ var i, j: word;
     v: byte;
 begin
 
- sleep(5);
+ sleep(1);
 
  bmp:=TBitmap32.Create;
  bmp.SetSize(320,200);
@@ -321,6 +321,13 @@ begin
    close(f);
 
 
+   for i:=0 to 16*5+12-1 do
+    all_walls[0][16+i]:=0;
+
+//    all_walls[0][16+i+1]:=0;
+
+
+
    assign(f, 'bitmaps\btm.pal'); reset(f, 1);
    blockread(f, def_pal, sizeof(def_pal), e);
    close(f);
@@ -331,6 +338,9 @@ begin
    close(f);
 
    {$i bitmaps\btm.inc}
+
+
+   totalwall:=32;
 
 
    score.hiscore:=50000;
@@ -344,8 +354,8 @@ begin
       mousereset;
 
       { mainscreen returns 1,2 (play number ) or -1 = quit }
-     { score.pl_numb:=mainscreen;
-      if score.pl_numb>0 then} start_game(1);//score.pl_numb);
+      score.pl_numb:=mainscreen;
+      if score.pl_numb>0 then start_game(1);//score.pl_numb);
 
    until score.pl_numb<1; { cycle until it's worth -1 = quit }
 
