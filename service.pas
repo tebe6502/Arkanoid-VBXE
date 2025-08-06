@@ -1,4 +1,4 @@
-﻿//unit service;
+//unit service;
 
 { ------------------------------------------------------------------------- }
 //                                 interface
@@ -233,11 +233,15 @@ var
 
     def_pal: arr768;
 
-    all_walls  : WHOLEWALLS;// absolute $d800;              { all the walls }
-
+{$IFDEF ATARI}
+    wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
+    wall       : WALLTYPE absolute $d800+$300;         { wall }
+    all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
+{$ELSE}
     wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
-
-    wall       : WALLTYPE;           { wall }
+    wall       : WALLTYPE;            { wall }
+    all_walls  : WHOLEWALLS;          { all the walls }
+{$ENDIF}
 
     tmp        : array [0..255] of byte;
 
@@ -246,7 +250,11 @@ var
     modx       : array[0..319] of byte;
     mody       : array[0..199] of byte;
 
+{$IFDEF ATARI}
+    screen     : array [0..0] of byte;
+{$ELSE}
     screen     : array [0..255*1024] of byte;
+{$ENDIF}
                { forcing the screen map to the VGA address }
                { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
@@ -495,16 +503,18 @@ var
     xf,yf,
     fr,og : word;
     
-    y: byte;
+    y, i: byte;
 
     begin
     xb   :=shinerec.xb;   { mette in xb,yb le coordinate del blocco }
     yb   :=shinerec.yb;
+    
+    i := xb+yb*16;
 
-    if wall[xb+yb*16]>8 then { se il blocco e grigio o marrone }
+    if wall[i]>8 then                  { se il blocco e grigio o marrone }
        begin
-       frame:=(shinerec.frame shr 1);        { calcola il n. del frame }
-       if wall[xb+yb*16]<>10 then inc(frame,5);
+       frame:=(shinerec.frame shr 1);  { calcola il n. del frame }
+       if wall[i]<>10 then inc(frame,5);
 
        xf:= 9+(xb shl 4);  { trova le coordinate sullo shermo del blocco }
        yf:=22+(yb shl 3);  { da far scintillare }
@@ -535,15 +545,15 @@ procedure unshine_block; { interrompe lo scintillio di un blocco se la }
     end;
 
 procedure shine(xb,yb : byte);   { questa procedura imposta lo }
-                                    { scintillio di un blocco }
+                                 { scintillio di un blocco }
     begin
     if shinerec.active then unshine_block;
 
     shinerec.xb    :=xb;  { coordinate del blocco }
     shinerec.yb    :=yb;  { x,y }
     shinerec.frame :=0;   { frame di partenza }
-    shinerec.active:=TRUE;           { scintillio attivo }
-    shinerec.block :=wall[xb+yb*16]; { tipo di blocco (marrone o grigio) }
+    shinerec.active:=TRUE;                 { scintillio attivo }
+    shinerec.block :=wall[byte(xb+yb*16)]; { tipo di blocco (marrone o grigio) }
     end;
 
 procedure checkshine; { se lo scintillio e' attivato allora lo esegue }
@@ -1599,21 +1609,24 @@ var
 { If the block is not knocked down then it makes it shimmer.               }
 
 procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
-
+var i: byte;
     begin
     { Controlla che le coordinate del blocco siano numeri validi... }
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
        begin
-       if wall[xb+yb*16]<>0 then { ... che ci sia un blocco da colpire... }
+       
+       i:=xb+yb*16;
+       
+       if wall[i]<>0 then { ... che ci sia un blocco da colpire... }
           begin
-          if wall[xb+yb*16]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[i]<10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
 
              { Incrementa lo SCORE del giocatore attuale a seconda }
              { del blocco colpito (i punti sono nell'array in SCORE_WALL) }
-             inc(score.player[cur_player],SCORE_WALL[wall[xb+yb*16]]);
+             inc(score.player[cur_player],SCORE_WALL[wall[i]]);
 
              inc(lett.incoming,random(LETTER_PROB));
 
@@ -1621,7 +1634,7 @@ procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
              lett.nexty:=((yb+1) shl 3)+22;
              lett.nexttype:=random_letter_drop;
 
-             wall[xb+yb*16]:=0;       { il blocco viene cancellato        }
+             wall[i]:=0;              { il blocco viene cancellato        }
              ball_block_sound(440,3); { emette un LA (nota musicale)      }
              ball.sbd:=0;             { azzera il contatore di deviazione }
              ball.brwhit:=0;          { e il cont. di dev. di emergenza   }
@@ -1629,10 +1642,10 @@ procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
 
           else    { se il blocco e marrone, o un grigio che non cade subito }
              begin
-             if (wall[xb+yb*16] and 15)=9 then { ...se e' grigio... }
+             if (wall[i] and 15)=9 then { ...se e' grigio... }
                 begin
-                ball.brwhit:=0;      { azzera il cont. di dev. di emergenza }
-                dec(wall[xb+yb*16],16); { decrementa la resistenza del blocco  }
+                ball.brwhit:=0;         { azzera il cont. di dev. di emergenza }
+                dec(wall[i],16);        { decrementa la resistenza del blocco  }
 
                 ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
                 shine(xb,yb);           { e imposta il luccichio del blocco }
@@ -1651,26 +1664,29 @@ procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
 
 { Simile a quella prima ma per la collisione fire_blocco }
 procedure shoot_block_with_fire(xb,yb : smallint);
-
+var i: byte;
     begin
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
        begin
-       if wall[xb+yb*16]<>0 then    { ... che ci sia un blocco da colpire... }
+       
+       i:=xb+yb*16;
+       
+       if wall[i]<>0 then    { ... che ci sia un blocco da colpire... }
           begin
-          if wall[xb+yb*16]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[i]<10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
-             inc(score.player[cur_player],SCORE_WALL[wall[xb+yb*16]]);
-             wall[xb+yb*16]:=0;       { il blocco viene cancellato        }
+             inc(score.player[cur_player],SCORE_WALL[wall[i]]);
+             wall[i]:=0;              { il blocco viene cancellato        }
              ball_block_sound(440,3); { emette un LA (nota musicale)      }
              end
 
           else    { se il blocco e marrone, o un grigio che non cade subito }
              begin
-             if (wall[xb+yb*16] and 15)=9 then { ...se e' grigio... }
+             if (wall[i] and 15)=9 then { ...se e' grigio... }
                 begin
-                dec(wall[xb+yb*16],16); { decrementa la resistenza del blocco  }
+                dec(wall[i],16); { decrementa la resistenza del blocco  }
                 ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
                 shine(xb,yb);           { e imposta il luccichio del blocco }
                 end
@@ -1723,7 +1739,7 @@ var x,y      : smallint;
                       { Ricordarsi che (0,0) e' il blocco in altro a destra }
 
 
-    if wall[xb+yb*16]<>0 then  { ...if the block is not hypothetical but exists }
+    if wall[byte(xb+yb*16)]<>0 then  { ...if the block is not hypothetical but exists }
        begin
        collision:=split_line(ox,oy,nx,ny);
        { calculates the intersection of the segment connecting the old and }
@@ -1752,7 +1768,7 @@ var x,y      : smallint;
              yb:=((oy+24) shr 3)-3;        { del blocco relative a tale  }
                                            { intersezione.               }
 
-             if wall[xb+yb*16]=0 then        { Se non vi e' alcun blocco   }
+             if wall[byte(xb+yb*16)]=0 then  { Se non vi e' alcun blocco   }
                 begin
                 xb:=min(12,max(0,nx shr 4)); { Allora l'urto avviene sull' }
                 yb:=((ny+24) shr 3)-3;       { altra intersezione. La n.2  }
@@ -1773,7 +1789,7 @@ var x,y      : smallint;
              xb:=min(12,max(0,nx shr 4)); { Si calcolano le coord. del blocco }
              yb:=((ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
 
-             if wall[xb+yb*16]=0 then     { Se il blocco non c'e'... }
+             if wall[byte(xb+yb*16)]=0 then     { Se il blocco non c'e'... }
                 begin
                 nx:=ox;                   { allora l'intersezione valida e' }
                 ny:=oy;                   { l'altra, e si procede... }
@@ -2627,7 +2643,7 @@ var x1,x2,y1,y2 : word;
                  x2:=(fire.x+shoots.width-9) shr 4;
                  y2:=y1;
 
-                 if (wall[x1+y1*16]<>0) or (wall[x2+y2*16]<>0) then
+                 if (wall[byte(x1+y1*16)]<>0) or (wall[byte(x2+y2*16)]<>0) then
                     begin
                     remove_fire;
                     fire.shot:=FALSE;
@@ -3323,7 +3339,7 @@ var x : byte;
        score.player[x]:=0;
        score.lives[x] :=5;
        score.wall_n[x]:=STARTWALL;
-       wall_p[x]:=all_walls[STARTWALL-1];
+       wall_p[x]:=all_walls[STARTWALL-1];		// !!! MP za duzo kopiuje
 
        score.roundsel[x]:=FALSE;
        end;
@@ -3479,7 +3495,7 @@ var nwall : boolean;
 
                 { the chosen wall is assigned to the player }
                 wall_p[cur_player]:=
-                      all_walls[score.wall_n[cur_player]-1];
+                      all_walls[choose_start_wall-1];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;

@@ -1,5 +1,24 @@
 program arkanoid: $1000;
 
+
+{
+; optimize OK (service.pas), line = 1616
+
+	lda #$00
+	sta :STACKORIGIN+STACKWIDTH+10
+	lda YB
+	asl @
+	rol :STACKORIGIN+STACKWIDTH+10
+	asl @
+	rol :STACKORIGIN+STACKWIDTH+10
+	asl @
+	asl @
+	add XB
+	sta I
+}
+
+
+
 uses crt, vbxe;
 
 var
@@ -121,8 +140,7 @@ procedure mousemove(x,y : smallint);
 
 
 
-{$i vservice.pas}
-
+{$i ..\service.pas}
 
 
 
