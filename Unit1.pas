@@ -321,13 +321,6 @@ begin
    close(f);
 
 
-   for i:=0 to 16*5+12-1 do
-    all_walls[0][16+i]:=0;
-
-//    all_walls[0][16+i+1]:=0;
-
-
-
    assign(f, 'bitmaps\btm.pal'); reset(f, 1);
    blockread(f, def_pal, sizeof(def_pal), e);
    close(f);

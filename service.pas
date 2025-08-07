@@ -234,21 +234,30 @@ var
     def_pal: arr768;
 
 {$IFDEF ATARI}
+    [striped] row        : array[0..250] of word absolute $c000; { array (see initRowArray) }
+
+    tmp        : array [0..255] of byte absolute $c000+$200;
+
+    mody       : array[0..199] of byte absolute $c000+$300;
+    modx       : array[0..319] of byte absolute $c000+$400;
+    
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
     all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
 {$ELSE}
-    wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
-    wall       : WALLTYPE;            { wall }
-    all_walls  : WHOLEWALLS;          { all the walls }
-{$ENDIF}
-
     tmp        : array [0..255] of byte;
 
     row        : array[0..250] of word; { array (see initRowArray) }
 
     modx       : array[0..319] of byte;
     mody       : array[0..199] of byte;
+    
+    wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
+    wall       : WALLTYPE;            { wall }
+    all_walls  : WHOLEWALLS;          { all the walls }
+{$ENDIF}
+
+
 
 {$IFDEF ATARI}
     screen     : array [0..0] of byte;
@@ -1623,7 +1632,7 @@ var i: byte;
        begin
        
        i:=xb+yb*16;
-       
+
        if wall[i]<>0 then { ... che ci sia un blocco da colpire... }
           begin
           if wall[i]<10 then { se il blocco puo' essere abbattuto... }
