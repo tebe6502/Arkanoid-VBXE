@@ -6,10 +6,10 @@
 
 const
 
-//   VBXE_OVRADR = $5000;
-//   VBXE_DATA = VBXE_OVRADR + 320*200;
+   VBXE_OVRADR = $5000;
+   VBXE_DATA = VBXE_OVRADR + 320*200;
 
-   vram = VBXE_OVRADR; // screen[0]
+   vram = 0; // screen[0]
 
    err1 = 1; // 'Ball speed exceed program capability'
    err2 = 2; // 'Ball seems to be still'
@@ -60,7 +60,7 @@ const
 
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
-   STARTWALL  = 1;   { Starting level }
+   STARTWALL  = 01;  { Starting level }
    BALLSPEED  = 500; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 2000;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
@@ -233,37 +233,20 @@ var
 
     def_pal: arr768;
 
-{$IFDEF ATARI}
-    [striped] row        : array[0..250] of word absolute $c000; { array (see initRowArray) }
+    all_walls  : WHOLEWALLS absolute $d800;              { all the walls }
 
-    tmp        : array [0..255] of byte absolute $c000+$200;
+    wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
 
-    mody       : array[0..199] of byte absolute $c000+$300;
-    modx       : array[0..319] of byte absolute $c000+$400;
-    
-    wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
-    wall       : WALLTYPE absolute $d800+$300;         { wall }
-    all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
-{$ELSE}
+    wall       : WALLTYPE;           { wall }
+
     tmp        : array [0..255] of byte;
 
     row        : array[0..250] of word; { array (see initRowArray) }
 
     modx       : array[0..319] of byte;
     mody       : array[0..199] of byte;
-    
-    wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
-    wall       : WALLTYPE;            { wall }
-    all_walls  : WHOLEWALLS;          { all the walls }
-{$ENDIF}
 
-
-
-{$IFDEF ATARI}
-//    screen     : array [0..0] of byte;
-{$ELSE}
-    screen     : array [0..255*1024] of byte;
-{$ENDIF}
+    screen     : array [0..255] of byte;
                { forcing the screen map to the VGA address }
                { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
@@ -284,183 +267,6 @@ procedure closeprogram;
 { ------------------------------------------------------------------------- }
 //                              implementation
 { ------------------------------------------------------------------------- }
-
-
-{$IFDEF ATARI}
-
-
-procedure blitBOX(src, dst: cardinal; w: word; h: byte);
-begin
-
-	asm
-	  fxs FX_MEMS #$80
-	end;
-
- blt.src_adr.byte2:=src shr 16;
- blt.src_adr.byte1:=src shr 8;
- blt.src_adr.byte0:=src;
-
- blt.dst_adr.byte2:=dst shr 16;
- blt.dst_adr.byte1:=dst shr 8;
- blt.dst_adr.byte0:=dst;
-
- blt.src_step_x:=1;
- blt.src_step_y:=w-1;
-
- blt.dst_step_x:=1;
- blt.dst_step_y:=w-1;
-
- blt.blt_width:=w-1;
- blt.blt_height:=h-1;
-
- blt.blt_and_mask:=$ff;
-
- blt.blt_zoom:=0;	// x1
-
- blt.blt_control:=0;
-
-	asm
-	  fxs FX_MEMS #$00
-	end;
-	
- RunBCB(blt);
-	
-end;
-
-
-procedure blitZERO(src, dst: cardinal; size : word);
-var i: word;
-begin
-
-// for i := 0 to size-1 do
-//  if screen[src + i] <> 0 then screen[dst + i] := screen[src + i];
-
-	asm
-	  fxs FX_MEMS #$80
-	end;
-
- blt.src_adr.byte2:=src shr 16;
- blt.src_adr.byte1:=src shr 8;
- blt.src_adr.byte0:=src;
-
- blt.dst_adr.byte2:=dst shr 16;
- blt.dst_adr.byte1:=dst shr 8;
- blt.dst_adr.byte0:=dst;
-
- blt.src_step_x:=1;
- blt.src_step_y:=1;
-
- blt.dst_step_x:=1;
- blt.dst_step_y:=1;
- 
- blt.blt_width:=size-1;
- blt.blt_height:=0;
-
- blt.blt_control := 1;
- blt.blt_and_mask := $ff;
-
-	asm
-	  fxs FX_MEMS #$00
-	end;
-
-
- RunBCB(blt);
-
-end;
-
-
-procedure blitTMP(dst: cardinal; size: byte);
-var x: byte;
-begin
-
-// for x := 0 to size-1 do
-//  screen[dst+x] := tmp[x];
-
-vbxe_ram.position:=dst;
-
-vbxe_ram.WriteBuffer(TMP, size);
-
-end;
-
-
-procedure blitROW(src, dst: cardinal; size: word);
-var x: word;
-begin
-
-// for x := 0 to size-1 do
-//  screen[dst+x] := screen[src+x];
-
-	asm
-	  fxs FX_MEMS #$80
-	end;
-
- blt.src_adr.byte2:=src shr 16;
- blt.src_adr.byte1:=src shr 8;
- blt.src_adr.byte0:=src;
-
- blt.dst_adr.byte2:=dst shr 16;
- blt.dst_adr.byte1:=dst shr 8;
- blt.dst_adr.byte0:=dst;
-
- blt.src_step_x:=1;
- blt.src_step_y:=1;
-
- blt.dst_step_x:=1;
- blt.dst_step_y:=1;
- 
- blt.blt_width:=size-1;
- blt.blt_height:=0;
-
- blt.blt_control := 0;
- blt.blt_and_mask := $ff;
-
-	asm
-	  fxs FX_MEMS #$00
-	end;
-
- RunBCB(blt);
-
-end;
-
-
-procedure blitBYTE(src, dst: cardinal);
-var a: byte;
-begin
-
-//  screen[dst] := screen[src];
-
- vbxe_ram.position := src;
- a := vbxe_ram.ReadByte;
-
- vbxe_ram.position := dst;
- vbxe_ram.WriteByte(a);
-
-end;
-
-
-procedure putBYTE(dst: cardinal; v: byte);
-begin
-
-//  screen[dst] := v;
-
- vbxe_ram.position := dst;
- vbxe_ram.WriteByte(v);
-
-end;
-
-
-function getBYTE(src: cardinal): byte;
-begin
-
-//  result := screen[src];
-
- vbxe_ram.position := src;
- Result := vbxe_ram.ReadByte;
-
-end;
-
-
-{$ELSE}
 
 procedure blitZERO(src, dst: cardinal; size : word);
 var i: word;
@@ -514,8 +320,6 @@ begin
   result := screen[src];
 
 end;
-
-{$ENDIF}
 
 
 { ------------------------------------------------------------------------- }
@@ -658,46 +462,7 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 //   AutoDetect : pointer;
 //   GraphMode, GraphDriver, ErrCode: smallint;
 
-var xdl: TXDL;
-
    begin
-   
-{$IFDEF ATARI}   
-
- if VBXE.GraphResult <> VBXE.grOK then begin
-  writeln('VBXE not detected');
-  halt;
- end;
-
- SetHorizontalRes(VBXE.VGAMed);
- ColorMapOff;
-
- VBXEControl(vc_xdl+vc_xcolor+vc_no_trans);
-
- GetXDL(xdl);
- xdl.rptl_ := 20-1;
- xdl.rptl  := 200-2;
- SetXDL(xdl);
-   
- vbxe_ram.position:=VBXE_OVRADR;
- vbxe_ram.size:=320*200;
- vbxe_ram.clear;
-
- dmactl:=0;
-
-	asm
-	  fxs FX_MEMS #$80
-	end;
-
- fillByte(blt, sizeof(TBCB), 0)	;
-
-	asm
-	  fxs FX_MEMS #$00
-	end;
-
-{$ENDIF}
-
-
  {
 	GraphDriver := InstallUserDriver('SVGA256',@DetectVGA);
    if RegisterBGIDriver(@svgadrv)<0 then
@@ -730,18 +495,16 @@ var
     xf,yf,
     fr,og : word;
     
-    y, i: byte;
+    y: byte;
 
     begin
     xb   :=shinerec.xb;   { mette in xb,yb le coordinate del blocco }
     yb   :=shinerec.yb;
-    
-    i := xb+yb*16;
 
-    if wall[i]>8 then                  { se il blocco e grigio o marrone }
+    if wall[xb+yb*16]>8 then { se il blocco e grigio o marrone }
        begin
-       frame:=(shinerec.frame shr 1);  { calcola il n. del frame }
-       if wall[i]<>10 then inc(frame,5);
+       frame:=(shinerec.frame shr 1);        { calcola il n. del frame }
+       if wall[xb+yb*16]<>10 then inc(frame,5);
 
        xf:= 9+(xb shl 4);  { trova le coordinate sullo shermo del blocco }
        yf:=22+(yb shl 3);  { da far scintillare }
@@ -772,15 +535,15 @@ procedure unshine_block; { interrompe lo scintillio di un blocco se la }
     end;
 
 procedure shine(xb,yb : byte);   { questa procedura imposta lo }
-                                 { scintillio di un blocco }
+                                    { scintillio di un blocco }
     begin
     if shinerec.active then unshine_block;
 
     shinerec.xb    :=xb;  { coordinate del blocco }
     shinerec.yb    :=yb;  { x,y }
     shinerec.frame :=0;   { frame di partenza }
-    shinerec.active:=TRUE;                 { scintillio attivo }
-    shinerec.block :=wall[byte(xb+yb*16)]; { tipo di blocco (marrone o grigio) }
+    shinerec.active:=TRUE;           { scintillio attivo }
+    shinerec.block :=wall[xb+yb*16]; { tipo di blocco (marrone o grigio) }
     end;
 
 procedure checkshine; { se lo scintillio e' attivato allora lo esegue }
@@ -911,8 +674,8 @@ procedure showBTMpicture(BTM : BTMTYPE);
 var x,y,ofst : word;
 
   begin
-    
-    blitBOX(BTM.ofs, vram, BTM.width, BTM.height);
+
+    blitROW(BTM.ofs, vram, BTM.width*BTM.height);
 
 (*
   for y:=0 to BTM.height-1 do   { la y varia da 0 all'altezza-1 del disegno }
@@ -1067,13 +830,6 @@ procedure Wait_VBL;
       end;
 *)
 
-{$IFDEF ATARI}
-
-//	pause;
-
-{$ENDIF}
-
-
 //  form1.show_play;
 end;
 
@@ -1093,17 +849,17 @@ procedure set_ball(var ball : BALLTYPE);
 
 procedure set_ball_speed(var ball : BALLTYPE; speed : smallint);
 var
-  sx,sy : smallint;   { Sets the speed of the ball based on the speed }
-  vm    : single;     { vector module passed in SPEED: smallint.      }
+  sx,sy : smallint;  { imposta la velocita' della palla in base al modulo }
+  vm    : single;     { del vettore velocita' passato in SPEED : integer.  }
 
   begin
-  sx:=ball.speedx;  { stores the x and y components of velocity }
-  sy:=ball.speedy;  { in sx and sy, respectively                }
+  sx:=ball.speedx;  { memorizza le componenti x e y della velocita' }
+  sy:=ball.speedy;  { rispettivamente in sx ed sy }
 
-  vm:=speed / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
-                                 { between the old and new speeds                }
-                                 { (the direction does not change, only          }
-                                 { the modulus changes).                         }
+  vm:=speed / sqrt(sx*sx+sy*sy); { calcola il coef. di proporzionalita'  }
+                                 { fra la vecchia e la nuova velocita'   }
+                                 { (la direzione non cambia, cambia solo }
+                                 { il modulo). }
 
   ball.speedx:=round(sx * vm);   { e quindi moltiplica per tale coef. }
   ball.speedy:=round(sy * vm);   { le due proiezioni della velocita'. }
@@ -1123,7 +879,6 @@ var w : real;
 function get_ball_direction(var ball : BALLTYPE): smallint;
 var w : smallint; { restituisce la direzione in cui si muove la palla }
   begin
-
   if ball.speedx=0 then w:=-90*(ball.speedy div abs(ball.speedy))
   else
     begin
@@ -1132,9 +887,7 @@ var w : smallint; { restituisce la direzione in cui si muove la palla }
 
     w:=round(arctan(-ball.speedy/ball.speedx)*180.0/3.14);
 
-
     if(ball.speedx<0) then inc(w,180);
-
     inc(w,360);
     w:=w mod 360;
     end;
@@ -1194,7 +947,6 @@ var
 
   ball.finex:=x and $ff;
   ball.finey:=y and $ff;
-
 
   { controlla se avviene un urto della pallina sulla parete di destra }
   { in caso d'urto inverte il segno }
@@ -1645,7 +1397,7 @@ var
     begin
     for y:=0 to 14 do
         for x:=0 to 12 do
-            if wall[byte(x+y*16)]<>0 then place_block(x,y,wall[byte(x+y*16)]);
+            if wall[x+y*16]<>0 then place_block(x,y,wall[x+y*16]);
     end;
 
 
@@ -1662,7 +1414,7 @@ var x,y,wl  : byte;
         for x:=0 to 12 do         { cioe' il blocco deve essere <>0 e <>10 }
                                   { poiche' 0 = nessun blocco, 10 = marrone }
 
-            if (wall[byte(x+y*16)]<>0) and (wall[byte(x+y*16)]<>10) then inc(remain_blk);
+            if (wall[x+y*16]<>0) and (wall[x+y*16]<>10) then inc(remain_blk);
 
     wl:=(wl-1) mod PATNUMBER;
 
@@ -1845,24 +1597,21 @@ var
 { If the block is not knocked down then it makes it shimmer.               }
 
 procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
-var i: byte;
+
     begin
     { Controlla che le coordinate del blocco siano numeri validi... }
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
        begin
-       
-       i:=xb+yb*16;
-
-       if wall[i]<>0 then { ... che ci sia un blocco da colpire... }
+       if wall[xb+yb*16]<>0 then { ... che ci sia un blocco da colpire... }
           begin
-          if wall[i]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[xb+yb*16]<10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
 
              { Incrementa lo SCORE del giocatore attuale a seconda }
              { del blocco colpito (i punti sono nell'array in SCORE_WALL) }
-             inc(score.player[cur_player],SCORE_WALL[wall[i]]);
+             inc(score.player[cur_player],SCORE_WALL[wall[xb+yb*16]]);
 
              inc(lett.incoming,random(LETTER_PROB));
 
@@ -1870,7 +1619,7 @@ var i: byte;
              lett.nexty:=((yb+1) shl 3)+22;
              lett.nexttype:=random_letter_drop;
 
-             wall[i]:=0;              { il blocco viene cancellato        }
+             wall[xb+yb*16]:=0;       { il blocco viene cancellato        }
              ball_block_sound(440,3); { emette un LA (nota musicale)      }
              ball.sbd:=0;             { azzera il contatore di deviazione }
              ball.brwhit:=0;          { e il cont. di dev. di emergenza   }
@@ -1878,10 +1627,10 @@ var i: byte;
 
           else    { se il blocco e marrone, o un grigio che non cade subito }
              begin
-             if (wall[i] and 15)=9 then { ...se e' grigio... }
+             if (wall[xb+yb*16] and 15)=9 then { ...se e' grigio... }
                 begin
-                ball.brwhit:=0;         { azzera il cont. di dev. di emergenza }
-                dec(wall[i],16);        { decrementa la resistenza del blocco  }
+                ball.brwhit:=0;      { azzera il cont. di dev. di emergenza }
+                dec(wall[xb+yb*16],16); { decrementa la resistenza del blocco  }
 
                 ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
                 shine(xb,yb);           { e imposta il luccichio del blocco }
@@ -1900,29 +1649,26 @@ var i: byte;
 
 { Simile a quella prima ma per la collisione fire_blocco }
 procedure shoot_block_with_fire(xb,yb : smallint);
-var i: byte;
+
     begin
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
        begin
-       
-       i:=xb+yb*16;
-       
-       if wall[i]<>0 then    { ... che ci sia un blocco da colpire... }
+       if wall[xb+yb*16]<>0 then    { ... che ci sia un blocco da colpire... }
           begin
-          if wall[i]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[xb+yb*16]<10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
-             inc(score.player[cur_player],SCORE_WALL[wall[i]]);
-             wall[i]:=0;              { il blocco viene cancellato        }
+             inc(score.player[cur_player],SCORE_WALL[wall[xb+yb*16]]);
+             wall[xb+yb*16]:=0;       { il blocco viene cancellato        }
              ball_block_sound(440,3); { emette un LA (nota musicale)      }
              end
 
           else    { se il blocco e marrone, o un grigio che non cade subito }
              begin
-             if (wall[i] and 15)=9 then { ...se e' grigio... }
+             if (wall[xb+yb*16] and 15)=9 then { ...se e' grigio... }
                 begin
-                dec(wall[i],16); { decrementa la resistenza del blocco  }
+                dec(wall[xb+yb*16],16); { decrementa la resistenza del blocco  }
                 ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
                 shine(xb,yb);           { e imposta il luccichio del blocco }
                 end
@@ -1975,7 +1721,7 @@ var x,y      : smallint;
                       { Ricordarsi che (0,0) e' il blocco in altro a destra }
 
 
-    if wall[byte(xb+yb*16)]<>0 then  { ...if the block is not hypothetical but exists }
+    if wall[xb+yb*16]<>0 then  { ...if the block is not hypothetical but exists }
        begin
        collision:=split_line(ox,oy,nx,ny);
        { calculates the intersection of the segment connecting the old and }
@@ -2004,7 +1750,7 @@ var x,y      : smallint;
              yb:=((oy+24) shr 3)-3;        { del blocco relative a tale  }
                                            { intersezione.               }
 
-             if wall[byte(xb+yb*16)]=0 then  { Se non vi e' alcun blocco   }
+             if wall[xb+yb*16]=0 then        { Se non vi e' alcun blocco   }
                 begin
                 xb:=min(12,max(0,nx shr 4)); { Allora l'urto avviene sull' }
                 yb:=((ny+24) shr 3)-3;       { altra intersezione. La n.2  }
@@ -2025,7 +1771,7 @@ var x,y      : smallint;
              xb:=min(12,max(0,nx shr 4)); { Si calcolano le coord. del blocco }
              yb:=((ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
 
-             if wall[byte(xb+yb*16)]=0 then     { Se il blocco non c'e'... }
+             if wall[xb+yb*16]=0 then     { Se il blocco non c'e'... }
                 begin
                 nx:=ox;                   { allora l'intersezione valida e' }
                 ny:=oy;                   { l'altra, e si procede... }
@@ -2646,52 +2392,45 @@ var x,y,a : byte;
     { Bit 0 }
     if (DIGITS[num] and 1)=1 then a:=223;   { Se il bit 0 e' 1 allora    }
     for x:=1 to 4 do                        { il colore del led in altro }
-        //screen[px+x+row[py]]:=a;          { e' rosso vivo, altrimenti  }
-	putBYTE(vram + px+x+row[py], a);
+        screen[px+x+row[py]]:=a;            { e' rosso vivo, altrimenti  }
                                             { rosso scuro.               }
 
     { Bit 1 }
-    a:=222;                               { "a" viene assunto come rosso scuro }
+    a:=222;                             { "a" viene assunto come rosso scuro }
     if (DIGITS[num] and 2)=2 then a:=223; { eventualmente viene poi cambiato }
     for x:=1 to 4 do
-        //screen[px+x+row[py+5]]:=a;    { py+5 perche' il trattino in mezzo }
-	putBYTE(vram + px+x+row[py+5], a);
+        screen[px+x+row[py+5]]:=a;    { py+5 perche' il trattino in mezzo }
                                       { e' 5 pixel piu' sotto di quello   }
                                       { in altro.                         }
     { Bit 2 }
     a:=222;
     if (DIGITS[num] and 4)=4 then a:=223;
     for x:=1 to 4 do
-        //screen[px+x+row[py+10]]:=a;
-	putBYTE(vram + px+x+row[py+10], a);
+        screen[px+x+row[py+10]]:=a;
 
     { Bit 3 }
     a:=222;
     if (DIGITS[num] and 8)=8 then a:=223;
     for y:=1 to 4 do
-        //screen[px+row[py+y]]:=a;
-	putBYTE(vram + px+row[py+y], a);
+        screen[px+row[py+y]]:=a;
 
     { Bit 4 }
     a:=222;
     if (DIGITS[num] and 16)=16 then a:=223;
     for y:=1 to 4 do
-        //screen[px+row[py+y+5]]:=a;
-	putBYTE(vram + px+row[py+y+5], a);
+        screen[px+row[py+y+5]]:=a;
 
     { Bit 5 }
     a:=222;
     if (DIGITS[num] and 32)=32 then a:=223;
     for y:=1 to 4 do
-        //screen[px+5+row[py+y]]:=a;
-	putBYTE(vram + px+5+row[py+y], a);
+        screen[px+5+row[py+y]]:=a;
 
     { Bit 6 }
     a:=222;
     if (DIGITS[num] and 64)=64 then a:=223;
     for y:=1 to 4 do
-        //screen[px+5+row[py+y+5]]:=a;
-	putBYTE(vram + px+5+row[py+y+5], a);
+        screen[px+5+row[py+y+5]]:=a;
 
     end;
 
@@ -2886,7 +2625,7 @@ var x1,x2,y1,y2 : word;
                  x2:=(fire.x+shoots.width-9) shr 4;
                  y2:=y1;
 
-                 if (wall[byte(x1+y1*16)]<>0) or (wall[byte(x2+y2*16)]<>0) then
+                 if (wall[x1+y1*16]<>0) or (wall[x2+y2*16]<>0) then
                     begin
                     remove_fire;
                     fire.shot:=FALSE;
@@ -3230,15 +2969,10 @@ var
      begin
      Wait_VBL; { Waits for the vertical blank }
 
-{$IFDEF ATARI}
-
-
-{$ELSE}
-     form1.show_play;
-{$ENDIF}
+     //form1.show_play;
 
      mous.x:=ball0.x;
-     
+
      mousecoords(x,y);  { reads mouse coordinates }
 
      {  if trainer (VAUS in automatic mode) is not active }
@@ -3326,7 +3060,7 @@ var
 
         { At this point the three balls are forced to split up. }
 	
-        hlp:=t1*90;
+	hlp:=t1*90;
 
         set_ball_direction(ball0,(hlp+30));
         set_ball_direction(ball1,(hlp+45));
@@ -3337,7 +3071,6 @@ var
         set_ball_speed(ball0,t2);
         set_ball_speed(ball1,t2);
         set_ball_speed(ball2,t2);
-
 
         vaus.letter:=0;
         end;
@@ -3421,10 +3154,10 @@ var
      if (not ball0.inplay) then   { If the No. 1 ball is no longer in play. }
         begin
         ball0.launch:=TRUE;
-        remove_ball(ball0);             { takes it off the screen }
+        remove_ball(ball0);           { takes it off the screen }
         destroy_vaus;                   { shows the destruction sequence }
         dec(score.lives[cur_player]);   { decreases the number of lives by 1 }
-        wall_p[cur_player]:=wall;       { stores the an assigned variable }
+        wall_p[cur_player]:=wall; { stores the an assigned variable }
                                         { to the player the current wall }
 
         { This happens because if there are two players, one must pass }
@@ -3508,7 +3241,7 @@ var x,y : smallint;
     oldy,
     newx,
     newy  : smallint;
-    //sc    : string[20];
+    sc    : string[20];
 
     begin
 
@@ -3661,8 +3394,7 @@ var x,y,z : word;
     { via the procedure written in assembler. }
     //memcpy(presents.map, screen, 64000);
 
-    blitBOX(presents.ofs, vram, 320, 200);
-  
+    blitROW(presents.ofs, vram, 320*200);
 
 //    soundicon;         { draw the sound icon }
 //    level_selection;   { and that of the level }
@@ -3712,9 +3444,7 @@ var nwall : boolean;
                                           { seconda non ha neanche una vita }
 
     trainer:=0;                           { il trainer viene disattivato }
-    wall:=wall_p[cur_player];             { si copia nel muro corrente }
-
-
+    wall:=wall_p[cur_player];       { si copia nel muro corrente }
                                           { quello del giocatore corrente }
     set_wall;                             { e lo si disegna }
 
@@ -3723,7 +3453,6 @@ var nwall : boolean;
                                           { schermo }
 
     setpalette(playscreen);               { si impostano i colori. }
-    
 
     { you print the three scores, player 1, 2 and hi-score }
     write_score(253,POS_DIGIT[1],score.player[1]);
@@ -3731,15 +3460,7 @@ var nwall : boolean;
     write_score(253,POS_DIGIT[3],score.hiscore);
 
     { And you draw the bricks of the wall }
-    //put_wall;
-
-(*
-    asm
-     kk: lda $d20a
-     sta $d01a
-     jmp kk
-    end;
-  *)  
+    put_wall;
 
     repeat
 
@@ -3748,7 +3469,7 @@ var nwall : boolean;
              { the player (cur_player) is made to choose now }
              if not score.roundsel[cur_player] then
                 begin
-                score.wall_n[cur_player]:=choose_start_wall; 
+                score.wall_n[cur_player]:=choose_start_wall;
 
                 { the chosen wall is assigned to the player }
                 wall_p[cur_player]:=
@@ -3767,14 +3488,15 @@ var nwall : boolean;
              { the picture. }
              nwall:=BounceBall;
 
+
              { If the NWALL framework is terminated, it is TRUE }
              if nwall then
                 begin
                 { so you increment the number of the wall it is at the cur_player }
-                inc(score.wall_n[cur_player]); 
+                inc(score.wall_n[cur_player]);
 
                 { And if the maximum number is exceeded, it starts from No.1 again }
-                if score.wall_n[cur_player] > totalwall then
+                if score.wall_n[cur_player]>totalwall then
                    score.wall_n[cur_player]:=1;
 
                 { and is taken in new wall from the general matrix }

@@ -1,6 +1,5 @@
 program arkanoid: $1000;
 
-
 {
 ; optimize OK (service.pas), line = 1616
 
@@ -19,7 +18,17 @@ program arkanoid: $1000;
 
 
 
-uses crt, vbxe;
+uses crt, atari, vbxe;
+
+{$r arkanoid.rc}
+
+{$define romoff}
+
+const
+        VBXE_OVRADR = $5000;
+        VBXE_DATA = VBXE_OVRADR + 320*200;
+
+	levels_wall = $d800+$400;
 
 var
 
@@ -27,6 +36,13 @@ var
           x,y: smallint;
           fire: Boolean;
         end;
+
+
+	blt: TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
+
+	vbxe_ram: TVBXEMemoryStream;
+
+
 
 
 procedure start_level;
@@ -152,8 +168,10 @@ begin
                    { by 320. }
 
 
-   {$i ..\bitmaps\btm.inc}
+   {$i btm.inc}
 
+
+   mous.fire:=true;
 
    totalwall:=32;
 
@@ -168,8 +186,9 @@ begin
       mousereset;
 
       { mainscreen returns 1,2 (play number ) or -1 = quit }
-     { score.pl_numb:=mainscreen;
-      if score.pl_numb>0 then} start_game(1);//score.pl_numb);
+      score.pl_numb:=mainscreen;
+
+      if score.pl_numb>0 then start_game(1);//score.pl_numb);
 
    until score.pl_numb<1; { cycle until it's worth -1 = quit }
 
