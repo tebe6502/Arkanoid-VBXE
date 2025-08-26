@@ -18,7 +18,7 @@ program arkanoid: $1000;
 
 
 
-uses crt, atari, vbxe;
+uses crt, atari, vbxe, joystick;
 
 {$r arkanoid.rc}
 
@@ -34,6 +34,8 @@ var
 
   mous: record
           x,y: smallint;
+	  left, right: smallint;
+	  top, bottom: smallint;
           fire: Boolean;
         end;
 
@@ -75,84 +77,53 @@ procedure mousereset;
 }
    end;
 
-procedure showmouse;
-//var regs : REGISTERS;
-   begin
-{
-   regs.ax:=1;
-   intr($33,regs);
-}
-   end;
 
-procedure hidemouse;
-//var regs : REGISTERS;
-   begin
-{
-   regs.ax:=2;
-   intr($33,regs);
-}
-  end;
+function mouseclick: byte;
+begin
+     result:=1;//ord(mous.fire);
 
-function mouseclick:smallint;
-//var regs : REGISTERS;
-   begin
-{
-   regs.ax:=3;
-   regs.bx:=0;
-   intr($33,regs);
-   mouseclick:=regs.bx;
-}
-     result:=ord(mous.fire);
+     mous.fire:=true;//not mous.fire;
+end;
 
-     mous.fire:=not mous.fire;
-   end;
 
 procedure mousecoords(var x,y : smallint);
-//var regs : REGISTERS;
-   begin
-{
-	regs.ax:=3;
-	regs.bx:=0;
-   intr($33,regs);
-   x:=regs.cx shr 1;
-   y:=regs.dx;
-}
-  x:=mous.x;
-  y:=190;//mous.y;
+var a: byte;
+begin
+
+ a:=porta and $0f;
+ 
+ case a of
+  joy_left: if mous.x > mous.left then dec(mous.x);
+  joy_right: if mous.x < mous.right then inc(mous.x);
+ end;
+ 
+ x:=mous.x;
+
  end;
 
 procedure mouse_x_limit(mn,mx : smallint);
-//var regs : REGISTERS;
-   begin
-{
-	regs.ax:=7;
-	regs.cx:=mn;
-	regs.dx:=mx;
-   intr($33,regs);
-}
- end;
+begin
+ 
+  mous.left:=mn;
+  mous.right:=mx;
+ 
+end;
 
 procedure mouse_y_limit(mn,mx : smallint);
-//var regs : REGISTERS;
-   begin
-{
-	regs.ax:=8;
-	regs.cx:=mn;
-	regs.dx:=mx;
-   intr($33,regs);
-}
- end;
+begin
+
+ mous.top := mn;
+ mous.bottom := mx;
+
+end;
 
 procedure mousemove(x,y : smallint);
-//var regs : REGISTERS;
-   begin
-{
-	regs.ax:=4;
-	regs.cx:=x;
-	regs.dx:=y;
-   intr($33,regs);
-}
-   end;
+begin
+
+ mous.x:=x;
+ mous.y:=y;
+
+end;
 
 
 

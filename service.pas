@@ -61,7 +61,7 @@ const
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 500; { Ball speed (256 = 70 pixels per second }
+   BALLSPEED  = 100; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 2000;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
@@ -230,6 +230,8 @@ var
     scrfluxcnt : byte;
 
     sound_on   : Boolean;
+    
+    hlp: word;
 
     def_pal: arr768;
 
@@ -403,15 +405,16 @@ begin
  blt.dst_adr.byte0:=dst;
 
  blt.src_step_x:=1;
- blt.src_step_y:=1;
+ blt.src_step_y:=0;
 
  blt.dst_step_x:=1;
- blt.dst_step_y:=1;
+ blt.dst_step_y:=0;
  
  blt.blt_width:=size-1;
  blt.blt_height:=0;
 
  blt.blt_control := 0;
+
  blt.blt_and_mask := $ff;
 
 	asm
@@ -1099,8 +1102,10 @@ var
   begin
   sx:=ball.speedx;  { stores the x and y components of velocity }
   sy:=ball.speedy;  { in sx and sy, respectively                }
+  
+  speed:=500;
 
-  vm:=speed / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
+  vm:=single(speed) / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
                                  { between the old and new speeds                }
                                  { (the direction does not change, only          }
                                  { the modulus changes).                         }
@@ -1142,6 +1147,7 @@ var w : smallint; { restituisce la direzione in cui si muove la palla }
   get_ball_direction:=w;
   end;
 
+
 procedure start_ball(var ball : BALLTYPE);
   begin
   { inizializza i parametri della palla quando questa deve essere }
@@ -1165,6 +1171,7 @@ procedure start_ball(var ball : BALLTYPE);
 
   ball.sbd:=0;
   ball.brwhit:=0;
+
   end;
 
 function ball_speed(ball : BALLTYPE): smallint;
@@ -1173,6 +1180,7 @@ function ball_speed(ball : BALLTYPE): smallint;
   { pitagora (v=sqrt(x^2+y^2)) }
 
   ball_speed:=round(sqrt(ball.speedx*ball.speedx+ball.speedy*ball.speedy));
+    
   end;
 
 
@@ -1336,7 +1344,7 @@ procedure set_vaus; { setta i parametri iniziali (di partenza) del vaus }
 
 procedure start_vaus;
   begin
-  mouse_x_limit(SCRMIN*2,(SCRMAX-vaus.width-1) shl 1);
+  mouse_x_limit(SCRMIN,(SCRMAX-vaus.width-1) shl 1);
   mousemove((SCRMAX-SCRMIN)-16,VAUS_LINE);
   vaus.x:=((SCRMAX-SCRMIN) shr 1)-8;
   vaus.y:=VAUS_LINE;
@@ -1352,11 +1360,14 @@ procedure remove_vaus;
 var y : byte;
   begin
   { Toglie il vaus e disegna al suo posto lo sfondo          }
+  
+  hlp:=vaus.oldx+row[vaus.oldy];
 
-  for y:=vaus.oldy to (vaus.oldy+vaus.height) do
-     //memcpy(playscreen.map[vaus.oldx+row[y]], screen[vaus.oldx+row[y]], vaus.oldlen);
-
-     blitROW(playscreen.ofs+vaus.oldx+row[y], vram + vaus.oldx+row[y], vaus.oldlen);
+  for y:=vaus.height downto 0 do begin
+     blitROW(playscreen.ofs + hlp, vram + hlp, vaus.oldlen);
+     
+     inc(hlp, 320);
+  end;
 
   vaus.oldlen:=vaus.width;
   end;
@@ -1365,7 +1376,6 @@ var y : byte;
 procedure place_vaus;
 var
   y: byte;
-  cnt : word;
 
   begin
   inc(vaus.iflash);        { viene incrementato ogni ciclo (1/70 sec.) }
@@ -1386,13 +1396,15 @@ var
   { vaus.flash di cui sopra. Per esempio flash[2]:=211 (vedi all'inizio nella }
   { dichiarazione delle costanti. }
 
+  hlp:=0;
+ 
   for y:=0 to vaus.height-1 do
      begin
      { questa moltiplicazione viene fatta qui per non ripeterla }
      { vaus.width volte }
-     cnt:=y * vaus.width;
+     //hlp:=y * vaus.width;
      //memzerocpy(playvaus.map[cnt], screen[vaus.x+row[y+vaus.y]], vaus.width);
-     blitZERO(playvaus.ofs + cnt, vram + vaus.x+row[y+vaus.y], vaus.width);
+     blitZERO(playvaus.ofs + hlp, vram + vaus.x+row[y+vaus.y], vaus.width);
 
      if (y>=2) and (y<(vaus.height-2)) then
         begin
@@ -1402,6 +1414,8 @@ var
         //screen[vaus.x+vaus.width-1+row[y+vaus.y]]:=FLASH[vaus.flash];
         putBYTE(vram + vaus.x+vaus.width-1+row[y+vaus.y], FLASH[vaus.flash]);
         end;
+	
+      inc(hlp, vaus.width);
      end;
   end;
 
@@ -3237,7 +3251,7 @@ var
      form1.show_play;
 {$ENDIF}
 
-     mous.x:=ball0.x;
+     //mous.x:=ball0.x;
      
      mousecoords(x,y);  { reads mouse coordinates }
 
@@ -3732,14 +3746,6 @@ var nwall : boolean;
 
     { And you draw the bricks of the wall }
     //put_wall;
-
-(*
-    asm
-     kk: lda $d20a
-     sta $d01a
-     jmp kk
-    end;
-  *)  
 
     repeat
 

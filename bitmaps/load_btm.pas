@@ -59,6 +59,8 @@ var
     
     ofset: cardinal;
     
+    j: integer;
+    
     dum: array [0..320*256] of byte;
     
     f: file;
@@ -302,6 +304,8 @@ begin
   
  close(f);
 
+ 
+ for j:=0 to 767 do def_pal[j]:=def_pal[j] shl 2;
 
  assign(f, 'btm.pal'); rewrite(f, 1);
  blockwrite(f, def_pal, 768);
