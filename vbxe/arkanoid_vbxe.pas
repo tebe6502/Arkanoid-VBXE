@@ -1,22 +1,4 @@
-program arkanoid: $1000;
-
-{
-; optimize OK (service.pas), line = 1616
-
-	lda #$00
-	sta :STACKORIGIN+STACKWIDTH+10
-	lda YB
-	asl @
-	rol :STACKORIGIN+STACKWIDTH+10
-	asl @
-	rol :STACKORIGIN+STACKWIDTH+10
-	asl @
-	asl @
-	add XB
-	sta I
-}
-
-
+program arkanoid;//: $1000;
 
 uses crt, atari, vbxe, joystick;
 
@@ -25,17 +7,9 @@ uses crt, atari, vbxe, joystick;
 {$define romoff}
 
 const
-        VBXE_DATA = VBXE_OVRADR + 320*200;
+        VBXE_DATA = VBXE_OVRADR + 320*216;
 
 var
-
-  mous: record
-          x,y: smallint;
-	  left, right: smallint;
-	  top, bottom: smallint;
-          fire: Boolean;
-        end;
-
 
 	blt: TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
 
@@ -79,8 +53,6 @@ begin
 
    {$i btm.inc}
 
-
-   mous.fire:=true;
 
    totalwall:=32;
 
