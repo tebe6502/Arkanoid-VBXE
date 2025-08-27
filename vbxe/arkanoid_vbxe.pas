@@ -25,10 +25,7 @@ uses crt, atari, vbxe, joystick;
 {$define romoff}
 
 const
-        VBXE_OVRADR = $5000;
         VBXE_DATA = VBXE_OVRADR + 320*200;
-
-	levels_wall = $d800+$400;
 
 var
 
@@ -66,73 +63,14 @@ end;
 
 
 
-(* Follow the common procedures based on interrupt $33 *)
-
-procedure mousereset;
-//var regs : REGISTERS;
-   begin
-{
-   regs.ax:=0;
-   intr($33,regs);
-}
-   end;
-
-
-function mouseclick: byte;
-begin
-     result:=1;//ord(mous.fire);
-
-     mous.fire:=true;//not mous.fire;
-end;
-
-
-procedure mousecoords(var x,y : smallint);
-var a: byte;
-begin
-
- a:=porta and $0f;
- 
- case a of
-  joy_left: if mous.x > mous.left then dec(mous.x, 2);
-  joy_right: if mous.x < mous.right then inc(mous.x);
- end;
- 
- x:=mous.x;
-
- end;
-
-procedure mouse_x_limit(mn,mx : smallint);
-begin
- 
-  mous.left:=mn;
-  mous.right:=mx;
- 
-end;
-
-procedure mouse_y_limit(mn,mx : smallint);
-begin
-
- mous.top := mn;
- mous.bottom := mx;
-
-end;
-
-procedure mousemove(x,y : smallint);
-begin
-
- mous.x:=x;
- mous.y:=y;
-
-end;
-
-
-
 {$i ..\service.pas}
 
 
 
 procedure init_game;
 begin
+
+   randomize;
 
    initSVGA;       { Activates 320x200x256 col. graphics mode. }
    initRowArray;   { Initializes a useful array to avoid multiplications }
@@ -154,7 +92,7 @@ begin
 
    repeat
 
-      mousereset;
+//      mousereset;
 
       { mainscreen returns 1,2 (play number ) or -1 = quit }
       score.pl_numb:=mainscreen;

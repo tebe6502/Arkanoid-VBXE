@@ -1,2 +1,2 @@
-levels_wall rcdata 'walls.dat'
+all_walls rcdata 'walls.dat'
 vbxe_data xbmp 'btm.bmp' 0 1

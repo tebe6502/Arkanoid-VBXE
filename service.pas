@@ -6,9 +6,6 @@
 
 const
 
-//   VBXE_OVRADR = $5000;
-//   VBXE_DATA = VBXE_OVRADR + 320*200;
-
    vram = VBXE_OVRADR; // screen[0]
 
    err1 = 1; // 'Ball speed exceed program capability'
@@ -61,7 +58,7 @@ const
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 100; { Ball speed (256 = 70 pixels per second }
+   BALLSPEED  = 500; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 2000;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
@@ -232,6 +229,7 @@ var
     sound_on   : Boolean;
     
     hlp: word;
+    f_hlp: single;
 
     def_pal: arr768;
 
@@ -246,10 +244,12 @@ var
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
     all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
+    
+    rnd: byte absolute $d20a;
 {$ELSE}
     tmp        : array [0..255] of byte;
 
-    row        : array[0..250] of word; { array (see initRowArray) }
+    row        : array[0..255] of word; { array (see initRowArray) }
 
     modx       : array[0..319] of byte;
     mody       : array[0..199] of byte;
@@ -290,6 +290,30 @@ procedure closeprogram;
 
 {$IFDEF ATARI}
 
+
+procedure mousecoords(var x,y : smallint);
+var a: byte;
+begin
+
+ a:=porta and $0f;
+ 
+ case a of
+  joy_left: if x > SCRMIN then dec(x, 4);
+  joy_right: if x < SCRMAX then inc(x, 4);
+ end;
+
+ end;
+ 
+ 
+ 
+function mouseclick: byte;
+begin
+    
+    result:=trig0 xor 1;
+    
+end;
+
+ 
 
 procedure blitBOX(src, dst: cardinal; w: word; h: byte);
 begin
@@ -580,6 +604,7 @@ procedure closeprogram;
   halt;
   end;
 
+
 { return the maximum between a and b }
 function max(a,b : smallint) : smallint;
   begin
@@ -646,31 +671,28 @@ function inkey : word;   { restituisce il codice del tasto premuto }
 
 procedure initRowArray;  { inizializza l'array ROW; row[n]:=320*n }
 var y : byte;
-  begin
-  for y:=0 to 199 do
-    row[y]:=y*320;
-
-  for y:=200 to 255 do
-    row[y]:=64000;
+begin
+  
+  hlp:=0;
+  
+  for y:=0 to 255 do begin
+  
+    if y>= 200 then
+     row[y] := 320*200
+    else
+     row[y]:=hlp;
+     
+    inc(hlp, 320);
 
   end;
 
-{ quanto segue fa parte della procedura per installare un driver esterno }
-{ come da esempio nell'help di Turbo Pascal.                             }
+end;
 
-//procedure svgadrv; external; {$L SVGADRV.OBJ}
-
-//function DetectVGA : smallint;
-//  begin
-//  DetectVGA := 0;
-//  end;
 
 procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 //var
 //   AutoDetect : pointer;
 //   GraphMode, GraphDriver, ErrCode: smallint;
-
-var xdl: TXDL;
 
    begin
    
@@ -686,11 +708,9 @@ var xdl: TXDL;
 
  VBXEControl(vc_xdl+vc_xcolor+vc_no_trans);
 
- GetXDL(xdl);
- xdl.rptl_ := 20-1;
- xdl.rptl  := 200-2;
- SetXDL(xdl);
-   
+ SetTopBorder(20);
+ SetXDLHeight(200);
+
  vbxe_ram.position:=VBXE_OVRADR;
  vbxe_ram.size:=320*200;
  vbxe_ram.clear;
@@ -1015,16 +1035,19 @@ var
 { BALL.x e BALL.y, BALLSPOT.x = BALLSPOT.y e' il raggio della palla }
 { in pixel }
 procedure place_ball(var ball : BALLTYPE);
-var yp : byte;
-    adr : word;
+var yp, x : byte;
   begin
+  
+  x:=0;
 
   for yp:=0 to BALLDIM-1 do
      begin
-     adr:=ball.x-BALLSPOT+row[yp-BALLSPOT+ball.y];
+     hlp:=ball.x-BALLSPOT+row[ball.y+yp-BALLSPOT];
 
      //mzerocpy(BALLARRAY[yp,0], screen[adr], BALLDIM);
-     blitZERO(balldata.ofs + yp * BALLDIM, vram + adr, BALLDIM);
+     blitZERO(balldata.ofs + x, vram + hlp, BALLDIM);
+     
+     inc(x, BALLDIM);
 
      end;
   end;
@@ -1035,17 +1058,16 @@ var yp : byte;
 procedure remove_ball(var ball: BALLTYPE);
 var
   yp   : byte;
-  temp : word;
 
   begin
   for yp:=0 to BALLDIM-1 do
       begin
-      temp:=ball.oldx-BALLSPOT+row[yp-BALLSPOT+ball.oldy];
+      hlp:=ball.oldx-BALLSPOT+row[yp-BALLSPOT+ball.oldy];
 
-      if (temp>0) and (temp<64000) then
+      //if (temp>0) and (temp<64000) then
          //memcpy(playscreen.map[temp], screen[temp], BALLDIM);
 
-         blitROW(playscreen.ofs+temp, vram+temp, BALLDIM);
+         blitROW(playscreen.ofs + hlp, vram + hlp, BALLDIM);
       end;
   end;
 
@@ -1064,39 +1086,29 @@ procedure Wait_VBL;
       { ogni scheda VGA in modalita' 320x200x256 col. lavora ad una }
       { frequenza di 70Hz. }
 
-      asm
-      mov  dx,$03da
-
-      BASSO:
-      in   al,dx
-      test al,8
-      jz   BASSO
-
-      ALTO:
-      in   al,dx
-      test al,8
-      jnz  ALTO
-      end;
 *)
 
 {$IFDEF ATARI}
 
-//	pause;
+	pause;
 
 {$ENDIF}
-
 
 //  form1.show_play;
 end;
 
 
 procedure set_ball(var ball : BALLTYPE);
+var b0, b1: Boolean;
   begin
-  if((ball.oldx<>EMP) and (ball.oldy<>EMP)) and
-    ((ball.oldx<>ball.x) or (ball.oldy<>ball.y)) then
-      remove_ball(ball); { appena ha inizio il VB si sposta la palla alle }
+  
+  b0:=(ball.oldx<>EMP) and (ball.oldy<>EMP);
+  b1:=(ball.oldx<>ball.x) or (ball.oldy<>ball.y);
+  
+  if (b0 and b1) then
+      remove_ball(ball); { as soon as VB starts the ball is moved to the }
 
-  place_ball(ball);  { nuove coordinate }
+  place_ball(ball);  { new coordinates }
 
   ball.oldx:=ball.x; { si settano le vecchie coordinate uguali a quelle }
   ball.oldy:=ball.y; { correnti, le correnti verrano modificate poi }
@@ -1112,8 +1124,6 @@ var
   sx:=ball.speedx;  { stores the x and y components of velocity }
   sy:=ball.speedy;  { in sx and sy, respectively                }
   
-  speed:=500;
-
   vm:=speed / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
                                  { between the old and new speeds                }
                                  { (the direction does not change, only          }
@@ -1136,7 +1146,6 @@ var w : single;
 
 function get_ball_direction(var ball : BALLTYPE): smallint;
 var w : smallint; { restituisce la direzione in cui si muove la palla }
-    a: single;
   begin
 
   if ball.speedx=0 then w:=-90*(ball.speedy div abs(ball.speedy))
@@ -1144,15 +1153,12 @@ var w : smallint; { restituisce la direzione in cui si muove la palla }
     begin
     { calcola l'arcotangente e aggiunge multipli di 90 gradi a seconda dei }
     { segni di ball.speedx e ballspeed.y }
+      
+    f_hlp:= -ball.speedy / ball.speedx;
     
-    w := -ball.speedy;
-    
-    a:= w / ball.speedx;
-    
-    a := arctan(a)*180.0/3.14;
+    f_hlp := arctan(f_hlp)*180.0/3.14;
 
-    w:=round(a);
-
+    w:=trunc(f_hlp);
 
     if(ball.speedx<0) then inc(w,180);
 
@@ -1191,11 +1197,16 @@ procedure start_ball(var ball : BALLTYPE);
   end;
 
 function ball_speed(ball : BALLTYPE): smallint;
+var i: integer;
   begin
   { restituisce il modulo della velocita' della palla, usa il teorema di }
   { pitagora (v=sqrt(x^2+y^2)) }
+  
+  i:=ball.speedx*ball.speedx+ball.speedy*ball.speedy;
+  
+  f_hlp:=sqrt(i);
 
-  ball_speed:=round(sqrt(ball.speedx*ball.speedx+ball.speedy*ball.speedy));
+  ball_speed:=trunc(f_hlp);
     
   end;
 
@@ -1360,11 +1371,11 @@ procedure set_vaus; { setta i parametri iniziali (di partenza) del vaus }
 
 procedure start_vaus;
   begin
-  mouse_x_limit(SCRMIN,(SCRMAX-vaus.width-1) shl 1);
-  mousemove((SCRMAX-SCRMIN)-16,VAUS_LINE);
+//  mouse_x_limit(SCRMIN,(SCRMAX-vaus.width-1) shl 1);
+//  mousemove((SCRMAX-SCRMIN)-16,VAUS_LINE);
   vaus.x:=((SCRMAX-SCRMIN) shr 1)-8;
   vaus.y:=VAUS_LINE;
-
+  
   { imposta il vaus al centro dell'area di gioco  }
   { x=(x1+x2)/2 media fra il massimo e il minimo  }
   { anche la freccina del mouse (che non si vede) }
@@ -1621,7 +1632,7 @@ var
        if (block and 15)=9 then
           begin
           cl2:=202; { il colore del mattoncino e' quello grigio }
-          wall[xa+ya*16]:=9+(GRAYDOWN shl 4); { e il numero del mattone e 9+16*n }
+          wall[byte(xa+ya*16)]:=9+(GRAYDOWN shl 4); { e il numero del mattone e 9+16*n }
           { dove n+1 e' il numero di colpi necessari per abbatterlo }
           { es. wall[1,2]=9+(1*16)=25 significa che il mattoncino alle }
           { coord. 1,2 cade se colpito 2 volte }
@@ -1968,21 +1979,21 @@ var i: byte;
 
 
 procedure ball_hit_block(var ball : BALLTYPE);
-var x,y      : smallint;
-    xb,yb    : smallint;
+var 
+
+    x,y,
+    lx,ly,
+    xb,yb    : shortint;
 
     ox,oy,
-    lx,ly,
-    mx,my,
     nx,ny,
-    f1,f2: smallint;
-
-    mimax,
+    mx,my,
+    f1,f2,
     angle,
     myx,myy  : smallint;
     
-    emergency: shortint;
-
+    emergency,
+    mimax,
     deflect,
     around,
     collision,
@@ -1993,9 +2004,9 @@ var x,y      : smallint;
     begin
     emergency:=EMP;    { the emergency rebound indicator }
 
-    nx:=ball.x-9;      { nx,ny hanno le coordinate della palla rispetto }
-    ny:=ball.y-22;     { all'origine fissata nell'angolo Nord-Ovest del }
-                       { campo di gioco (entro cui si muove la palla).  }
+    nx:=ball.x-9;      { nx,ny have the coordinates of the ball with respect to }
+    ny:=ball.y-22;     { the origin fixed in the Northwest corner of }
+                       { field of play (within which the ball moves). }
 
     ox:=ball.oldx-9;   { idem per le vecchie coordinate, l'origine e'   }
     oy:=ball.oldy-22;  { quindi il punto dello schermo (9,22).          }
@@ -2161,9 +2172,9 @@ var x,y      : smallint;
                                             { must be between 0 and 12. }
   
 
-                  if ((xb+lx)<0 ) or
-                     ((xb+lx)>12) or
-                     (wall[mx+my*16]<>0) then
+                  if (shortint(xb+lx)<0 ) or
+                     (shortint(xb+lx)>12) or
+                     (wall[byte(mx+my*16)]<>0) then
                         adjw[lx+1,ly+1]:=1   { There are bricks }
                   else
                      adjw[lx+1,ly+1]:=0;     { There are no bricks }
@@ -2185,10 +2196,10 @@ var x,y      : smallint;
           { if bricks 1, 2, and 128 are located around U, the valu e'     }
           { of around is 1+2+128=131.                                     }
 	  
-          around:=adjw[0,0]+(adjw[1,0] shl 1)+
-                            (adjw[2,0] shl 2)+(adjw[2,1] shl 3)+
-                            (adjw[2,2] shl 4)+(adjw[1,2] shl 5)+
-                            (adjw[0,2] shl 6)+(adjw[0,1] shl 7);
+          around:=adjw[0,0] or (adjw[1,0] shl 1) or
+                               (adjw[2,0] shl 2) or (adjw[2,1] shl 3) or
+                               (adjw[2,2] shl 4) or (adjw[1,2] shl 5) or
+                               (adjw[0,2] shl 6) or (adjw[0,1] shl 7);
 
           { Deflect contains a value that represents in hexadecimal       }
           { the changes to be made to vx (first hexadecimal digit)        }
@@ -2330,23 +2341,23 @@ var x,y      : smallint;
        case emergency of
 
          5: begin
-            if adjw[1,0]=0 then mimax:=mimax and $0f or $00;
-            if adjw[0,1]=0 then mimax:=mimax and $f0 or $03;
+            if adjw[1,0]=0 then mimax:=(mimax and $0f) or $00;
+            if adjw[0,1]=0 then mimax:=(mimax and $f0) or $03;
             end;
 
          6: begin
-            if adjw[0,1]=0 then mimax:=mimax and $0f or $10;
-            if adjw[1,2]=0 then mimax:=mimax and $f0 or $04;
+            if adjw[0,1]=0 then mimax:=(mimax and $0f) or $10;
+            if adjw[1,2]=0 then mimax:=(mimax and $f0) or $04;
             end;
 
          7: begin
-            if adjw[1,2]=0 then mimax:=mimax and $0f or $20;
-            if adjw[2,1]=0 then mimax:=mimax and $f0 or $05;
+            if adjw[1,2]=0 then mimax:=(mimax and $0f) or $20;
+            if adjw[2,1]=0 then mimax:=(mimax and $f0) or $05;
             end;
 
          8: begin
-            if adjw[2,1]=0 then mimax:=mimax and $0f or $30;
-            if adjw[1,0]=0 then mimax:=mimax and $f0 or $06;
+            if adjw[2,1]=0 then mimax:=(mimax and $0f) or $30;
+            if adjw[1,0]=0 then mimax:=(mimax and $f0) or $06;
             end;
 
          end;
@@ -2355,8 +2366,11 @@ var x,y      : smallint;
 
           lx:=90*(mimax shr 4);    { la prima cifra di mimax viene posta in }
           mx:=90*(mimax and 15);   { lx e la seconda in mx.                 }
+
           angle:=random(smallint(mx-lx))+lx; { L'angolo e' una variabile casuale fra  }
                                    { lx e mx }
+				   
+	//angle:=45;
 
        until ((angle mod 90)>30) and ((angle mod 90)<60);
        { e questo ciclo si ripete finche' la palla ha un inclinazione }
@@ -2365,7 +2379,7 @@ var x,y      : smallint;
        set_ball_direction(ball,angle mod 360);
        set_ball_speed(ball,ball.speed);
 
-       ball.brwhit:=0; { Azzera il contatore di emergenza }
+       ball.brwhit:=0; { Reset emergency counter }
        end;
 
     end;
@@ -2414,7 +2428,7 @@ var yb, k : word;
             inc(k);
             end;
 
-        blitTMP(playscreen.ofs+SCRMIN-1+y*320, k);
+        blitTMP(playscreen.ofs+SCRMIN-1+row[y], k);
 
         end;
 
@@ -3197,7 +3211,8 @@ var
 
   { Performs a reset in case the mouse has some problem sometimes }
   { happens. }
-  mousereset;
+  //mousereset;
+  x:=0;
 
   { The ball is in play and must be thrown }
   ball0.inplay:=TRUE;
@@ -3240,13 +3255,13 @@ var
   start_vaus;
   remove_round_level;             { Removes the words ROUND xx, READY}
   set_ball(ball0);
-
+  
   { This is the main cycle, it can only get out of it if : }
   { - the ball is lost, }
   { - the picture is ended (i.e., no more bricks are left to be destroyed. }
   { - the game is somehow aborted.                 }
 
-  set_ball_direction(ball0,random(15)+60); { random starting angle }
+  set_ball_direction(ball0,rnd and 15+60); { random starting angle }
                                              { 60 and 75 degrees }
   set_ball_speed(ball0,BALLSPEED);
 
@@ -3267,8 +3282,6 @@ var
      form1.show_play;
 {$ENDIF}
 
-     //mous.x:=ball0.x;
-     
      mousecoords(x,y);  { reads mouse coordinates }
 
      {  if trainer (VAUS in automatic mode) is not active }
@@ -3288,7 +3301,7 @@ var
 
      if ball0.launch=TRUE then
         begin
-        inc(ball0.stm);  { if the ball is attached the shot counter }
+        inc(ball0.stm);    { if the ball is attached the shot counter }
                            { is continuously incremented.             }
 
 
@@ -3302,7 +3315,7 @@ var
         if mouseclick=1 then ball0.launch:=FALSE;
         end
 
-     else
+     else begin
         { Otherwise if the ball is not attached one simply needs to move it. }
         { Clearly if there are 3 balls you need to move all 3.               }
 
@@ -3310,6 +3323,8 @@ var
             if ball0.inplay then move_ball(ball0);
             if ball1.inplay then move_ball(ball1);
             if ball2.inplay then move_ball(ball2);
+
+     end;
 
      { If the coordinates of the ball cn are between 22 and 142 (respectively}
      { maximum and minimum coordinates at which a brick can be bumped) then  }
@@ -3367,7 +3382,6 @@ var
         set_ball_speed(ball0,t2);
         set_ball_speed(ball1,t2);
         set_ball_speed(ball2,t2);
-
 
         vaus.letter:=0;
         end;
@@ -3624,7 +3638,7 @@ var x : byte;
 
 
 procedure soundicon;
-var x,y,fl,fw,h : word;
+
     begin
 (*
     { Altezza dell'icona (l'icona e' alta il doppio perche' il brush }
