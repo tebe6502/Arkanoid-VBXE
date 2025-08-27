@@ -236,7 +236,7 @@ var
     def_pal: arr768;
 
 {$IFDEF ATARI}
-    [striped] row        : array[0..250] of word absolute $c000; { array (see initRowArray) }
+    [striped] row        : array[0..255] of word absolute $c000; { array (see initRowArray) }
 
     tmp        : array [0..255] of byte absolute $c000+$200;
 
@@ -601,6 +601,15 @@ procedure fatal_error(err_type: byte);
    begin
 
     status := err_type;
+    
+    asm
+      sta $100
+      
+      kk: lda $d20a
+      sta $d01a
+      jmp kk
+    
+    end;
 
 {
    nosound;
@@ -641,7 +650,7 @@ var y : byte;
   for y:=0 to 199 do
     row[y]:=y*320;
 
-  for y:=200 to 250 do
+  for y:=200 to 255 do
     row[y]:=64000;
 
   end;
@@ -1105,7 +1114,7 @@ var
   
   speed:=500;
 
-  vm:=single(speed) / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
+  vm:=speed / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
                                  { between the old and new speeds                }
                                  { (the direction does not change, only          }
                                  { the modulus changes).                         }
@@ -1116,7 +1125,7 @@ var
   end;
 
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
-var w : real;
+var w : single;
   begin                  { imposta l'angolo di traiettoria della palla }
   w:=angle*3.14/180.0;   { w viene espresso in gradi }
 
@@ -1127,6 +1136,7 @@ var w : real;
 
 function get_ball_direction(var ball : BALLTYPE): smallint;
 var w : smallint; { restituisce la direzione in cui si muove la palla }
+    a: single;
   begin
 
   if ball.speedx=0 then w:=-90*(ball.speedy div abs(ball.speedy))
@@ -1134,8 +1144,14 @@ var w : smallint; { restituisce la direzione in cui si muove la palla }
     begin
     { calcola l'arcotangente e aggiunge multipli di 90 gradi a seconda dei }
     { segni di ball.speedx e ballspeed.y }
+    
+    w := -ball.speedy;
+    
+    a:= w / ball.speedx;
+    
+    a := arctan(a)*180.0/3.14;
 
-    w:=round(arctan(-ball.speedy/ball.speedx)*180.0/3.14);
+    w:=round(a);
 
 
     if(ball.speedx<0) then inc(w,180);
@@ -1961,18 +1977,18 @@ var x,y      : smallint;
     nx,ny,
     f1,f2: smallint;
 
-    deflect,
-    around,
     mimax,
     angle,
     myx,myy  : smallint;
     
     emergency: shortint;
 
-    collision: byte;
+    deflect,
+    around,
+    collision,
     touch    : byte;
 
-    adjw     : array[0..2,0..2] of smallint;
+    adjw     : array[0..2,0..2] of byte;
 
     begin
     emergency:=EMP;    { the emergency rebound indicator }

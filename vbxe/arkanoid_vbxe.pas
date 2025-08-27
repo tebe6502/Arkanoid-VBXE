@@ -93,7 +93,7 @@ begin
  a:=porta and $0f;
  
  case a of
-  joy_left: if mous.x > mous.left then dec(mous.x);
+  joy_left: if mous.x > mous.left then dec(mous.x, 2);
   joy_right: if mous.x < mous.right then inc(mous.x);
  end;
  
