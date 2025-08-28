@@ -64,7 +64,6 @@ var
 
 
 
-
 procedure start_level;
 begin
 
@@ -147,6 +146,7 @@ begin
       score.pl_numb:=mainscreen;
 
       if score.pl_numb>0 then start_game(1);//score.pl_numb);
+
 
    until score.pl_numb<1; { cycle until it's worth -1 = quit }
 

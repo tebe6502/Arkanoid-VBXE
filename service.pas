@@ -2029,10 +2029,12 @@ var
     ox,oy,
     nx,ny,
     mx,my,
-    f1,f2,
     angle,
     myx,myy  : smallint;
-    
+
+    f1,f2    : word;
+    a,b      : byte;
+
     emergency,
     mimax,
     deflect,
@@ -2073,10 +2075,15 @@ var
           mx:=ball.oldx-nx-9;  { e dal punto di intersezione 2 }
           my:=ball.oldy-ny-22;
 
-          f1:=lx*lx+ly*ly;     { indi sceglie fra i due il punto di }
-          f2:=mx*mx+my*my;     { intersezione piu' vicino alle vecchie coord. }
+	  a:=abs(lx); b:=abs(ly);
 
-          if (f1<f2) then      { f1 e f2 sono il quadrato del modulo del }
+          f1:=a*a+b*b;         { indi sceglie fra i due il punto di }
+
+	  a:=abs(mx); b:=abs(my);
+
+          f2:=a*a+b*b;         { intersezione piu' vicino alle vecchie coord. }
+
+          if (f1 < f2) then    { f1 e f2 sono il quadrato del modulo del }
                                { vettore distanza (vedi sopra) }
 
              { Consider the case where the closest intersection is number 1. }
@@ -2472,7 +2479,7 @@ var yb: word;
             inc(k);
             end;
 
-        blitTMP(playscreen.ofs+SCRMIN-1+row[y], k);
+        blitTMP(playscreen.ofs+row[y]+SCRMIN-1, k);
 
         end;
 
@@ -3868,7 +3875,7 @@ var nwall : boolean;
                                           { quello del giocatore corrente }
     set_wall;                             { e lo si disegna }
 
-    fill_picture_with_pattern(pattern);   { si imposta lo sfondo }
+    //fill_picture_with_pattern(pattern);   { si imposta lo sfondo }
     showBTMpicture(playscreen);           { e si disegna tutto quanto sullo }
                                           { schermo }
 
@@ -3882,7 +3889,7 @@ var nwall : boolean;
 
     { And you draw the bricks of the wall }
     //put_wall;
-
+   
     repeat
 
           repeat
