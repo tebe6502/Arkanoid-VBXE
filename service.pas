@@ -2082,14 +2082,14 @@ var
              { Consider the case where the closest intersection is number 1. }
 
              begin
-             xb:=min(12,max(ox shr 4,0));  { Vengono assegnate le coord. }
-             yb:=((oy+24) shr 3)-3;        { del blocco relative a tale  }
+             xb:=min(12,max(word(ox) shr 4,0));  { Vengono assegnate le coord. }
+             yb:=(byte(oy+24) shr 3)-3;        { del blocco relative a tale  }
                                            { intersezione.               }
 
              if wall[byte(xb+yb*16)]=0 then  { Se non vi e' alcun blocco   }
                 begin
-                xb:=min(12,max(0,nx shr 4)); { Allora l'urto avviene sull' }
-                yb:=((ny+24) shr 3)-3;       { altra intersezione. La n.2  }
+                xb:=min(12,max(0,word(nx) shr 4)); { Allora l'urto avviene sull' }
+                yb:=(byte(ny+24) shr 3)-3;       { altra intersezione. La n.2  }
                 end
              else
                 begin                        { Se invece il blocco esiste  }
@@ -2104,16 +2104,16 @@ var
              { If it is the second intersection closest to the }
              { old coordinates, proceed in the same way.       }
 
-             xb:=min(12,max(0,nx shr 4)); { Si calcolano le coord. del blocco }
-             yb:=((ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
+             xb:=min(12,max(0,word(nx) shr 4)); { Si calcolano le coord. del blocco }
+             yb:=(byte(ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
 
              if wall[byte(xb+yb*16)]=0 then     { Se il blocco non c'e'... }
                 begin
                 nx:=ox;                   { allora l'intersezione valida e' }
                 ny:=oy;                   { l'altra, e si procede... }
 
-                xb:=min(12,max(0,nx shr 4)); { ...riassegnando alle nuove }
-                yb:=((ny+24) shr 3)-3;       { coord. l'intersezione n.1  }
+                xb:=min(12,max(0,word(nx) shr 4)); { ...riassegnando alle nuove }
+                yb:=(byte(ny+24) shr 3)-3;       { coord. l'intersezione n.1  }
                 end;
              end;
 
