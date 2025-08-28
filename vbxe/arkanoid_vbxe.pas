@@ -45,11 +45,13 @@
 
 program arkanoid;
 
-uses crt, atari, vbxe, joystick;
+uses crt, atari, vbxe, joystick;//, fastmath;
 
 {$r arkanoid.rc}
 
 {$define romoff}
+
+//{$f $c8}
 
 const
         VBXE_DATA = VBXE_OVRADR + 320*216;
@@ -77,6 +79,36 @@ end;
 
 procedure ball_block_sound(a,b: word);
 begin
+
+end;
+
+
+
+function sqrt32(v: cardinal): word;
+var b,q,r,t: cardinal;
+begin
+
+ r:=v;
+ q:=0;
+ b:=1 shl 30;
+ 
+ while b>r do b:=b shr 2;
+ 
+ while b>0 do begin
+  t:=q+b;
+  
+  q:=q shr 1;
+  
+  if r>=t then begin
+   r:=r-t;
+   q:=q+b;  
+  end;
+  
+  b:=b shr 2;
+ 
+ end;
+ 
+ result:=q;
 
 end;
 

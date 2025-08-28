@@ -1067,13 +1067,23 @@ var b0, b1: Boolean;
 procedure set_ball_speed(var ball : BALLTYPE; speed : smallint);
 var
   sx,sy : smallint;   { Sets the speed of the ball based on the speed }
-  vm    : single;     { vector module passed in SPEED: smallint.      }
+  vm : single;     { vector module passed in SPEED: smallint.      }
+  i: cardinal;
+  
+  a,b: word;
 
   begin
   sx:=ball.speedx;  { stores the x and y components of velocity }
   sy:=ball.speedy;  { in sx and sy, respectively                }
   
-  vm:=speed / sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
+  a:=abs(sx);
+  b:=abs(sy);
+  
+  i:=(a*a) + (b*b);
+  
+  hlp:=sqrt32(i);
+  
+  vm:=speed / hlp ;//sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
                                  { between the old and new speeds                }
                                  { (the direction does not change, only          }
                                  { the modulus changes).                         }
@@ -1147,16 +1157,20 @@ procedure start_ball(var ball : BALLTYPE);
   end;
 
 function ball_speed(ball : BALLTYPE): smallint;
-var i: integer;
+var i: cardinal;
+    a, b: word;
   begin
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
   
-  i:=ball.speedx*ball.speedx+ball.speedy*ball.speedy;
+  a:=abs(ball.speedx);
+  b:=abs(ball.speedy);
   
-  f_hlp:=sqrt(i);
+  i:=a*a + b*b;
+  
+  ball_speed:=sqrt32(i);
 
-  ball_speed:=trunc(f_hlp);
+  //ball_speed:=trunc(f_hlp);
     
   end;
 
