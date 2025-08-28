@@ -241,6 +241,8 @@ var
     mody       : array[0..255] of byte absolute $c000+$300;
     modx       : array[0..255] of byte absolute $c000+$400;
     
+    scanline   : array[0..255] of byte absolute $c000+$500;
+    
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
     all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
@@ -1096,7 +1098,7 @@ var
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 var w : single;
   begin                  { imposta l'angolo di traiettoria della palla }
-
+ 
   w:=angle*pi/180.0;   { w viene espresso in gradi }
 
   ball.speedx:=trunc(256*cos(w));  { la velocita' si suppone unitaria }
@@ -1469,6 +1471,12 @@ begin
 	hlp := xs+row[y+ys];
 	
 	i:=0;
+	
+	vbxe_ram.Position:=playscreen.ofs + hlp;
+	vbxe_Ram.ReadBuffer(scanline, 16);
+
+	vbxe_ram.Position:=pattern.ofs + yh;
+	vbxe_Ram.ReadBuffer(scanline[128], 40);
 
         for x:=0 to 15 do
             if (x+xs) < SCRMAX then
@@ -1477,11 +1485,13 @@ begin
                { shadow:=128 nessuna ombra, shadow:=0 c'e' l'ombra }
 
                //shadow:=playscreen.map[x+xs+row[y+ys]] and 128;
-               shadow:=getBYTE(playscreen.ofs + hlp + x) and $80;
+               //shadow:=getBYTE(playscreen.ofs + hlp + x) and $80;
+               shadow:=scanline[x] and $80;
 
                { prende il pixel di sfondo e ci aggiunge l'ombra se necessario }
                //cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
-               cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and $7f) or shadow;
+               //cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and $7f) or shadow;
+               cl:=(scanline[128 + modx[x+xs]] and $7f) or shadow;
 
 	       tmp[i] := cl;
 	       inc(i);
@@ -1497,7 +1507,8 @@ begin
                end;
 
 	blitTMP(vram + hlp, i);
-	blitTMP(playscreen.ofs + hlp, i);
+	//blitTMP(playscreen.ofs + hlp, i);
+	blitROW(vram + hlp, playscreen.ofs + hlp, i);
 
         end;
 
@@ -1509,8 +1520,10 @@ begin
 
     for y:=ys+4 to ys+12 do begin
 
-	i:=0;
-	hlp := row[y];
+	hlp := row[y] + xs;
+
+	vbxe_ram.Position:=playscreen.ofs + hlp;
+	vbxe_Ram.ReadBuffer(TMP, 32);
 
         for x:=xs+8 to xs+24 do
 
@@ -1532,10 +1545,11 @@ begin
                begin
                { prende il colore di sfondo e toglie l'ombra }
                //cl:=playscreen.map[x+row[y]] or 128;
-               cl:=getBYTE(playscreen.ofs + hlp + x) or $80;
+               //cl:=getBYTE(playscreen.ofs + hlp + x) or $80;
+               TMP[x - xs]:=TMP[x - xs] or $80;
 
-	       tmp[i] := cl;
-	       inc(i);
+	       //tmp[i] := cl;
+	       //inc(i);
 
                { e lo memorizza sia sullo schermo fisico ...}
                //screen[x+row[y]]:=cl;
@@ -1547,10 +1561,11 @@ begin
                //putBYTE(playscreen.ofs + x+row[y], cl);
                end;
 
-	inc(hlp, xs+8);
+	//inc(hlp, xs+8);
 
-	blitTMP(vram + hlp, i);
-	blitTMP(playscreen.ofs + hlp, i);
+	blitTMP(vram + hlp, 32);
+	//blitTMP(playscreen.ofs + hlp, 32);
+	blitROW(vram + hlp, playscreen.ofs + hlp, 32);
 
     end;
 
@@ -1573,13 +1588,17 @@ begin
     for y:=0 to 7 do begin
 
         hlp := xs+row[ys+y];
+	
+	vbxe_ram.Position:=playscreen.ofs + hlp;
+	vbxe_ram.ReadBuffer(scanline, 16);
 
         for x:=0 to 15 do
             begin
             { check if any bricks are at the specified coordinates }
             { cast a shadow }
             //shadow:=playscreen.map[xs+x+row[ys+y]] and 128;
-            shadow:=getBYTE(playscreen.ofs + hlp + x) and $80;
+            //shadow:=getBYTE(playscreen.ofs + hlp + x) and $80;
+            shadow:=scanline[x] and $80;
 
             if (y<7) and (x<15) then
                 begin
@@ -1613,7 +1632,8 @@ begin
             end;
 
 	blitTMP(vram + hlp, 16);    
-	blitTMP(playscreen.ofs + hlp, 16);
+	//blitTMP(playscreen.ofs + hlp, 16);
+	blitROW(vram + hlp, playscreen.ofs + hlp, 16);
 
     end;
 
@@ -1621,8 +1641,12 @@ begin
     { now draw the shadow of the brick }
     for y:=ys+4 to ys+12 do begin
     
-        i:=0;
-        hlp := row[y];
+  //      i:=0;
+  
+        hlp := row[y] + xs;
+
+	vbxe_ram.Position:=playscreen.ofs + hlp;
+	vbxe_ram.ReadBuffer(TMP, 32);
 
         for x:=xs+8 to xs+24 do
             if x<SCRMAX then  { check as in remove_block that the coordinates }
@@ -1633,11 +1657,11 @@ begin
                { preleva il pixel x,y dallo schermo e ci proietta sopra }
                { l'ombra. }
                //cl:=playscreen.map[x+row[y]] and 127;
-               cl:=getBYTE(playscreen.ofs + hlp + x) and $7f;
+               //cl:=getBYTE(playscreen.ofs + hlp + x) and $7f;
+               TMP[x - xs]:=TMP[x - xs] and $7f;
 	       
-	       tmp[i] := cl;
-	       
-	       inc(i);
+//	       tmp[i] := cl;
+//	       inc(i);
 
                { dopo di che lo rimette sullo schermo fisico... }
                //screen[x+row[y]]:=cl;
@@ -1648,10 +1672,11 @@ begin
                //putBYTE(playscreen.ofs + hlp, cl);
                end;
 
-	inc(hlp, xs+8);
+//	inc(hlp, xs+8);
 
-	blitTMP(vram + hlp, i);
-	blitTMP(playscreen.ofs + hlp, i);
+	blitTMP(vram + hlp, 32);
+	//blitTMP(playscreen.ofs + hlp, 32);
+	blitROW(vram + hlp, playscreen.ofs + hlp, 32);
 
     end;
 
@@ -1695,13 +1720,17 @@ begin
 
        hlp := xs+row[ys];
 
+       vbxe_ram.Position:=playscreen.ofs + hlp;
+       vbxe_ram.ReadBuffer(scanline, 15);
+
        { draw the right edge of the brick }
        for x:=0 to 14 do
            begin
 
            { comments similar to above }
            //cl:=playscreen.map[xs+x+row[ys]] and 128;
-           cl:=getBYTE(playscreen.ofs + hlp + x) and $80;
+           //cl:=getBYTE(playscreen.ofs + hlp + x) and $80;
+           cl:=scanline[x] and $80;
 
            tmp[x]:=(cl2 and $7f) or cl;
 
@@ -1713,7 +1742,8 @@ begin
            end;
 	   
 	blitTMP(vram + hlp, 15);
-	blitTMP(playscreen.ofs + hlp, 15);
+	//blitTMP(playscreen.ofs + hlp, 15);
+	blitROW(vram + hlp, playscreen.ofs + hlp, 15);
 
        end;
        
@@ -2409,6 +2439,7 @@ var
 
          end;
 
+
        repeat
 
           lx:=90*(mimax shr 4);    { la prima cifra di mimax viene posta in }
@@ -2457,12 +2488,17 @@ var yb: word;
         begin
 
         yb:=mody[y]*patt.width;
+	
+	vbxe_ram.Position:=patt.ofs + yb;
+	vbxe_ram.ReadBuffer(scanline, 40);
 
         k:=0;
         for x:=SCRMIN-1 to SCRMAX-1 do
             begin
             //cl:=patt.map[modx[x]+yb]; { Takes the pixel from the background }
-            cl:=getBYTE(patt.ofs + modx[x]+yb);
+            //cl:=getBYTE(patt.ofs + modx[x]+yb);
+	    
+	    cl:=scanline[ modx[x] ];
 
             shadow:=128;              { Shadow = 128 -> shadow not present }
 
@@ -2714,23 +2750,34 @@ begin
         begin
         for y:=0 to 15 do
             begin
-            
+	               
 	    z:=y*newvaus.width+w*(newvaus.width*16);
-	   
+
 	    hlp := a+row[y+b];
+
+	    vbxe_ram.Position:=newvaus.ofs + z;
+	    vbxe_ram.ReadBuffer(scanline, newvaus.width);
+
+	    vbxe_ram.Position:=playscreen.ofs + hlp;
+	    vbxe_ram.ReadBuffer(scanline[128], newvaus.width);
             
 	    for x:=0 to newvaus.width-1 do
                 begin
-                if (getBYTE(newvaus.ofs + x+z) = 0) then
+//                if (getBYTE(newvaus.ofs + x+z) = 0) then
+                if scanline[x] = 0 then
+
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
                    //blitBYTE(playscreen.ofs + x+a+row[y+b], vram + x+a+row[y+b])
 		   
-		   tmp[x] := getBYTE(playscreen.ofs + hlp + x)
+//		   tmp[x] := getBYTE(playscreen.ofs + hlp + x)
+		   tmp[x] := scanline[128+x]
+		   
                 else
                    //screen[x+a+row[y+b]]:=newvaus.map[x+z];
                    //blitBYTE(newvaus.ofs + x+z, vram + x+a+row[y+b])
 
-		   tmp[x] := getBYTE(newvaus.ofs + x+z)
+//		   tmp[x] := getBYTE(newvaus.ofs + x+z)
+		   tmp[x] := scanline[x]
                 end;
 		
 	    blitTMP(vram + hlp, newvaus.width);
@@ -3215,6 +3262,7 @@ var temp : smallint;
 
    set_ball_direction(ball,temp);
    set_ball_speed(ball,ball.speed);
+   
    ball.sbd:=0;
    end;
 
@@ -3875,7 +3923,7 @@ var nwall : boolean;
                                           { quello del giocatore corrente }
     set_wall;                             { e lo si disegna }
 
-    //fill_picture_with_pattern(pattern);   { si imposta lo sfondo }
+    fill_picture_with_pattern(pattern);   { si imposta lo sfondo }
     showBTMpicture(playscreen);           { e si disegna tutto quanto sullo }
                                           { schermo }
 
