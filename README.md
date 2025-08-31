@@ -9,3 +9,6 @@
 </pre>
 
 VBXE version by Tomasz (Tebe) Biela
+
+<https://forums.atariage.com/topic/384190-arkanoid-vbxe/>
+
