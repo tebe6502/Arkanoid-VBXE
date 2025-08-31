@@ -131,9 +131,9 @@ type
               speedy : smallint;       { velocita' sull'asse y }
               sbd    : word;           { per evitare i loop della pallina }
               brwhit : byte;           { n. di blocchi marroni colpiti di seguito }
-              inplay : boolean;        { flag, TRUE se la palla e' in gioco }
-              launch : boolean;        { flag, TRUE se la palla deve essere }
-                                       { ancora lanciata }
+              inplay : boolean;        { flag, TRUE if the ball is in play }
+              launch : boolean;        { flag, TRUE if the ball must be }
+                                       { thrown again }
               onvaus : smallint;       { larghezza in pixel del vaus }
               stm    : byte;           { contatore di calamita }
               end;
@@ -143,10 +143,10 @@ type
    WHOLEWALLS = array[0..32] of WALLTYPE;  { for all 33 walls }
 
    SCORETYPE  = RECORD                            { keeps score }
-                player : array[0..2] of integer;  { player 1 and 2 }
+                player : array[0..2] of cardinal; { player 1 and 2 }
                 wall_n : array[0..2] of byte;     { current wall }
                 lives  : array[0..2] of byte;     { remaining lives }
-                hiscore: integer;                 { record }
+                hiscore: cardinal;                { record }
                 pl_numb: byte;                    { current player }
                 roundsel : array[0..2] of boolean;
                 abortplay : boolean;
@@ -228,6 +228,8 @@ var
 
     sound_on   : Boolean;
     
+    old_scores : cardinal;
+    
     hlp: word;
     f_hlp: single;
 
@@ -242,6 +244,7 @@ var
     modx       : array[0..255] of byte absolute $c000+$400;
     
     scanline   : array[0..255] of byte absolute $c000+$500;
+    scanline2  : array[0..127] of byte absolute $c000+$580;
     
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
@@ -855,16 +858,62 @@ procedure put_letter;
 var fl,fw : word;
     yl: byte;
 
-    begin
+
+
+procedure blitLETTER(src, dst: cardinal; w : word; h: byte);
+begin
+
+	asm
+	  fxs FX_MEMS #$80
+	end;
+
+ blt.src_adr.byte2:=src shr 16;
+ blt.src_adr.byte1:=src shr 8;
+ blt.src_adr.byte0:=src;
+
+ blt.dst_adr.byte2:=dst shr 16;
+ blt.dst_adr.byte1:=dst shr 8;
+ blt.dst_adr.byte0:=dst;
+
+ blt.src_step_x:=1;
+ blt.dst_step_x:=1;
+
+ blt.blt_control := 1;
+
+ blt.dst_step_y:=320;
+ blt.src_step_y:=128;
+ 
+ blt.blt_height:=h-1;
+
+ blt.blt_width:=w-1;
+
+ blt.blt_and_mask := $ff;
+
+	asm
+	  fxs FX_MEMS #$00
+	end;
+
+
+ RunBCB(blt);
+
+end;
+
+
+
+begin
     fl:=(lett.typ shl 10)+(lett.frame shl 4);
 
+    blitLETTER(letters.ofs + fl, vram + lett.x+row[lett.y], 16, 8);
+
+{
     for yl:=0 to 7 do
         begin
         fw:=yl shl 7;
         //memzerocpy(letters.map[fw+fl], screen[lett.x+row[lett.y+yl]], 16);
         blitZERO(letters.ofs + fw+fl, vram + lett.x+row[lett.y+yl], 16, 1);
         end;
-    end;
+}
+end;
 
 
 procedure remove_letter;
@@ -1449,7 +1498,7 @@ procedure remove_block(xa,ya : byte);
 var
     x,y, i: byte;
 
-    xs,ys : word;
+    xs,ys : byte;
     yh : word;
     cl, shadow: byte;
 
@@ -1476,7 +1525,7 @@ begin
 	vbxe_Ram.ReadBuffer(scanline, 16);
 
 	vbxe_ram.Position:=pattern.ofs + yh;
-	vbxe_Ram.ReadBuffer(scanline[128], 40);
+	vbxe_Ram.ReadBuffer(scanline2, 40);
 
         for x:=0 to 15 do
             if (x+xs) < SCRMAX then
@@ -1491,7 +1540,7 @@ begin
                { prende il pixel di sfondo e ci aggiunge l'ombra se necessario }
                //cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
                //cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and $7f) or shadow;
-               cl:=(scanline[128 + modx[x+xs]] and $7f) or shadow;
+               cl:=(scanline2[modx[x+xs]] and $7f) or shadow;
 
 	       tmp[i] := cl;
 	       inc(i);
@@ -2447,8 +2496,6 @@ var
 
           angle:=random(smallint(mx-lx))+lx; { L'angolo e' una variabile casuale fra  }
                                    { lx e mx }
-				   
-	//angle:=45;
 
        until ((angle mod 90)>30) and ((angle mod 90)<60);
        { e questo ciclo si ripete finche' la palla ha un inclinazione }
@@ -2703,22 +2750,30 @@ begin
             
 	    z:=y*explosion.width+w*(explosion.width shl 4);
 	    
+	    vbxe_ram.Position:=explosion.ofs + z;
+	    vbxe_ram.ReadBuffer(scanline, explosion.width);   
+	    
 	    hlp := a+row[y+b];
+
+	    vbxe_ram.Position:=playscreen.ofs + hlp;
+	    vbxe_ram.ReadBuffer(scanline2, explosion.width);   
 	    
             for x:=0 to explosion.width-1 do
                 begin
                 { Se il colore e' trasparente o il fotogramma e' il 6 }
                 { allora viene usato il colore del fondale.           }
-                if (w=6) or (getBYTE(explosion.ofs + x+z) = 0) then
+                if (w=6) or (scanline[x] = 0) {(getBYTE(explosion.ofs + x+z) = 0)} then
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
                    //blitBYTE(playscreen.ofs + hlp + x, vram + hlp + x)
 		   
-		   tmp[x] := GetBYTE(playscreen.ofs + hlp + x)
+		   //tmp[x] := GetBYTE(playscreen.ofs + hlp + x)
+		   tmp[x] := scanline2[x]
                 else
                    //screen[x+a+row[y+b]]:=explosion.map[x+z];
                    //blitBYTE(explosion.ofs + x+z, vram + hlp + x)
 		   
-		   tmp[x] := GetBYTE(explosion.ofs + x+z)
+		   //tmp[x] := GetBYTE(explosion.ofs + x+z)
+		   tmp[x] := scanline[x];
                 end;
 		
 	    blitTMP(vram + hlp, explosion.width);
@@ -2754,13 +2809,13 @@ begin
 	    z:=y*newvaus.width+w*(newvaus.width*16);
 
 	    hlp := a+row[y+b];
-
+	        
 	    vbxe_ram.Position:=newvaus.ofs + z;
 	    vbxe_ram.ReadBuffer(scanline, newvaus.width);
 
 	    vbxe_ram.Position:=playscreen.ofs + hlp;
-	    vbxe_ram.ReadBuffer(scanline[128], newvaus.width);
-            
+	    vbxe_ram.ReadBuffer(scanline2, newvaus.width);
+
 	    for x:=0 to newvaus.width-1 do
                 begin
 //                if (getBYTE(newvaus.ofs + x+z) = 0) then
@@ -2770,7 +2825,7 @@ begin
                    //blitBYTE(playscreen.ofs + x+a+row[y+b], vram + x+a+row[y+b])
 		   
 //		   tmp[x] := getBYTE(playscreen.ofs + hlp + x)
-		   tmp[x] := scanline[128+x]
+		   tmp[x] := scanline2[x]
 		   
                 else
                    //screen[x+a+row[y+b]]:=newvaus.map[x+z];
@@ -2788,15 +2843,13 @@ begin
 end;
 
 
-procedure put_digit(px,py,num : word);  { Stampa la cifra digitale num }
-                                        { alle coord. px,py.           }
+procedure put_digit(px: word; py, num: byte);  { Stampa la cifra digitale num }
+                                               { alle coord. px,py.           }
 var x,y,a : byte;
 
     begin
-    a:=222; { Il colore 222 e' il rosso scuro che viene usato se il led }
-            { in questione deve apparire spento.                        }
-            { Mentre il colore 223 e' il rosso vivo di quando il led e' }
-            { acceso.                                                   }
+    a:=222; { Color 222 is dark red, which is used if the LED in question should appear off.
+            { Color 223 is bright red, which is used when the LED is on. }
 
     { ----------------- }
     { |       0       | }
@@ -2870,15 +2923,15 @@ var x,y,a : byte;
 
 
 { Print the 5 digits of the score at coordinates px,py }
-procedure write_score(px,py : smallint; sc : integer);
-var n1 : integer;
+procedure write_score(px: word; py : byte; sc : cardinal);
+var n1 : byte;
     f  : boolean;
 
    begin
-   f:=false; { Finche' questo rimane a false, gli 0 non vengono stampati  }
-             { Questo per far si che' all'inizio il punteggio sia 0 e non }
-             { 000000 che sta male.                                       }
-
+   f:=false; { As long as this remains false, the 0s are not printed. }
+             { This is to ensure that the score starts at 0 and not   }
+             { 000000, which looks bad.                               }
+	     
    { first digital digit }
    n1:=(sc div 100000) mod 10;
    if n1>0 then f:=true;          { Se la prima cifra e' >0 allora }
@@ -2911,6 +2964,7 @@ var n1 : integer;
    { the score travels in multiples of 10 points.                      }
    put_digit(px+35,py,0);
    end;
+
 
 { When the pause is invoked, the control switches to this procedure }
 procedure pause_game;
@@ -2959,27 +3013,42 @@ var x,y,cn: byte;
                 { because the one in play should not be counted. }
 
     for cn:=0 to 7 do                       { at most he draws 8 }
-        for y:=0 to minivaus.height-1 do
+        for y:=0 to minivaus.height-1 do begin
+
+  	    vbxe_ram.Position:=minivaus.ofs + y*minivaus.width;
+	    vbxe_ram.ReadBuffer(scanline, minivaus.width);
+
+            yl:=y+YLIVES;
+	    
+	    hlp := XLIVES+cn*minivaus.width;
+	    
+
+  	    vbxe_ram.Position:=playscreen.ofs + hlp + row[yl];
+	    vbxe_ram.ReadBuffer(scanline2, minivaus.width);
+	    
+
             for x:=0 to minivaus.width-1 do
                 begin
-                xl:=x+XLIVES+cn*minivaus.width;
-                yl:=y+YLIVES;
+                xl:=x + hlp;
 
                 xp:=modx[xl];
                 yp:=mody[yl]*pattern.width;
-
+		
                 { if the number of lives is greater than the counter }
                 { then draw a vaus.                                  }
-                if (lives>cn) and (getBYTE(minivaus.ofs + x+y*minivaus.width) <> 0) then
+                if (lives>cn) and (scanline[x] <> 0) {(getBYTE(minivaus.ofs + x+y*minivaus.width) <> 0)} then
                    begin
                    //cl:=minivaus.map[x+y*minivaus.width];
-                   cl:=getBYTE(minivaus.ofs + x+y*minivaus.width);
+                   //cl:=getBYTE(minivaus.ofs + x+y*minivaus.width);
+		   cl:=scanline[x];
 
                    //screen[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
-                   putBYTE(vram + xl+row[yl], cl);
+                   //putBYTE(vram + xl+row[yl], cl);
 
                    //playscreen.map[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
-                   putBYTE(playscreen.ofs + xl+row[yl], cl);
+                   //putBYTE(playscreen.ofs + xl+row[yl], cl);
+		   
+		   tmp[x] := cl;
 
                    end
 
@@ -2988,18 +3057,29 @@ var x,y,cn: byte;
                 else
                   begin
                   //shadow:=playscreen.map[xl+row[yl]] and 128;
-                  shadow:=getBYTE(playscreen.ofs + xl+row[yl]) and 128;
+                  //shadow:=getBYTE(playscreen.ofs + xl+row[yl]) and 128;
+                  shadow:=scanline2[x] and 128;
 
                   //cl:=(pattern.map[xp+yp] and 127) or shadow;
                   cl:=(getBYTE(pattern.ofs + xp+yp) and 127) or shadow;
 
                   //screen[xl+row[yl]]:=cl;
-                  putBYTE(vram + xl+row[yl], cl);
+                  //putBYTE(vram + xl+row[yl], cl);
 
                   //playscreen.map[xl+row[yl]]:=cl;
-                  putBYTE(playscreen.ofs + xl+row[yl], cl);
+                  //putBYTE(playscreen.ofs + xl+row[yl], cl);
+		  
+		  tmp[x] := cl;
                   end;
                 end;
+		
+	hlp := hlp + row[yl];
+	blitTMP(vram + hlp, minivaus.width);
+	//blitTMP(playscreen.ofs + hlp, minivaus.width);
+	blitROW(vram + hlp, playscreen.ofs + hlp, minivaus.width);
+		
+	end;
+
     end;
 
 
@@ -3283,12 +3363,14 @@ var
   t1,t2: smallint;
   hlp: smallint;
 
-  cn: byte;
+//  cn: byte;
 
   ball0: BALLTYPE;
   ball1: BALLTYPE;
   ball2: BALLTYPE;
-
+  
+  scores: cardinal;
+  
 
   procedure check_ball(var ball: BALLTYPE);
   begin
@@ -3550,8 +3632,18 @@ var
      { As long as there is more than one ball in play, no letter should come }
      if balls_in_play>1 then lett.incoming:=0;
 
+
      { Update player's score }
-     write_score(253,POS_DIGIT[cur_player],score.player[cur_player]);
+     scores := score.player[cur_player];
+     
+     if old_scores <> scores then begin
+       
+       write_score(253,POS_DIGIT[cur_player], scores);
+
+       old_scores := scores;
+
+     end;
+     
 
      { If the player's score is greater than the hi-score }
      if score.player[cur_player] > score.hiscore then
@@ -3609,12 +3701,16 @@ var
      { of the cycle, it means that all three have fallen.            }
 
 //     for cn:=0 to 2 do
+	
+	if ball0.launch = FALSE then
+
          if not ball0.inplay then
             begin
             ball0:=ball1;
             ball1:=ball2;
             ball2.inplay:=FALSE;
             end;
+
 
      balls_in_play:=0;  { The number of balls in play is recalculated each time. }
 //     for cn:=0 to 2 do
@@ -3783,6 +3879,8 @@ procedure set_start_parameters;
 var x : byte;
    begin
    { Imposta i parametri del giocatore 1 e 2 }
+   
+   old_scores := 1;
 
    for x:=1 to 2 do
        begin
