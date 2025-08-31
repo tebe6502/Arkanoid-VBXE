@@ -1148,7 +1148,7 @@ procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 var w : single;
   begin                  { imposta l'angolo di traiettoria della palla }
  
-  w:=angle*pi/180.0;   { w viene espresso in gradi }
+  w:=angle*pi/180.0;     { w viene espresso in gradi }
 
   ball.speedx:=trunc(256*cos(w));  { la velocita' si suppone unitaria }
   ball.speedy:=-trunc(256*sin(w)); { v=256 equivale a 70 pixel al sec. }
@@ -1206,6 +1206,7 @@ procedure start_ball(var ball : BALLTYPE);
   ball.brwhit:=0;
 
   end;
+
 
 function ball_speed(ball : BALLTYPE): smallint;
 var i: cardinal;
@@ -1517,7 +1518,7 @@ begin
         { potrebbe essere inscurito da un ombra proiettata da un altro }
         { mattoncino }
 
-	hlp := xs+row[y+ys];
+	hlp := row[y+ys] + xs;
 	
 	i:=0;
 	
@@ -2005,7 +2006,7 @@ var
 { if it is a gray that withstands multiple hits it decreases its strength. }
 { If the block is not knocked down then it makes it shimmer.               }
 
-procedure shoot_block(xb,yb : smallint; var ball : BALLTYPE);
+procedure shoot_block(xb,yb : byte; var ball : BALLTYPE);
 var i: byte;
     begin
     { Controlla che le coordinate del blocco siano numeri validi... }
@@ -2060,7 +2061,7 @@ var i: byte;
     end;
 
 { Simile a quella prima ma per la collisione fire_blocco }
-procedure shoot_block_with_fire(xb,yb : smallint);
+procedure shoot_block_with_fire(xb,yb : byte);
 var i: byte;
     begin
     if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
@@ -2101,7 +2102,8 @@ var i: byte;
 procedure ball_hit_block(var ball : BALLTYPE);
 var 
 
-    x,y,
+    x,y: byte;
+
     lx,ly,
     xb,yb    : shortint;
 
@@ -2121,7 +2123,7 @@ var
     collision,
     touch    : byte;
 
-    adjw     : array[0..2,0..2] of byte;
+    adjw     : array[0..3,0..3] of byte;
 
     begin
     emergency:=EMP;    { the emergency rebound indicator }
@@ -2138,7 +2140,7 @@ var
                       { Ricordarsi che (0,0) e' il blocco in altro a destra }
 
 
-    if wall[byte(xb+yb*16)]<>0 then  { ...if the block is not hypothetical but exists }
+    if wall[byte(xb)+byte(yb)*16]<>0 then  { ...if the block is not hypothetical but exists }
        begin
        collision:=split_line(ox,oy,nx,ny);
        { calculates the intersection of the segment connecting the old and }
@@ -2172,7 +2174,7 @@ var
              yb:=(byte(oy+24) shr 3)-3;        { del blocco relative a tale  }
                                            { intersezione.               }
 
-             if wall[byte(xb+yb*16)]=0 then  { Se non vi e' alcun blocco   }
+             if wall[byte(xb)+byte(yb)*16]=0 then  { Se non vi e' alcun blocco   }
                 begin
                 xb:=min(12,max(0,word(nx) shr 4)); { Allora l'urto avviene sull' }
                 yb:=(byte(ny+24) shr 3)-3;       { altra intersezione. La n.2  }
@@ -2193,7 +2195,7 @@ var
              xb:=min(12,max(0,word(nx) shr 4)); { Si calcolano le coord. del blocco }
              yb:=(byte(ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
 
-             if wall[byte(xb+yb*16)]=0 then     { Se il blocco non c'e'... }
+             if wall[byte(xb)+byte(yb)*16]=0 then     { Se il blocco non c'e'... }
                 begin
                 nx:=ox;                   { allora l'intersezione valida e' }
                 ny:=oy;                   { l'altra, e si procede... }
@@ -2241,35 +2243,35 @@ var
 
        { Se la palla urta il bordo superiore del mattoncino... }
 
-       if (y<x) and (x<shortint(7-y)) then
+       if (y<x) and (x<byte(7-y)) then
           begin
           ball.speedy:=-ball.speedy;   { Si inverte la coord. y della vel. }
           emergency:=1;                { e segna l'eventiale punto di contatto }
           end;
 
        { ...il bordo inferiore... }
-       if (shortint(7-y) < x) and (x<y) then
+       if (byte(7-y) < x) and (x<y) then
           begin
           ball.speedy:=-ball.speedy;   { inverte la y della vel. }
           emergency:=3;
           end;
 
        { ...il bordo sinistro... }
-       if (x<y) and (y<shortint(7-x)) then
+       if (x<y) and (y<byte(7-x)) then
           begin
           ball.speedx:=-ball.speedx;   { inverte la x della vel. }
           emergency:=2;
           end;
 
        { ... e quello destro ... }
-       if (shortint(7-x)<y) and (y<x) then
+       if (byte(7-x)<y) and (y<x) then
           begin
           ball.speedx:=-ball.speedx;   { inverte la x della vel. }
           emergency:=4;
           end;
 
        { ... se invece avviene su uno dei quattro spigoli ... }
-       if (x=y) or (x=shortint(7-y)) then
+       if (x=y) or (x=byte(7-y)) then
           begin
           deflect:=$00;
           touch:=0;
@@ -2293,17 +2295,17 @@ var
           for lx:=-1 to 1 do
               for ly:=-1 to 1 do
                   begin
-                  mx:=max(min(xb+lx,12),0); { When referring to x,      }
+                  mx:=max(min(byte(xb)+byte(lx),12),0); { When referring to x,      }
                   my:=yb+ly;                { the coordinate            }
                                             { must be between 0 and 12. }
   
 
                   if (shortint(xb+lx)<0 ) or
                      (shortint(xb+lx)>12) or
-                     (wall[byte(mx+my*16)]<>0) then
-                        adjw[lx+1,ly+1]:=1   { There are bricks }
+                     (wall[byte(mx)+byte(my)*16]<>0) then
+                        adjw[byte(lx+1),byte(ly+1)]:=1   { There are bricks }
                   else
-                     adjw[lx+1,ly+1]:=0;     { There are no bricks }
+                     adjw[byte(lx+1),byte(ly+1)]:=0;     { There are no bricks }
 
                   end;
 

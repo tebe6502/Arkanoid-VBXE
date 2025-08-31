@@ -83,11 +83,10 @@ end;
 
 
 
-function sqrt32(v: cardinal): word;
-var b,q,r,t: cardinal;
+function sqrt32(r: cardinal): word;
+var b,q,t: cardinal;
 begin
 
- r:=v;
  q:=0;
  b:=1 shl 30;
  
