@@ -151,7 +151,7 @@ begin
    loadBTM('..\PRESENT.BTM' ,presents,false);   { la scritta ARKANOID }
    loadBTM('..\EXPLODE.BTM' ,explosion,FALSE);  { l'esplosione del vaus }
    loadBTM('..\NEWVAUS.BTM' ,newvaus,FALSE);    { la creazione del vaus }
-   loadBTM('..\SOUNDFX.BTM' ,soundfx,FALSE);    { l'icona sound on/off  }
+   //loadBTM('..\SOUNDFX.BTM' ,soundfx,FALSE);    { l'icona sound on/off  }
    loadBTM('..\SHINEWAL.BTM',shinewall,FALSE);  { il lucchichio dei mattoni }
    loadBTM('..\MINIVAUS.BTM',minivaus,FALSE);   { i vaus che indicano le vite }
    loadBTM('..\LEVELSEL.BTM',levelsel,FALSE);   { l'icona del livello di gioco }
@@ -164,7 +164,7 @@ begin
 
    loadBTM('ball' ,balldata,FALSE);   
 
-   loadBTM('..\pattern0.BTM' ,pattern,FALSE);   
+//   loadBTM('..\pattern0.BTM' ,pattern,FALSE);   
    
    loadBTM('..\pattern0.BTM' ,pattern0,FALSE);       
    loadBTM('..\pattern1.BTM' ,pattern1,FALSE);       
@@ -214,10 +214,10 @@ begin
  writeln(t, #9'newvaus.width := ', newvaus.width , ';');
  writeln(t, #9'newvaus.height := ', newvaus.height , ';'); 
  writeln(t);
- writeln(t, #9'soundfx.ofs := VBXE_DATA + ', soundfx.ofs , ';');
- writeln(t, #9'soundfx.width := ', soundfx.width , ';');
- writeln(t, #9'soundfx.height := ', soundfx.height , ';');
- writeln(t); 
+// writeln(t, #9'soundfx.ofs := VBXE_DATA + ', soundfx.ofs , ';');
+// writeln(t, #9'soundfx.width := ', soundfx.width , ';');
+// writeln(t, #9'soundfx.height := ', soundfx.height , ';');
+// writeln(t); 
  writeln(t, #9'shinewall.ofs := VBXE_DATA + ', shinewall.ofs , ';');
  writeln(t, #9'shinewall.width := ', shinewall.width , ';');
  writeln(t, #9'shinewall.height := ', shinewall.height , ';'); 
@@ -260,10 +260,10 @@ begin
  writeln(t, #9'balldata.height := ', balldata.height , ';');
  writeln(t);
 
- writeln(t, #9'pattern.ofs := VBXE_DATA + ', pattern.ofs , ';');
- writeln(t, #9'pattern.width := ', pattern.width , ';');
- writeln(t, #9'pattern.height := ', pattern.height , ';');
- writeln(t);
+// writeln(t, #9'pattern.ofs := VBXE_DATA + ', pattern.ofs , ';');
+// writeln(t, #9'pattern.width := ', pattern.width , ';');
+// writeln(t, #9'pattern.height := ', pattern.height , ';');
+// writeln(t);
  writeln(t, #9'pattern0.ofs := VBXE_DATA + ', pattern0.ofs , ';');
  writeln(t, #9'pattern0.width := ', pattern0.width , ';');
  writeln(t, #9'pattern0.height := ', pattern0.height , ';');
@@ -293,7 +293,7 @@ end;
 
 begin
 
- ofset := vbxe_data;
+ ofset := 0;//vbxe_data;
 
 
  assign(f, 'btm.dat'); rewrite(f, 1);
@@ -301,6 +301,10 @@ begin
  blockwrite(f, dum, ofset);
  
  Arkanoid;
+ 
+ fillByte(dum, sizeof(dum), 0);
+ 
+ blockwrite(f, dum, 21);
   
  close(f);
 

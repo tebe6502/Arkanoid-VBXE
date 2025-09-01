@@ -7,51 +7,41 @@
 {                         Professor Eduardo Calabrese                     }
 {                    Revisione v1.02 per il publico dominio               }
 {                                                                         }
-{ Nota: Questo programma e' la riproduzione fedele (per quanto possibile) }
-{       del famoso Coin-Op da bar Arkanoid. I diritti del gioco originale }
-{       sono della Taito Corp, questa versione e' da intendersi solamente }
-{       a titolo dimostrativo. E' quindi assolutamente vietata la vendita }
-{       o qualsiasi altro scopo di lucro.                                 }
+{ Note: This program is a faithful reproduction (as far as possible)      }
+{ of the famous barroom Coin-Op Arkanoid. The rights to the original game }
+{ are held by Taito Corp, this version is intended only for demonstration }
+{ purposes. It is therefore strictly forbidden to be sold or any other    }
+{ profit-making purpose.                                                  }
 {                                                                         }
-{       Il programma gira su tutte le macchine con processore 80286 o su- }
-{       periore. E' consigliato l'utilizzo di un 80386 per aprezzarne a   }
-{       pieno le qualita'.                                                }
+{ The program runs on all machines with 80286 processor or higher.        }
+{ It is recommended that you use an 80386 to apreciate a full             }
+{ its qualities.                                                          }
 {                                                                         }
-{       E sconsigliata la compilazione con RANGE CHECKING attivato dal    }
-{       momento che i tempi di esecuzione sono critici e un minimo ritar- }
-{       do nell'esecuzione di alcuni punti puo' provocarne un significa-  }
-{       tivo e fastidioso rallentamento globale.                          }
-{       Naturalmente il programma funziona tranquillamente anche con      }
-{       la verifica degli intervalli attiva.                              }
+{ And compilation with RANGE CHECKING enabled by is not recommended       }
+{ since execution times are critical and a slight delay in the execution  }
+{ of some points can cause a significant and annoying global slowdown.    }
+{                                                                         }
+{ Of course, the program runs smoothly even with the interval             }
+{ check active.                                                           }
 {                                                                         }
 { ----------------------------------------------------------------------- }
 
-{ NOTA PER CHI CERCASSE SPECIFICHE RIGUARDO ALLA GRAFICA                  }
-{                                                                         }
-{ La grafica di questo programma e' stata progettata con POWERDESIGN 386, }
-{ un programma shareware che permette di manipolare immagini in modo      }
-{ avanzato. Chiunque fosse interessato puo' prelevarlo gratuitamente da   }
-{ qualunque nodo ISN oppure a Banana's BBS al 2:332/508 (Tel.0521/904046).}
-{ Il programma viene continuamente aggiornato, l'ultima versione disponi- }
-{ bile al momento della stesura di questo testo e' la v1.06 beta.         }
-{ Il nome con cui e' possibile prelevare tale programma e' PD386Bxx.ARJ o }
-{ PD386Bxx.ZIP ove al posto delle xx viene messo il numero della versione }
-{ corrente. Pertanto un eventuale DOWNLOAD puo' essere fatto col nome:    }
-{ PD386B*.*                                                               }
-{ Il programma richiede un processore 386 (o migliore), scheda VGA o SVGA }
-{ ed e' consigliabile la presenza di memoria estesa/espansa e relativo    }
-{ driver di memoria (es. EMM386, QEMM, ecc.)                              }
+(*
+ 
+ VBXE v1.3 by Tebe/Madteam
+
+ 2025-09-01
+*)
 
 
 program arkanoid;
 
-uses crt, atari, vbxe, joystick;//, fastmath;
+uses crt, atari, vbxe, joystick;
 
 {$r arkanoid.rc}
 
 {$define romoff}
 
-//{$f $c8}
 
 const
         VBXE_DATA = VBXE_OVRADR + 320*216;

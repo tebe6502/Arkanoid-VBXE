@@ -189,7 +189,7 @@ var
     explosion  : BTMTYPE;  { esplosione vaus }
     newvaus    : BTMTYPE;  { sequenza di animazione di partenza }
     presents   : BTMTYPE;  { scritta ARKANOID }
-    soundfx    : BTMTYPE;  { l'icona con la nota e la nota sbarrata }
+//    soundfx    : BTMTYPE;  { l'icona con la nota e la nota sbarrata }
     shinewall  : BTMTYPE;  { luccichio dei mattoncini grigi e beige }
     minivaus   : BTMTYPE;  { vaus piccolino che indica le vite }
     levelsel   : BTMTYPE;  { 5 frames dei numeri per scegliere il livello }
