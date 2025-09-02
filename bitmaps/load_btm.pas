@@ -117,6 +117,7 @@ var
   BTMREC.height:=s[8]+s[9]*256;  { l'altezza, byte 8 e 9 }
 //  BTMREC.trasp :=s[10];          { e il colore di trasparenza }
 
+
   size:=(BTMREC.width)*(BTMREC.height); { calcola dimensione immagine }
 
 //  getmem(BTMREC.map,size);              { alloca la memoria per l'immagine }

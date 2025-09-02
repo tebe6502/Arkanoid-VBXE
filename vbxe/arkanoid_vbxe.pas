@@ -31,6 +31,7 @@
  VBXE v1.3 by Tebe/Madteam
 
  2025-09-01
+ 2025-09-03
 *)
 
 
@@ -49,6 +50,7 @@ const
 var
 
 	blt: TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
+	blt_letter: TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
 
 	vbxe_ram: TVBXEMemoryStream;
 
