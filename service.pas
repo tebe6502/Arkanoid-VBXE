@@ -22,7 +22,7 @@ const
    VAUS_W     = 34;  { Width of the VAUS in pixels                        }
    VAUS_H     = 4;   { Height of the VAUS in pixels                       }
    VAUS_LINE  = 184; { Y coordinate on which the VAUS moves horizontally  }
-   EMP        = -1;  { Use EMP (empty) instead of -1                      }
+   EMP        = 255; { Use EMP (empty) instead of 255                     }
    BALLDIM    = 5;   { Diameter of the ball (in pixels)                   }
    BALLSPOT   = 3;   { Radius of the ball (in pixels) = diameter/2 +1     }
 
@@ -237,19 +237,20 @@ var
 
 {$IFDEF ATARI}
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
+    pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
     pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
-
 
     [striped] row        : array[0..255] of word absolute $c000; { array (see initRowArray) }
 
-    tmp        : array [0..255] of byte absolute $c000+$200;
+    mody       : array[0..255] of byte absolute $c000+$200;
+    modx       : array[0..255] of byte absolute $c000+$300;
 
-    mody       : array[0..255] of byte absolute $c000+$300;
-    modx       : array[0..255] of byte absolute $c000+$400;
-    
-    scanline   : array[0..255] of byte absolute $c000+$500;
-    scanline2  : array[0..127] of byte absolute $c000+$580;
-    
+    Mod90Table: array [0..255] of byte absolute $c000+$400;
+    Mod10Table: array [0..255] of byte absolute $c000+$500;
+ 
+    sintable: array [0..450-1] of byte absolute $c000+$600;
+
+
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
     all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
@@ -309,8 +310,7 @@ begin
   joy_right: if x < SCRMAX then inc(x, 4);
  end;
 
- end;
- 
+end;
  
  
 function mouseclick: byte;
@@ -319,8 +319,6 @@ begin
     result:=trig0 xor 1;
     
 end;
-
-
 
 
 procedure blitTEMP(swidth, dwidth: word); overload;
@@ -355,13 +353,12 @@ begin
 end;
 
 
-
 procedure blitLETTER(src, dst: cardinal);
 begin
 
-	asm
-	  fxs FX_MEMS #$80
-	end;
+ asm
+   fxs FX_MEMS #$80
+ end;
 
  blt_letter.src_adr.byte2:=src shr 16;
  blt_letter.src_adr.byte1:=src shr 8;
@@ -371,23 +368,21 @@ begin
  blt_letter.dst_adr.byte1:=dst shr 8;
  blt_letter.dst_adr.byte0:=dst;
 
-	asm
-	  fxs FX_MEMS #$00
-	end;
-
+ asm
+   fxs FX_MEMS #$00
+ end;
 
  RunBCB(blt_letter);
 
 end;
 
 
-
 procedure blitBOX(src, dst: cardinal; w: word; h: byte);
 begin
 
-	asm
-	  fxs FX_MEMS #$80
-	end;
+ asm
+   fxs FX_MEMS #$80
+ end;
 
  blt.src_adr.byte2:=src shr 16;
  blt.src_adr.byte1:=src shr 8;
@@ -405,9 +400,9 @@ begin
 
  blt.blt_control:=0;
 
-	asm
-	  fxs FX_MEMS #$00
-	end;
+ asm
+   fxs FX_MEMS #$00
+ end;
 	
  RunBCB(blt);
 	
@@ -417,9 +412,9 @@ end;
 procedure blitZERO(src, dst: cardinal; w : word; h: byte);
 begin
 
-	asm
-	  fxs FX_MEMS #$80
-	end;
+ asm
+   fxs FX_MEMS #$80
+ end;
 
  blt.src_adr.byte2:=src shr 16;
  blt.src_adr.byte1:=src shr 8;
@@ -438,22 +433,11 @@ begin
 
  blt.blt_width:=w-1;
 
-	asm
-	  fxs FX_MEMS #$00
-	end;
-
+ asm
+   fxs FX_MEMS #$00
+ end;
 
  RunBCB(blt);
-
-end;
-
-
-procedure blitTMP(dst: cardinal; size: byte);
-begin
-
-vbxe_ram.position:=dst;
-
-vbxe_ram.WriteBuffer(TMP, size);
 
 end;
 
@@ -461,9 +445,9 @@ end;
 procedure blitROW(src, dst: cardinal; size: word);
 begin
 
-	asm
-	  fxs FX_MEMS #$80
-	end;
+ asm
+   fxs FX_MEMS #$80
+ end;
 
  blt.src_adr.byte2:=src shr 16;
  blt.src_adr.byte1:=src shr 8;
@@ -481,50 +465,20 @@ begin
 
  blt.blt_width:=size-1;
 
-	asm
-	  fxs FX_MEMS #$00
-	end;
+ asm
+   fxs FX_MEMS #$00
+ end;
 
  RunBCB(blt);
 
 end;
 
 
-{
-procedure blitBYTE(src, dst: cardinal);
-var a: byte;
-begin
-
-//  screen[dst] := screen[src];
-
- vbxe_ram.position := src;
- a := vbxe_ram.ReadByte;
-
- vbxe_ram.position := dst;
- vbxe_ram.WriteByte(a);
-
-end;
-}
-
-
 procedure putBYTE(dst: cardinal; v: byte);
 begin
 
-//  screen[dst] := v;
-
  vbxe_ram.position := dst;
  vbxe_ram.WriteByte(v);
-
-end;
-
-
-function getBYTE(src: cardinal): byte;
-begin
-
-//  result := screen[src];
-
- vbxe_ram.position := src;
- Result := vbxe_ram.ReadByte;
 
 end;
 
@@ -1103,25 +1057,30 @@ var
   end;
 
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
-var w : single;
-  begin                  { imposta l'angolo di traiettoria della palla }
- 
+//var w : single;
+begin                  { sets the trajectory angle of the ball }
+
+  ball.speedx:=sintable[angle+90];  { the velocity is assumed to be unitary }
+  ball.speedy:=-sintable[angle];    { v=256 equals 70 pixels per sec. }
+
+(*
   w:=angle*pi/180.0;     { w viene espresso in gradi }
 
   ball.speedx:=trunc(256*cos(w));  { la velocita' si suppone unitaria }
   ball.speedy:=-trunc(256*sin(w)); { v=256 equivale a 70 pixel al sec. }
-  end;
+*)
+end;
 
 
 function get_ball_direction(var ball : BALLTYPE): smallint;
-var w : smallint; { restituisce la direzione in cui si muove la palla }
+var w : smallint; { Returns the direction in which the ball is moving }
   begin
 
   if ball.speedx=0 then w:=-90*(ball.speedy div abs(ball.speedy))
   else
     begin
-    { calcola l'arcotangente e aggiunge multipli di 90 gradi a seconda dei }
-    { segni di ball.speedx e ballspeed.y }
+    { calculates the arcotangent and adds multiples of 90 degrees depending on }
+    { signs of ball.speedx and ballspeed.y }
       
     f_hlp:= -ball.speedy / ball.speedx;
     
@@ -1130,9 +1089,11 @@ var w : smallint; { restituisce la direzione in cui si muove la palla }
     w:=trunc(f_hlp);
 
     if(ball.speedx<0) then inc(w,180);
-
+    
     inc(w,360);
-    w:=w mod 360;
+    //w:=w mod 360;
+    
+    while w >= 360 do dec(w, 360);
     end;
 
   get_ball_direction:=w;
@@ -1495,26 +1456,20 @@ begin
                { shadow:=128 nessuna ombra, shadow:=0 c'e' l'ombra }
 
                //shadow:=playscreen.map[x+xs+row[y+ys]] and 128;
-               //shadow:=getBYTE(playscreen.ofs + hlp + x) and $80;
-//               shadow:=scanline[x] and $80;
 	       shadow:=scr[x+i] and $80;
 
                { prende il pixel di sfondo e ci aggiunge l'ombra se necessario }
                //cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
-               //cl:=(getBYTE(pattern.ofs + modx[x+xs]+yh) and $7f) or shadow;
-//               cl:=(scanline2[modx[x+xs]] and $7f) or shadow;
 	       cl:=(pat[modx[x+xs]+yh] and $7f) or shadow;
 
 	       scr[x+i]:=cl;
 
                { dopodiche' mette il colore sia sullo schermo della VGA sia }
                //screen[x+xs+row[y+ys]]:=cl;
-               //putBYTE(vram + hlp + x, cl);
 
                { sullo schermo ausiliario dove sono presenti solo gli oggetti }
                { statici e non quelli in movimento tipo pallina o vaus.}
                //playscreen.map[x+xs+row[y+ys]]:=cl;
-               //putBYTE(playscreen.ofs + hlp + x, cl);
                end;
 
         end;
@@ -1563,8 +1518,6 @@ begin
                begin
                { prende il colore di sfondo e toglie l'ombra }
                //cl:=playscreen.map[x+row[y]] or 128;
-               //cl:=getBYTE(playscreen.ofs + hlp + x) or $80;
-               //TMP[x - xs]:=TMP[x - xs] or $80;
 	       
 	       i := x - xs;
 	       
@@ -1572,12 +1525,10 @@ begin
 
                { e lo memorizza sia sullo schermo fisico ...}
                //screen[x+row[y]]:=cl;
-               //putBYTE(vram + x+row[y], cl);
 
                { che su quello virtuale (cioe' quello che tiene solo }
                { gli oggetti fissi }
                //playscreen.map[x+row[y]]:=cl;
-               //putBYTE(playscreen.ofs + x+row[y], cl);
                end;
 
     end;
@@ -1619,20 +1570,15 @@ begin
     blitTEMP(playscreen.ofs + hlp, $0200, 16, 8);
 
 
-    for y:=0 to 7 do begin
-    
+    for y:=7 downto 0 do begin
+
         i:=y*16;
-
-//        hlp := xs+row[ys+y];
-
 
         for x:=15 downto 0 do
             begin
             { check if any bricks are at the specified coordinates }
             { cast a shadow }
             //shadow:=playscreen.map[xs+x+row[ys+y]] and 128;
-            //shadow:=getBYTE(playscreen.ofs + hlp + x) and $80;
-//            shadow:=scanline[x] and $80;
 	    shadow := scr[x + i] and $80;
 
             if (y<7) and (x<15) then
@@ -1642,28 +1588,22 @@ begin
 
                 cl:=(COLORBLOCK[(block-1) and 15] and $7f) or shadow;
 
-		//tmp[x] := cl;
 		scr[x + i] := cl;
 
                 //screen[xs+x+row[ys+y]]:=cl;
-                //putBYTE(vram + hlp, cl);
 
                 //playscreen.map[xs+x+row[ys+y]]:=cl;
-                //putBYTE(playscreen.ofs + hlp, cl);
                 end
             else
                begin
                { if the coordinates are on the right or bottom edge, }
                { draw the pixels in black }
 	       
-	       //tmp[x] := shadow;
 	       scr[x + i] := shadow;
 
                //screen[xs+x+row[ys+y]]:=shadow; { sarebbe shadow or 0 }
-               //putBYTE(vram + hlp, shadow);
 
                //playscreen.map[xs+x+row[ys+y]]:=shadow; {...quindi shadow }
-               //putBYTE(playscreen.ofs + hlp, shadow);
                end;
 	       
             end;
@@ -1671,13 +1611,14 @@ begin
     end;
 
 
-    blitTEMP(16, 320);
-    
+    blitTEMP(0, 320);
+
     blitTEMP($200, playscreen.ofs + hlp, 16, 8);
     blitTEMP($200, vram + hlp, 16, 8);
 
 
     hlp := row[ys+4] + xs;
+
     blitTEMP(320, 32);
     blitTEMP(playscreen.ofs + hlp, $0300, 32, 9);
 
@@ -1685,7 +1626,6 @@ begin
     //for y:=ys+4 to ys+12 do begin
     for y:=8 downto 0 do begin
     
-  
 //        hlp := row[y] + xs;
 
 	yh := y * 32;
@@ -1699,8 +1639,6 @@ begin
                { preleva il pixel x,y dallo schermo e ci proietta sopra }
                { l'ombra. }
                //cl:=playscreen.map[x+row[y]] and 127;
-               //cl:=getBYTE(playscreen.ofs + hlp + x) and $7f;
-               //TMP[x - xs]:=TMP[x - xs] and $7f;
 
 	       i := x - xs;
 
@@ -1708,11 +1646,9 @@ begin
 
                { dopo di che lo rimette sullo schermo fisico... }
                //screen[x+row[y]]:=cl;
-               //putBYTE(vram + hlp, cl);
 
                { e su quello virtuale }
                //playscreen.map[x+row[y]]:=cl;
-               //putBYTE(playscreen.ofs + hlp, cl);
                end;
 
     end;
@@ -1726,7 +1662,7 @@ begin
     hlp := row[ys] + xs;
 
     blitTEMP(320, 16);
-    blitTEMP(playscreen.ofs + hlp, $0200, 16, 8);
+    blitTEMP(playscreen.ofs + hlp, $0200, 15, 7);
 
 
     if block>8 then { but if the block is gray (=9) or brown (=10) ... }
@@ -1750,23 +1686,18 @@ begin
 
 	   i:=y*16;
 
-	   //hlp := row[y+ys] + xs;
-
            { takes the pixel xs,y+ys from the screen, adds a shadow to it }
            { i.e., makes the color darker }
            //cl:=playscreen.map[xs+row[y+ys]] and 128;
-           //cl:=getBYTE(playscreen.ofs + hlp) and $80;
 	   cl := scr[i] and $80;
 
            cl2:=(cl2 and 127) or cl;
 
            { ... e lo rimette sullo schermo fisico }
            //screen[xs+row[ys+y]]:=cl2;
-           //putBYTE(vram + hlp, cl2);
 
            { ... e su quello virtuale }
            //playscreen.map[xs+row[ys+y]]:=cl2;
-           //putBYTE(playscreen.ofs + hlp, cl2);
 	   scr[i] := cl2;
 	   
            end;
@@ -1778,18 +1709,14 @@ begin
 
            { comments similar to above }
            //cl:=playscreen.map[xs+x+row[ys]] and 128;
-           //cl:=getBYTE(playscreen.ofs + hlp + x) and $80;
-           //cl:=scanline[x] and $80;
 	   cl:=scr[x] and $80;
 
-           //tmp[x]:=(cl2 and $7f) or cl;
 	   scr[x] := (cl2 and $7f) or cl;
 
            //screen[xs+x+row[ys]]:=cl2;
-           //putBYTE(vram + hlp, cl2);
 
            //playscreen.map[xs+x+row[ys]]:=cl2;
-           //putBYTE(playscreen.ofs + hlp, cl2);
+
            end;
 
        end;
@@ -1797,8 +1724,8 @@ begin
 
     blitTEMP(16, 320);
     
-    blitTEMP($200, playscreen.ofs + hlp, 16, 8);
-    blitTEMP($200, vram + hlp, 16, 8);
+    blitTEMP($200, playscreen.ofs + hlp, 15, 7);
+    blitTEMP($200, vram + hlp, 15, 7);
 
     asm
 	fxs FX_MEMS #$00
@@ -2009,7 +1936,7 @@ procedure shoot_block(xb,yb : byte; var ball : BALLTYPE);
 var i: byte;
     begin
     { Controlla che le coordinate del blocco siano numeri validi... }
-    if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
+    if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
        i:=xb+yb*16;
@@ -2063,7 +1990,7 @@ var i: byte;
 procedure shoot_block_with_fire(xb,yb : byte);
 var i: byte;
     begin
-    if (xb>=0) and (xb<=12) and (yb>=0) and (yb<=14) then
+    if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
        i:=xb+yb*16;
@@ -2192,7 +2119,7 @@ var
              { old coordinates, proceed in the same way.       }
 
              xb:=min(12,max(0,word(nx) shr 4)); { Si calcolano le coord. del blocco }
-             yb:=(byte(ny+24) shr 3)-3;       { sull'intersezione nx,ny (la seconda) }
+             yb:=(byte(ny+24) shr 3)-3;         { sull'intersezione nx,ny (la seconda) }
 
              if wall[byte(xb)+byte(yb)*16]=0 then     { Se il blocco non c'e'... }
                 begin
@@ -2498,11 +2425,13 @@ var
           angle:=random(smallint(mx-lx))+lx; { L'angolo e' una variabile casuale fra  }
                                    { lx e mx }
 
-       until ((angle mod 90)>30) and ((angle mod 90)<60);
+       until (mod90(angle)>30) and (mod90(angle)<60);
        { e questo ciclo si ripete finche' la palla ha un inclinazione }
        { compresa fra i 30 e i 60 gradi piu' multipli di 90 gradi.    }
+       
+       while angle >= 360 do dec(angle, 360);
 
-       set_ball_direction(ball,angle mod 360);
+       set_ball_direction(ball,angle {mod 360});
        set_ball_speed(ball,ball.speed);
 
        ball.brwhit:=0; { Reset emergency counter }
@@ -2553,9 +2482,6 @@ var yb: word;
         for x:=SCRMIN-1 to SCRMAX-1 do
             begin
             //cl:=patt.map[modx[x]+yb]; { Takes the pixel from the background }
-            //cl:=getBYTE(patt.ofs + modx[x]+yb);
-	    
-	    //cl:=scanline[ modx[x] ];
 	    
 	    cl := pat[ modx[x] + yb ];
 
@@ -2681,45 +2607,54 @@ begin
     b:=vaus.y-5;     { dell'animazione che e' leggermente spostato }
                      { dall'origine degli assi.                    }
 
+    asm
+	fxs FX_MEMS #$80
+    end;
+
+    blitTEMP(explosion.width, explosion.width);
+
+
     for w:=0 to 6 do  { w = frame to display, cycles through all frames from 0 to 6 }
         begin
+
         for y:=0 to 15 do
             begin
-            
+
 	    z:=y*explosion.width+w*(explosion.width shl 4);
-	    
-	    vbxe_ram.Position:=explosion.ofs + z;
-	    vbxe_ram.ReadBuffer(scanline, explosion.width);   
-	    
+
+	    blitTEMP(explosion.ofs + z, $280, explosion.width, 1);
+
 	    hlp := a+row[y+b];
 
-	    vbxe_ram.Position:=playscreen.ofs + hlp;
-	    vbxe_ram.ReadBuffer(scanline2, explosion.width);   
-	    
+	    blitTEMP(playscreen.ofs + hlp, $200, explosion.width, 1);
+
             for x:=0 to explosion.width-1 do
                 begin
                 { Se il colore e' trasparente o il fotogramma e' il 6 }
                 { allora viene usato il colore del fondale.           }
-                if (w=6) or (scanline[x] = 0) {(getBYTE(explosion.ofs + x+z) = 0)} then
+                if (w=6) or (pom[x] = 0) then
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
                    //blitBYTE(playscreen.ofs + hlp + x, vram + hlp + x)
 		   
-		   //tmp[x] := GetBYTE(playscreen.ofs + hlp + x)
-		   tmp[x] := scanline2[x]
+		   //scr[x] := scr[x]
                 else
                    //screen[x+a+row[y+b]]:=explosion.map[x+z];
                    //blitBYTE(explosion.ofs + x+z, vram + hlp + x)
 		   
-		   //tmp[x] := GetBYTE(explosion.ofs + x+z)
-		   tmp[x] := scanline[x];
+		   scr[x] := pom[x];
                 end;
 		
-	    blitTMP(vram + hlp, explosion.width);
+	    blitTEMP($200, vram + hlp, explosion.width, 1);
             end;
 
         death_sound(w);   { Il cicalino di quando il vaus viene distrutto }
                           { per ogni valore di w c'e' una nota diversa    }
         end;
+
+    asm
+	fxs FX_MEMS #$00
+    end;
+
 
     death_sound(7);
     mydelay(150);         { attende qualche istante. }
@@ -2739,45 +2674,52 @@ begin
     a:=((SCRMAX-SCRMIN) div 2)-12;
     b:=vaus_line-5;
 
+    asm
+	fxs FX_MEMS #$80
+    end;
+
+    blitTEMP(newvaus.width, newvaus.width);
+
+
     for w:=11 downto 0 do
         begin
-        for y:=0 to 15 do
+        for y:=15 downto 0 do
             begin
 	               
 	    z:=y*newvaus.width+w*(newvaus.width*16);
 
 	    hlp := a+row[y+b];
-	        
-	    vbxe_ram.Position:=newvaus.ofs + z;
-	    vbxe_ram.ReadBuffer(scanline, newvaus.width);
 
-	    vbxe_ram.Position:=playscreen.ofs + hlp;
-	    vbxe_ram.ReadBuffer(scanline2, newvaus.width);
+	    blitTEMP(newvaus.ofs + z, $280, newvaus.width, 1);		// pom
+
+	    blitTEMP(playscreen.ofs + hlp, $200, newvaus.width, 1);	// scr
 
 	    for x:=0 to newvaus.width-1 do
                 begin
-//                if (getBYTE(newvaus.ofs + x+z) = 0) then
-                if scanline[x] = 0 then
+                if pom[x] = 0 then
 
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
                    //blitBYTE(playscreen.ofs + x+a+row[y+b], vram + x+a+row[y+b])
-		   
-//		   tmp[x] := getBYTE(playscreen.ofs + hlp + x)
-		   tmp[x] := scanline2[x]
-		   
+
+		   //scr[x] := scr[x]
+
                 else
                    //screen[x+a+row[y+b]]:=newvaus.map[x+z];
                    //blitBYTE(newvaus.ofs + x+z, vram + x+a+row[y+b])
 
-//		   tmp[x] := getBYTE(newvaus.ofs + x+z)
-		   tmp[x] := scanline[x]
+		   scr[x] := pom[x]
                 end;
-		
-	    blitTMP(vram + hlp, newvaus.width);
+
+	    blitTEMP($200, vram + hlp, newvaus.width, 1);
             end;
 
-        mydelay(1);
+        pause;
         end;
+	
+    asm
+	fxs FX_MEMS #$00
+    end;
+	
 end;
 
 
@@ -2886,31 +2828,31 @@ begin
    blitTEMP(128, 320);
 
    { first digital digit }
-   n1:=(sc div 100000) mod 10;
+   n1:=mod10table[sc div 100000];
    if n1>0 then f:=true;          { Se la prima cifra e' >0 allora }
    if f then put_digit(px,py,n1)  { occorre stamparla }
    else put_digit(px,py,10);      { altrimenti stampa un numero spento }
 
    { second digital digit }
-   n1:=(sc div 10000) mod 10;     { Ditto for the remaining blocks }
+   n1:=mod10table[sc div 10000];     { Ditto for the remaining blocks }
    if n1>0 then f:=true;
    if f then put_digit(px+7,py,n1)
    else put_digit(px+7,py,10);
 
    { third digital digit }
-   n1:=(sc div 1000) mod 10;
+   n1:=mod10table[sc div 1000];
    if n1>0 then f:=true;
    if f then put_digit(px+14,py,n1)
    else put_digit(px+14,py,10);
 
    { fourth digital digit }
-   n1:=(sc div 100) mod 10;
+   n1:=mod10table[sc div 100];
    if n1>0 then f:=true;
    if f then put_digit(px+21,py,n1)
    else put_digit(px+21,py,10);
 
    { fifth digital digit }
-   n1:=(sc div 10) mod 10;
+   n1:=mod10table[sc div 10];
    put_digit(px+28,py,n1);
 
    { sixth and last digital digit (which of course is always 0 because }
@@ -2928,11 +2870,8 @@ end;
 procedure pause_game;
 var x,y,z : byte;
 
-    begin
-    
-    exit;
-    
-    
+begin
+
     nosound;                    { disattiva qualunque suono del cicalino }
     setcolor(0);                { Stampa la scritta in nero spostandola  }
     for x:=0 to 2 do            { in tutte le direzioni.                 }
@@ -2954,7 +2893,7 @@ var x,y,z : byte;
 
     { textwidth('Game Paused') is a function that returns the length }
     { in pixels of the text 'Game Paused'.                           }
-    end;
+end;
 
 
 { Print the small vaus in the lower left corner indicating the number of }
@@ -2970,23 +2909,31 @@ var x,y,cn: byte;
     xl,yl   : word;
     shadow, cl  : byte;
 
-    begin
+begin
     dec(lives); { The number of lives must be decreased by one   }
                 { because the one in play should not be counted. }
+
+    asm
+	fxs FX_MEMS #$80
+    end;
+
+    blitTEMP(pattern.width, pattern.width);
+    blitTEMP(pattern.ofs, $300, pattern.width, pattern.height);			// pat
+
+    blitTEMP(minivaus.width, minivaus.width);
+
 
     for cn:=0 to 7 do                       { at most he draws 8 }
         for y:=0 to minivaus.height-1 do begin
 
-  	    vbxe_ram.Position:=minivaus.ofs + y*minivaus.width;
-	    vbxe_ram.ReadBuffer(scanline, minivaus.width);
+	    blitTEMP(minivaus.ofs + y*minivaus.width, $280, minivaus.width, 1);	// pom
 
             yl:=y+YLIVES;
-	    
+
 	    hlp := XLIVES+cn*minivaus.width;
 
-  	    vbxe_ram.Position:=playscreen.ofs + hlp + row[yl];
-	    vbxe_ram.ReadBuffer(scanline2, minivaus.width);
-	    
+	    blitTEMP(playscreen.ofs + hlp + row[yl], $200, minivaus.width, 1);	// scr
+
 
             for x:=0 to minivaus.width-1 do
                 begin
@@ -2994,22 +2941,18 @@ var x,y,cn: byte;
 
                 xp:=modx[xl];
                 yp:=mody[yl]*pattern.width;
-		
+
                 { if the number of lives is greater than the counter }
                 { then draw a vaus.                                  }
-                if (lives>cn) and (scanline[x] <> 0) {(getBYTE(minivaus.ofs + x+y*minivaus.width) <> 0)} then
+                if (lives>cn) and (pom[x] <> 0) then
                    begin
                    //cl:=minivaus.map[x+y*minivaus.width];
-                   //cl:=getBYTE(minivaus.ofs + x+y*minivaus.width);
-		   cl:=scanline[x];
 
                    //screen[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
-                   //putBYTE(vram + xl+row[yl], cl);
 
                    //playscreen.map[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
-                   //putBYTE(playscreen.ofs + xl+row[yl], cl);
 		   
-		   tmp[x] := cl;
+		   scr[x] := pom[x];
 
                    end
 
@@ -3018,30 +2961,31 @@ var x,y,cn: byte;
                 else
                   begin
                   //shadow:=playscreen.map[xl+row[yl]] and 128;
-                  //shadow:=getBYTE(playscreen.ofs + xl+row[yl]) and 128;
-                  shadow:=scanline2[x] and 128;
+                  shadow:=scr[x] and $80;
 
                   //cl:=(pattern.map[xp+yp] and 127) or shadow;
-                  cl:=(getBYTE(pattern.ofs + xp+yp) and 127) or shadow;
+		  cl:=(pat[xp+yp] and $7f) or shadow;
 
                   //screen[xl+row[yl]]:=cl;
-                  //putBYTE(vram + xl+row[yl], cl);
 
                   //playscreen.map[xl+row[yl]]:=cl;
-                  //putBYTE(playscreen.ofs + xl+row[yl], cl);
-		  
-		  tmp[x] := cl;
+
+		  scr[x] := cl;
                   end;
                 end;
 		
 	hlp := hlp + row[yl];
-	blitTMP(vram + hlp, minivaus.width);
-	//blitTMP(playscreen.ofs + hlp, minivaus.width);
-	blitROW(vram + hlp, playscreen.ofs + hlp, minivaus.width);
+
+	blitTEMP($200, vram + hlp, minivaus.width, 1);
+	blitTEMP($200, playscreen.ofs + hlp, minivaus.width, 1);
 		
 	end;
 
+    asm
+	fxs FX_MEMS #$00
     end;
+
+end;
 
 
 procedure place_fire;
@@ -3065,7 +3009,7 @@ end;
 
 
 procedure check_fire;
-var x1,x2,y1,y2 : word;
+var x1,x2,y1,y2 : byte;
     begin
     if (fire.avl) then
        begin
@@ -3270,7 +3214,7 @@ var temp : smallint;
 
    repeat
     temp:=get_ball_direction(ball)+random(BALLDEV)-(BALLDEV shr 1);
-   until ((temp mod 90)>30) and ((temp mod 90)<60);
+   until (mod90(temp)>30) and (mod90(temp)<60);
 
    set_ball_direction(ball,temp);
    set_ball_speed(ball,ball.speed);
@@ -3308,7 +3252,7 @@ var
   begin
 
          if (ball.inplay) then  { all considerations apply if the ball }
-                                    { is in play.                          }
+                                { is in play.                          }
             begin
             if (ball.y>=22) and (ball.y<142) then
                ball_hit_block(ball);
@@ -3333,7 +3277,7 @@ var
                { If the speed is less than the maximum speed }
                if ball.speed < MAXSPEED then
                   begin
-                  inc(ball.speed,10);  { you increase it }
+                  inc(ball.speed,10);              { you increase it }
                   set_ball_speed(ball,ball.speed); { and you update it }
                   end;
                end;
@@ -3633,9 +3577,6 @@ var
      { of the cycle, it means that all three have fallen.            }
 
 //     for cn:=0 to 2 do
-	
-	if ball0.launch = FALSE then
-
          if not ball0.inplay then
             begin
             ball0:=ball1;
@@ -3803,7 +3744,7 @@ var x,y : smallint;
 
        end;
   *)
-    choose_start_wall:=st;  { e ritorna il numero selezionato }
+    choose_start_wall:=st + 1;  { e ritorna il numero selezionato }
     end;
 
 

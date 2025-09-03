@@ -50,12 +50,10 @@ const
 	VBXE_DIGIT = VBXE_DATA + $26400;
 
 var
-
 	blt: TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
 	blt_letter: TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
 
 	vbxe_ram: TVBXEMemoryStream;
-
 
 
 procedure start_level;
@@ -75,6 +73,27 @@ begin
 
 end;
 
+
+function mod90(a: smallint): byte; assembler;
+asm
+; N = hi:lo (16-bit)
+; N mod 90 -> A
+
+    LDY a+1
+    LDA Mod90Table,Y   ; tablica: (X*256) mod 90
+    CLC
+    ADC a              ; dodaj młodszy bajt
+    CMP #90
+    BCC done
+    SBC #90
+    CMP #90
+    BCC done
+    SBC #90            ; max 2 odejmowania bo 256 < 3*90
+done:
+    ; A = reszta mod 90
+
+    sta Result
+end;
 
 
 function sqrt32(r: cardinal): word;
@@ -105,9 +124,7 @@ begin
 end;
 
 
-
 {$i ..\service.pas}
-
 
 
 procedure init_game;
