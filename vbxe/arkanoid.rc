@@ -1,2 +1,3 @@
 all_walls rcdata 'walls.dat'
+vbxe_digit xbmp 'arkanoid_digit.bmp' 0 1
 vbxe_data xbmp 'btm.bmp' 0 1

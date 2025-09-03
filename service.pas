@@ -344,17 +344,11 @@ begin
  blt.dst_adr.byte1:=dst shr 8;
  blt.dst_adr.byte0:=dst;
 
- blt.src_step_x:=1;
- blt.dst_step_x:=1;
-
  blt.blt_control := 0;
 
  blt.blt_height:=h-1;
 
  blt.blt_width:=w-1;
-
- blt.blt_and_mask := $ff;
-
 
  RunBCB(blt);
 
@@ -403,18 +397,11 @@ begin
  blt.dst_adr.byte1:=dst shr 8;
  blt.dst_adr.byte0:=dst;
 
- blt.src_step_x:=1;
- blt.dst_step_x:=1;
-
  blt.dst_step_y:=320;
  blt.src_step_y:=320;
 
  blt.blt_width:=w-1;
  blt.blt_height:=h-1;
-
- blt.blt_and_mask:=$ff;
-
- blt.blt_zoom:=0;	// x1
 
  blt.blt_control:=0;
 
@@ -428,11 +415,7 @@ end;
 
 
 procedure blitZERO(src, dst: cardinal; w : word; h: byte);
-//var i: word;
 begin
-
-// for i := 0 to size-1 do
-//  if screen[src + i] <> 0 then screen[dst + i] := screen[src + i];
 
 	asm
 	  fxs FX_MEMS #$80
@@ -446,9 +429,6 @@ begin
  blt.dst_adr.byte1:=dst shr 8;
  blt.dst_adr.byte0:=dst;
 
- blt.src_step_x:=1;
- blt.dst_step_x:=1;
-
  blt.blt_control := 1;
 
  blt.dst_step_y:=320;
@@ -457,8 +437,6 @@ begin
  blt.blt_height:=h-1;
 
  blt.blt_width:=w-1;
-
- blt.blt_and_mask := $ff;
 
 	asm
 	  fxs FX_MEMS #$00
@@ -495,9 +473,6 @@ begin
  blt.dst_adr.byte1:=dst shr 8;
  blt.dst_adr.byte0:=dst;
 
- blt.src_step_x:=1;
- blt.dst_step_x:=1;
-
  blt.src_step_y:=0;
  blt.dst_step_y:=0;
  
@@ -505,8 +480,6 @@ begin
  blt.blt_control := 0;
 
  blt.blt_width:=size-1;
-
- blt.blt_and_mask := $ff;
 
 	asm
 	  fxs FX_MEMS #$00
@@ -794,6 +767,13 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
  
  fillByte(blt_letter, sizeof(TBCB), 0);
  
+ 
+ blt.src_step_x:=1;
+ blt.dst_step_x:=1;
+
+ blt.blt_and_mask:=$ff;
+
+
 
  blt_letter.src_step_x:=1;
  blt_letter.dst_step_x:=1;
@@ -1483,9 +1463,9 @@ begin
 
     hlp := row[ys] + xs;
 
-	asm
-	  fxs FX_MEMS #$80
-	end;
+    asm
+	fxs FX_MEMS #$80
+    end;
 
     blitTEMP(320, 16);
     blitTEMP(playscreen.ofs + hlp, $0200, 16, 8);
@@ -2803,9 +2783,17 @@ end;
 
 procedure put_digit(px: word; py, num: byte);  { Stampa la cifra digitale num }
                                                { alle coord. px,py.           }
-var x,y,a : byte;
+const
+   mul_6 : array [0..10] of byte = ( {$eval 11,":1*6"} );
 
-    begin
+//var x,y,a : byte;
+
+begin
+
+ blitTEMP(VBXE_DIGIT + mul_6[num], vram + px+row[py], 6, 11 );
+
+
+(*    
     a:=222; { Color 222 is dark red, which is used if the LED in question should appear off.
             { Color 223 is bright red, which is used when the LED is on. }
 
@@ -2876,8 +2864,9 @@ var x,y,a : byte;
     for y:=1 to 4 do
         //screen[px+5+row[py+y+5]]:=a;
 	putBYTE(vram + px+5+row[py+y+5], a);
+*)
 
-    end;
+end;
 
 
 { Print the 5 digits of the score at coordinates px,py }
@@ -2885,11 +2874,17 @@ procedure write_score(px: word; py : byte; sc : cardinal);
 var n1 : byte;
     f  : boolean;
 
-   begin
+begin
    f:=false; { As long as this remains false, the 0s are not printed. }
              { This is to ensure that the score starts at 0 and not   }
              { 000000, which looks bad.                               }
-	     
+
+    asm
+	fxs FX_MEMS #$80
+    end;
+
+   blitTEMP(128, 320);
+
    { first digital digit }
    n1:=(sc div 100000) mod 10;
    if n1>0 then f:=true;          { Se la prima cifra e' >0 allora }
@@ -2921,7 +2916,12 @@ var n1 : byte;
    { sixth and last digital digit (which of course is always 0 because }
    { the score travels in multiples of 10 points.                      }
    put_digit(px+35,py,0);
-   end;
+
+    asm
+	fxs FX_MEMS #$00
+    end;
+
+end;
 
 
 { When the pause is invoked, the control switches to this procedure }

@@ -46,6 +46,8 @@ uses crt, atari, vbxe, joystick;
 
 const
         VBXE_DATA = VBXE_OVRADR + 320*216;
+	
+	VBXE_DIGIT = VBXE_DATA + $26400;
 
 var
 
