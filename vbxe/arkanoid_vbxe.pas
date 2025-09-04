@@ -44,7 +44,7 @@ uses crt, atari, vbxe, joystick;
 
 {$define romoff}
 
-{$f $c8}
+//{$f $c8}
 
 
 const

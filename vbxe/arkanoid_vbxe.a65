@@ -151,8 +151,6 @@ START
 	icl 'atari\romoff.asm'
 	.fi
 
-	fmulinit
-
 VLEN	= VARDATASIZE-VARINITSIZE
 VADR	= DATAORIGIN+VARINITSIZE
 
@@ -1884,28 +1882,31 @@ B	= DATAORIGIN+$009B
 
 ; -------------------  ASM Block 00000137  -------------------
 
- lda a
-random_in_range:
-  sta scratch
-  clc
-  sbc #1
-  ora #1
-  ldy #$FF
-  ;determine which mask to use by counting leading zeroes
-count iny
-  rol a
-  bcc count
-  ;loop until random <= range-1
-try lda $d20a
-  and mask_bytes,y
-  cmp scratch: #$00
-  bcs try
- 
-  sta result
-  
-  jmp @exit
+// https://www.romhacking.net/forum/index.php?msg=401374
 
-mask_bytes: dta $FF, $7F, $3F, $1F, $0F, $07, $03, $01
+	lda a
+random_in_range:
+	sta scratch
+	clc
+	sbc #1
+	ora #1
+	ldy #$FF
+	;determine which mask to use by counting leading zeroes
+count	iny
+	rol @
+	bcc count
+	;loop until random <= range-1
+try	lda $d20a
+	and mask_bytes,y
+	cmp scratch: #$00
+	bcs try
+ 
+	sta Result
+  
+	jmp @exit
+
+mask_bytes
+	dta $FF, $7F, $3F, $1F, $0F, $07, $03, $01
 
 
 @exit
@@ -1958,7 +1959,7 @@ RESULT	= DATAORIGIN+$00A1
 
 .local	SQRT32						; FUNCTION
 
-; optimize OK (arkanoid_vbxe.pas), line = 133
+; optimize OK (arkanoid_vbxe.pas), line = 137
 
 	lda #$00
 	sta Q
@@ -1966,7 +1967,7 @@ RESULT	= DATAORIGIN+$00A1
 	sta Q+2
 	sta Q+3
 
-; optimize OK (arkanoid_vbxe.pas), line = 134
+; optimize OK (arkanoid_vbxe.pas), line = 138
 
 	sta B
 	sta B+1
@@ -1977,7 +1978,7 @@ RESULT	= DATAORIGIN+$00A1
 	jmp l_029E
 l_029F
 
-; optimize OK (arkanoid_vbxe.pas), line = 136
+; optimize OK (arkanoid_vbxe.pas), line = 140
 
 	lda B
 	sta :STACKORIGIN+9
@@ -2023,7 +2024,7 @@ l_029E
 	jmp l_02B3
 l_02B4
 
-; optimize OK (arkanoid_vbxe.pas), line = 139
+; optimize OK (arkanoid_vbxe.pas), line = 143
 
 	lda Q
 	add B
@@ -2038,14 +2039,14 @@ l_02B4
 	adc B+3
 	sta T+3
 
-; optimize OK (arkanoid_vbxe.pas), line = 141
+; optimize OK (arkanoid_vbxe.pas), line = 145
 
 	lsr Q+3
 	ror Q+2
 	ror Q+1
 	ror Q
 
-; optimize OK (arkanoid_vbxe.pas), line = 143
+; optimize OK (arkanoid_vbxe.pas), line = 147
 
 	lda R+3
 	cmp T+3
@@ -2061,7 +2062,7 @@ l_02B4
 @
 	jcc l_02D4
 
-; optimize OK (arkanoid_vbxe.pas), line = 144
+; optimize OK (arkanoid_vbxe.pas), line = 148
 
 	lda R
 	sbc T
@@ -2076,7 +2077,7 @@ l_02B4
 	sbc T+3
 	sta R+3
 
-; optimize OK (arkanoid_vbxe.pas), line = 145
+; optimize OK (arkanoid_vbxe.pas), line = 149
 
 	lda Q
 	add B
@@ -2092,7 +2093,7 @@ l_02B4
 	sta Q+3
 l_02D4
 
-; optimize OK (arkanoid_vbxe.pas), line = 148
+; optimize OK (arkanoid_vbxe.pas), line = 152
 
 	lda B
 	sta :STACKORIGIN+9
@@ -2120,7 +2121,7 @@ l_02D4
 	sta B+3
 l_02B3
 
-; optimize OK (arkanoid_vbxe.pas), line = 138
+; optimize OK (arkanoid_vbxe.pas), line = 142
 
 	lda B+3
 	cmp #$00
@@ -2138,7 +2139,7 @@ l_02B3
 	jcs l_02B4
 @
 
-; optimize OK (arkanoid_vbxe.pas), line = 152
+; optimize OK (arkanoid_vbxe.pas), line = 156
 
 	lda Q
 	sta RESULT
@@ -16544,15 +16545,15 @@ NWALL	= DATAORIGIN+$042F
 
 .local	INIT_GAME					; PROCEDURE
 
-; optimize FAIL ('SYSTEM.RANDOMIZE', arkanoid_vbxe.pas), line = 163
+; optimize FAIL ('SYSTEM.RANDOMIZE', arkanoid_vbxe.pas), line = 167
 
 	jsr SYSTEM.RANDOMIZE
 
-; optimize FAIL ('INITSVGA', arkanoid_vbxe.pas), line = 165
+; optimize FAIL ('INITSVGA', arkanoid_vbxe.pas), line = 169
 
 	jsr INITSVGA
 
-; optimize FAIL ('INITROWARRAY', arkanoid_vbxe.pas), line = 166
+; optimize FAIL ('INITROWARRAY', arkanoid_vbxe.pas), line = 170
 
 	jsr INITROWARRAY
 
@@ -17029,12 +17030,12 @@ NWALL	= DATAORIGIN+$042F
 	lda #$00
 	sta PATTERN4.HEIGHT+1
 
-; optimize OK (arkanoid_vbxe.pas), line = 173
+; optimize OK (arkanoid_vbxe.pas), line = 177
 
 	lda #$20
 	sta TOTALWALL
 
-; optimize OK (arkanoid_vbxe.pas), line = 175
+; optimize OK (arkanoid_vbxe.pas), line = 179
 
 	lda #$50
 	sta SCORE.HISCORE
@@ -17044,12 +17045,12 @@ NWALL	= DATAORIGIN+$042F
 	sta SCORE.HISCORE+2
 	sta SCORE.HISCORE+3
 
-; optimize OK (arkanoid_vbxe.pas), line = 178
+; optimize OK (arkanoid_vbxe.pas), line = 182
 
 	lda #$01
 	sta SOUND_ON
 
-; optimize OK (arkanoid_vbxe.pas), line = 179
+; optimize OK (arkanoid_vbxe.pas), line = 183
 
 	lda #$03
 	sta LV
@@ -17059,13 +17060,13 @@ NWALL	= DATAORIGIN+$042F
 ; --- RepeatUntilProlog
 l_35B4
 
-; optimize FAIL ('MAINSCREEN', arkanoid_vbxe.pas), line = 186
+; optimize FAIL ('MAINSCREEN', arkanoid_vbxe.pas), line = 190
 
 	jsr MAINSCREEN
 	lda MAINSCREEN.RESULT
 	sta SCORE.PL_NUMB
 
-; optimize OK (arkanoid_vbxe.pas), line = 188
+; optimize OK (arkanoid_vbxe.pas), line = 192
 
 	jeq l_35CA
 	lda #$01
@@ -17075,7 +17076,7 @@ l_35B4
 	jsr START_GAME
 l_35CA
 
-; optimize OK (arkanoid_vbxe.pas), line = 191
+; optimize OK (arkanoid_vbxe.pas), line = 195
 
 	lda SCORE.PL_NUMB
 	cmp #$01
@@ -17094,7 +17095,7 @@ l_35CA
 .endl
 l_0022
 
-; optimize FAIL ('INIT_GAME', arkanoid_vbxe.pas), line = 199
+; optimize FAIL ('INIT_GAME', arkanoid_vbxe.pas), line = 203
 
 	jsr INIT_GAME
 
@@ -17417,7 +17418,6 @@ adr.ALL_WALLS	= $DC00
 ATARI
 CPU_6502
 ROMOFF
-FASTMUL
 .endl
 
 .local	@RESOURCE
@@ -17522,21 +17522,6 @@ PROGRAMSTACK	= DATAORIGIN+VARDATASIZE
 	.print 'DATA: ',DATAORIGIN,'..',PROGRAMSTACK
 
 	ert DATAORIGIN<@end,'DATA memory overlap'
-
-; ------------------------------------------------------------
-
-	icl 'common\fmul.asm'				; fast multiplication
-
-	.print 'FMUL_INIT: ',fmulinit,'..',*-1
-
-	org $C800
-
-	.print 'FMUL_DATA: ',*,'..',*+$07FF
-
-square1_lo	.ds $200
-square1_hi	.ds $200
-square2_lo	.ds $200
-square2_hi	.ds $200
 
 	run START
 
