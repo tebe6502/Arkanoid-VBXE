@@ -32,6 +32,7 @@
 
  2025-09-01
  2025-09-03
+ 2025-09-04
 *)
 
 
@@ -42,6 +43,8 @@ uses crt, atari, vbxe, joystick;
 {$r arkanoid.rc}
 
 {$define romoff}
+
+{$f $c8}
 
 
 const
@@ -70,6 +73,37 @@ end;
 
 procedure ball_block_sound(a,b: word);
 begin
+
+end;
+
+
+function rand(a: byte): byte; assembler;
+asm
+// https://www.romhacking.net/forum/index.php?msg=401374
+
+	lda a
+random_in_range:
+	sta scratch
+	clc
+	sbc #1
+	ora #1
+	ldy #$FF
+	;determine which mask to use by counting leading zeroes
+count	iny
+	rol @
+	bcc count
+	;loop until random <= range-1
+try	lda $d20a
+	and mask_bytes,y
+	cmp scratch: #$00
+	bcs try
+ 
+	sta Result
+  
+	jmp @exit
+
+mask_bytes
+	dta $FF, $7F, $3F, $1F, $0F, $07, $03, $01
 
 end;
 

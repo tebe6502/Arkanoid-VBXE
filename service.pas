@@ -59,7 +59,7 @@ const
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
    BALLSPEED  = 500; { Ball speed (256 = 70 pixels per second }
-   MAXSPEED   = 2000;{ Maximum speed attainable by the ball }
+   MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
 
@@ -83,7 +83,7 @@ const
    LETTER_FRM = 8;   { Number of frames that constitute the animation of the letter }
    LETTER_SBF = 5;   { Number of cycles it must complete before moving to the next frame }
 
-   { Probability of letter drop in % }       {  L   E  B   D   S   C  P }
+   { Probability of letter drop in % }  {  L   E  B   D   S   C  P }
    LETTER_DIS : array[0..7] of byte = ( 0, 16, 20, 3, 18, 20, 20, 3 );
 
    FLUXLEVEL  = 176;
@@ -123,19 +123,19 @@ type
 
    BALLTYPE = RECORD                   { contiene i dati della pallina }
               x,y,                     { coordinate x,y attuali }
-              finex,finey,             { sottomultipli delle coordinate }
+              finex,finey,             { submultiples of the coordinates }
               oldx,oldy,               { vecchie coordinate }
               speed  : smallint;       { velocita' (256 = 70 pixel al sec. }
-              finespeed : smallint;    { velocita' (sottomultiplo) }
+              finespeed : smallint;    { speed (submultiple) }
               speedx,                  { velocita' sull'asse x }
               speedy : smallint;       { velocita' sull'asse y }
-              sbd    : word;           { per evitare i loop della pallina }
-              brwhit : byte;           { n. di blocchi marroni colpiti di seguito }
+              sbd    : word;           { to avoid ball loops }
+              brwhit : byte;           { number of brown blocks affected in succession }
               inplay : boolean;        { flag, TRUE if the ball is in play }
               launch : boolean;        { flag, TRUE if the ball must be }
                                        { thrown again }
-              onvaus : smallint;       { larghezza in pixel del vaus }
-              stm    : byte;           { contatore di calamita }
+              onvaus : smallint;       { width in pixels of the vaus }
+              stm    : byte;           { magnet counter }
               end;
 
    WALLTYPE = array [0..16*16-1] of byte;//array[0..12,-1..15] of byte; { for the wall (13x15 bricks) }
@@ -240,16 +240,17 @@ var
     pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
     pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
 
-    [striped] row        : array[0..255] of word absolute $c000; { array (see initRowArray) }
+    mody       : array[0..255] of byte absolute $0500;
+    modx       : array[0..255] of byte absolute $0600;
+    
+    sqrtable : array [0..1023] of cardinal absolute $a000;
 
-    mody       : array[0..255] of byte absolute $c000+$200;
-    modx       : array[0..255] of byte absolute $c000+$300;
+    [striped] row : array[0..255] of word absolute $c000; { array (see initRowArray) }
 
-    Mod90Table: array [0..255] of byte absolute $c000+$400;
-    Mod10Table: array [0..255] of byte absolute $c000+$500;
+    Mod90Table: array [0..255] of byte absolute $c000+$200;
+    Mod10Table: array [0..255] of byte absolute $c000+$300;
  
-    sintable: array [0..450-1] of byte absolute $c000+$600;
-
+    sintable: array [0..450-1] of smallint absolute $c000+$400;
 
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
@@ -323,6 +324,8 @@ end;
 
 procedure blitTEMP(swidth, dwidth: word); overload;
 begin
+
+ while BlitterBusy do;
 
  blt.dst_step_y:=dwidth;
  blt.src_step_y:=swidth;
@@ -470,15 +473,6 @@ begin
  end;
 
  RunBCB(blt);
-
-end;
-
-
-procedure putBYTE(dst: cardinal; v: byte);
-begin
-
- vbxe_ram.position := dst;
- vbxe_ram.WriteByte(v);
 
 end;
 
@@ -824,7 +818,7 @@ function random_letter_drop : smallint;
 var rn,sum,letter : word;
    begin
    repeat
-      rn:=random(100);  { Tira a caso un numero fra 0 e 99 }
+      rn:=rand(100);  { Tira a caso un numero fra 0 e 99 }
       sum:=0;           { pone la somma a zero             }
       letter:=0;        { e la lettera corrente a 0        }
 
@@ -948,27 +942,12 @@ procedure showBTMpicture(BTM : BTMTYPE);
 { BALL.x and BALL.y, BALLSPOT.x = BALLSPOT.y is the radius of the ball }
 { in pixels }
 procedure place_ball(var ball : BALLTYPE);
-//var yp, x : byte;
 begin
 
   hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];
   
   blitZERO(balldata.ofs, vram + hlp, BALLDIM, BALLDIM); 
 
-{
-  x:=0;
-
-  for yp:=0 to BALLDIM-1 do
-     begin
-     hlp:=ball.x-BALLSPOT+row[ball.y+yp-BALLSPOT];
-  
-     //mzerocpy(BALLARRAY[yp,0], screen[adr], BALLDIM);
-     blitZERO(balldata.ofs + x, vram + hlp, BALLDIM, 1);
-     
-     inc(x, BALLDIM);
-
-     end;
-}
 end;
 
 
@@ -1014,35 +993,35 @@ procedure set_ball(var ball : BALLTYPE);
 var b0, b1: Boolean;
   begin
   
-  b0:=(ball.oldx<>EMP) and (ball.oldy<>EMP);
-  b1:=(ball.oldx<>ball.x) or (ball.oldy<>ball.y);
+  b0 := (byte(ball.oldx) <> EMP) and (byte(ball.oldy) <> EMP);
+  b1 := (byte(ball.oldx) <> byte(ball.x)) or (byte(ball.oldy) <> byte(ball.y));
   
   if (b0 and b1) then
       remove_ball(ball); { as soon as VB starts the ball is moved to the }
 
   place_ball(ball);  { new coordinates }
 
-  ball.oldx:=ball.x; { si settano le vecchie coordinate uguali a quelle }
-  ball.oldy:=ball.y; { correnti, le correnti verrano modificate poi }
+  ball.oldx := ball.x; { si settano le vecchie coordinate uguali a quelle }
+  ball.oldy := ball.y; { correnti, le correnti verrano modificate poi }
   end;
 
 
 procedure set_ball_speed(var ball : BALLTYPE; speed : smallint);
 var
   sx,sy : smallint;   { Sets the speed of the ball based on the speed }
-  vm : single;     { vector module passed in SPEED: smallint.      }
+  vm : single;        { vector module passed in SPEED: smallint.      }
   i: cardinal;
   
   a,b: word;
 
-  begin
+begin
   sx:=ball.speedx;  { stores the x and y components of velocity }
   sy:=ball.speedy;  { in sx and sy, respectively                }
   
-  a:=abs(sx);
-  b:=abs(sy);
+  a:=abs(sx) and 1023;
+  b:=abs(sy) and 1023;
   
-  i:=(a*a) + (b*b);
+  i:=sqrtable[a] + sqrtable[b];
   
   hlp:=sqrt32(i);
   
@@ -1053,12 +1032,19 @@ var
 
   ball.speedx:=trunc(sx * vm);   { e quindi moltiplica per tale coef. }
   ball.speedy:=trunc(sy * vm);   { le due proiezioni della velocita'. }
+    
+  if ball.speedx = 0 then ball.speedx := $a0;
+  if ball.speedy = 0 then ball.speedy := $a0;
 
-  end;
+end;
 
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 //var w : single;
 begin                  { sets the trajectory angle of the ball }
+
+  if angle < 0 then inc(angle, 360);
+
+  while angle >= 360 do dec(angle, 360);
 
   ball.speedx:=sintable[angle+90];  { the velocity is assumed to be unitary }
   ball.speedy:=-sintable[angle];    { v=256 equals 70 pixels per sec. }
@@ -1074,15 +1060,22 @@ end;
 
 function get_ball_direction(var ball : BALLTYPE): smallint;
 var w : smallint; { Returns the direction in which the ball is moving }
-  begin
+begin
 
-  if ball.speedx=0 then w:=-90*(ball.speedy div abs(ball.speedy))
+  if ball.speedx=0 then begin
+   
+   if ball.speedy >= 0 then
+    w:=-90
+   else
+    w:=90;
+   
+  end 
   else
     begin
     { calculates the arcotangent and adds multiples of 90 degrees depending on }
     { signs of ball.speedx and ballspeed.y }
       
-    f_hlp:= -ball.speedy / ball.speedx;
+    f_hlp := -ball.speedy / ball.speedx;
     
     f_hlp := arctan(f_hlp)*180.0/pi;
 
@@ -1096,12 +1089,12 @@ var w : smallint; { Returns the direction in which the ball is moving }
     while w >= 360 do dec(w, 360);
     end;
 
-  get_ball_direction:=w;
-  end;
+  get_ball_direction := w;
+end;
 
 
 procedure start_ball(var ball : BALLTYPE);
-  begin
+begin
   { initialize the ball parameters when it is to be }
   { thrown by the vaus. }
 
@@ -1124,26 +1117,26 @@ procedure start_ball(var ball : BALLTYPE);
   ball.sbd:=0;
   ball.brwhit:=0;
 
-  end;
+end;
 
 
 function ball_speed(ball : BALLTYPE): smallint;
 var i: cardinal;
     a, b: word;
-  begin
+begin
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
   
-  a:=abs(ball.speedx);
-  b:=abs(ball.speedy);
+  a:=abs(ball.speedx) and 1023;
+  b:=abs(ball.speedy) and 1023;
   
-  i:=a*a + b*b;
+  i:=sqrtable[a] + sqrtable[b];
   
   ball_speed:=sqrt32(i);
 
   //ball_speed:=trunc(f_hlp);
     
-  end;
+end;
 
 
 procedure move_ball(var ball : BALLTYPE);
@@ -1157,8 +1150,8 @@ var
   { before performing this addition, everything is multiplied by 256 in order to }
   { have a higher number of positions. }
 
-  x:=(ball.x shl 8)+ball.finex+ball.speedx;
-  y:=(ball.y shl 8)+ball.finey+ball.speedy;
+  x := (byte(ball.x) shl 8) + ball.finex + ball.speedx;
+  y := (byte(ball.y) shl 8) + ball.finey + ball.speedy;
 
   ball.x:=x shr 8;
   ball.y:=y shr 8;
@@ -1169,7 +1162,7 @@ var
   { check if the ball hits the right wall }
   { if it hits, reverse the sign }
 
-  if(ball.x>SCRMAX) then
+  if(byte(ball.x) > SCRMAX) then
      begin
      ball.speedx:=-ball.speedx;  { inverte il vettore x della velocita' }
      ball.x:=2*SCRMAX-ball.x;    { riflette sull'asse x=SCRMAX la palla }
@@ -1179,7 +1172,7 @@ var
 
   { idem per la parete di sinistra }
 
-  if(ball.x<SCRMIN) then
+  if(byte(ball.x) < SCRMIN) then
      begin
      ball.speedx:=-ball.speedx;
      ball.x:=2*SCRMIN-ball.x;
@@ -1189,7 +1182,7 @@ var
 
   { ... e per quella superiore }
 
-  if(ball.y<SCRTOP) then
+  if(byte(ball.y) < SCRTOP) then
      begin
      ball.speedy:=-ball.speedy;
      ball.y:=2*SCRTOP-ball.y;
@@ -1202,19 +1195,21 @@ var
     greater than 0 (i.e., the ball is moving downward), and if the
     ball was previously above the vaus, then ...}
 
-  b0:=(ball.y + BALLSPOT > VAUS_LINE);
-  b1:=(ball.speedy > 0);
-  b2:=(ball.oldy <= VAUS_LINE);
+  b0 := byte(ball.y + BALLSPOT) > VAUS_LINE;
+  b1 := ball.speedy > 0;
+  b2 := byte(ball.oldy) <= VAUS_LINE;
 
 //  if(ball.y+BALLSPOT>VAUS_LINE) and (ball.speedy>0) and (ball.oldy<=VAUS_LINE) then
   if b0 and b1 and b2 then
      begin
-     { se un qualsiasi punto della palla si trova sul vaus ... }
+     { if any point on the ball is on the vaus ... }
 
-     if(ball.x > smallint(vaus.x-BALLSPOT)) and (ball.x < smallint(vaus.x+vaus.width+BALLSPOT)) then
+     if(byte(ball.x) > byte(vaus.x-BALLSPOT)) and (byte(ball.x) < byte(vaus.x+vaus.width+BALLSPOT)) then
         begin
-        { inverte il vettore vy della velocita' della palla }
+        { reverses the vy vector of the ball's velocity }
         ball.speedy:=-ball.speedy;
+	
+	ball.sbd := 0;
 
         if (vaus.letter=6) and (not ball.launch) then
            begin
@@ -1227,54 +1222,52 @@ var
         { emette il suono d'urto palla-vaus }
 
         { se la palla urta il cilindretto rosso di sinistra del vaus }
-        if (ball.x < smallint(vaus.x+10)) then
+        if (ball.x < byte(vaus.x+10)) then
            begin
            { inverte il vettore vx, velocita' x della palla }
            ball.speedx:=-ball.speedx;
 
            { mette nella variabile angle l'angolo di movimento della palla
              piu' un valore casuale di deviasione compreso fra 0 e BALLDEV }
-           angle:=get_ball_direction(ball)+random(BALLDEV);
+           angle:=get_ball_direction(ball) + rand(BALLDEV);
 
-           { re-imposta secondo questo nuovo angolo la direzione di movimento
-             della pallina. Comunque sia' l'angolo e' compreso fra 120 e 160
-             gradi. Valori superiori o inferiori a questo range vengono auto
-             maticamente riportati ai valori estremi del range stesso.
-             Ad esempio 175 gradi viene riportato a 160 gradi. }
+           { Reset the direction of movement of the ball according to this new }
+           { angle. However, the angle must be between 120 and 160 degrees.    }
+           { Values above or below this range are automatically adjusted to    } 
+	   { the extreme values of the range itself. For example, 175 degrees  }
+           { is adjusted to 160 degrees.                                       }
 
            set_ball_direction(ball,max(120,min(160,angle)));
 
-           { re-imposta la velocita' della palla, perche' cambiando l'angolo
-             di movimento la velocita' viene perduta. }
+           { Reset the speed of the ball, because changing the angle of }
+           { movement causes speed to be lost.                          }
 
            set_ball_speed(ball,ball.speed);
            end;
 
-        { del tutto simile al precedente con la differenza che il discorso
-          viene fatto per il cilindretto rosso di destra. }
+        { Completely similar to the previous one, with the difference that }      
+	{ the description refers to the small red cylinder on the right.   }
 
-        if (ball.x > smallint(vaus.x + vaus.width - 10)) then
+        if (byte(ball.x) > byte(vaus.x + vaus.width - 10)) then
            begin
            ball.speedx:=-ball.speedx;
-           angle:=get_ball_direction(ball)-random(BALLDEV);
+           angle:=get_ball_direction(ball)-rand(BALLDEV);
            set_ball_direction(ball,min(60,max(20,angle)));
-           set_ball_speed(ball,ball.speed);
+           set_ball_speed(ball, ball.speed);
            end;
 
         end;
      end;
 
-  { se la palla supera il vaus, senza che avvenga una collisione, vale
-    a dire: se entrambe, la vecchia e la nuova coordinata y sono maggiori
-    della dell'ordinata su cui scorre il vaus e la velocita' y della palla
-    e maggiore di 0, cioe' la palla si muove verso il basso, allora la palla
-    e' persa e il vaus viene fatto esplodere.}
+  { if the ball passes the vaus without colliding with it, that is to say:
+    if both the old and new y coordinates are greater than the ordinate on which
+    the vaus runs and the speed y of the ball is greater than 0, i.e.
+    the ball is moving downwards, then the ball is lost and the vaus is detonated.  }
 
-  if (ball.oldy>VAUS_LINE) and (ball.y>SCRBOT) and (ball.speedy>0) then
+  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy>0) then
      begin
-     ball.inplay:=FALSE; { per adesso viene solo settato il flag, palla non
-                           piu' in gioco. }
-     remove_ball(ball);  { e si cancella la palla dallo schermo }
+     ball.inplay:=FALSE; { For now, only the flag is set, the ball is no longer in play. }
+     remove_ball(ball);  { and the ball is removed from the screen }
      end;
 
   end;
@@ -1337,7 +1330,7 @@ end;
 
 procedure place_vaus;
 var
-  y: byte;
+  i, y: byte;
 
   begin
   inc(vaus.iflash);               { viene incrementato ogni ciclo (1/70 sec.) }
@@ -1359,7 +1352,19 @@ var
   { declaration of constants. }
 
   blitZERO(playvaus.ofs, vram + vaus.x + row[vaus.y], vaus.width, vaus.height);
- 
+
+  asm
+   fxs FX_MEMS #$80
+  end;
+
+  hlp := vaus.x + row[vaus.y + 2];
+  
+  y := vaus.height - 4;
+    
+  blitTEMP(320, 1);
+  blitTEMP(vram + hlp, $200, 1, y);
+
+(* 
   for y:=0 to vaus.height-1 do
      begin
      { this multiplication is done here so as not to repeat it }
@@ -1372,7 +1377,7 @@ var
         begin
         //screen[vaus.x+row[y+vaus.y]]:=FLASH[vaus.flash];
 	
-	hlp := vaus.x+row[y+vaus.y];
+	hlp := vaus.x + row[y+vaus.y];
 
         putBYTE(vram + hlp, FLASH[vaus.flash]);
 
@@ -1381,7 +1386,19 @@ var
         end;
 	
      end;
+*)
+
+  for i:=0 to y do scr[i] := FLASH[vaus.flash];
+   
+  blitTEMP(1, 320);
+  blitTEMP($200, vram + hlp, 1, y);
+  blitTEMP($200, vram + hlp + vaus.width-1, 1, y);
+   
+  asm
+   fxs FX_MEMS #$00
   end;
+
+end;
 
 
 { moves the vaus to coordinates x,y }
@@ -1437,7 +1454,7 @@ begin
 
     for y:=7 downto 0 do
         begin
-        yh:=pattern.width*mody[ys+y]; { calcola la coord. y relativa alla }
+        yh:=byte(pattern.width)*mody[ys+y]; { calcola la coord. y relativa alla }
                                       { mattonella di sfondo che deve rim-  }
                                       { piazzare il mattoncino che non c'e' }
                                       { piu' }
@@ -1486,19 +1503,18 @@ begin
     { pixels on the y-axis. In other words, the edge of the shadow coincides with }
     { the center of the brick }
 
-    hlp := row[ys+4] + xs;
+    hlp := row[ys+4] + xs + 8;
 
-    blitTEMP(320, 32);
-    blitTEMP(playscreen.ofs + hlp, $0300, 32, 9);
+    blitTEMP(320, 17);
+    blitTEMP(playscreen.ofs + hlp, $0300, 17, 9);
+
+    i:=0;
 
 //    for y:=ys+4 to ys+12 do begin
-    for y:=8 downto 0 do begin
+    for y:=0 to 8 do begin
 
-//	hlp := row[y] + xs;
-
-        yh:=y*32;
-
-        for x:=xs+8 to xs+24 do
+        //for x:=xs+8 to xs+24 do
+        for x:=16 downto 0 do
 
             { It is necessary to check that the coordinates are not greater than }
             { those of the playing field because in that case there is no }
@@ -1514,14 +1530,12 @@ begin
 
             { Dunque il caso da tenere in considerazione e' solo x<SCRMAX }
 
-            if x < SCRMAX then
+            if x+xs+8 < SCRMAX then
                begin
                { prende il colore di sfondo e toglie l'ombra }
                //cl:=playscreen.map[x+row[y]] or 128;
-	       
-	       i := x - xs;
-	       
-	       pat[yh + i] := pat[yh + i] or $80;
+
+	       pat[x+i] := pat[x+i] or $80;
 
                { e lo memorizza sia sullo schermo fisico ...}
                //screen[x+row[y]]:=cl;
@@ -1531,12 +1545,14 @@ begin
                //playscreen.map[x+row[y]]:=cl;
                end;
 
+	inc(i, 17);
+
     end;
 
-    blitTEMP(32, 320);
+    blitTEMP(17, 320);
     
-    blitTEMP($300, playscreen.ofs + hlp, 32, 9);
-    blitTEMP($300, vram + hlp, 32, 9);
+    blitTEMP($300, playscreen.ofs + hlp, 17, 9);
+    blitTEMP($300, vram + hlp, 17, 9);
 
 
     asm
@@ -1611,27 +1627,26 @@ begin
     end;
 
 
-    blitTEMP(0, 320);
+    blitTEMP(16, 320);
 
     blitTEMP($200, playscreen.ofs + hlp, 16, 8);
     blitTEMP($200, vram + hlp, 16, 8);
 
 
-    hlp := row[ys+4] + xs;
+    hlp := row[ys+4] + xs + 8;
 
-    blitTEMP(320, 32);
-    blitTEMP(playscreen.ofs + hlp, $0300, 32, 9);
+    blitTEMP(320, 17);
+    blitTEMP(playscreen.ofs + hlp, $0300, 17, 9);
+    
+    i:=0;
 
     { now draw the shadow of the brick }
     //for y:=ys+4 to ys+12 do begin
-    for y:=8 downto 0 do begin
+    for y:=0 to 8 do begin
     
-//        hlp := row[y] + xs;
-
-	yh := y * 32;
-
-        for x:=xs+8 to xs+24 do
-            if x<SCRMAX then  { check as in remove_block that the coordinates }
+        //for x:=xs+8 to xs+24 do
+        for x:=16 downto 0 do	
+            if x+xs+8<SCRMAX then  { check as in remove_block that the coordinates }
                               { are not beyond the right wall, because }
                               { the shadow is not cast on that wall }
                begin
@@ -1640,9 +1655,7 @@ begin
                { l'ombra. }
                //cl:=playscreen.map[x+row[y]] and 127;
 
-	       i := x - xs;
-
-	       pat[yh + i] := pat[yh + i] and $7f;
+	       pat[x + i] := pat[x + i] and $7f;
 
                { dopo di che lo rimette sullo schermo fisico... }
                //screen[x+row[y]]:=cl;
@@ -1651,18 +1664,19 @@ begin
                //playscreen.map[x+row[y]]:=cl;
                end;
 
+	inc(i, 17);
     end;
 
-    blitTEMP(32, 320);
-    
-    blitTEMP($300, playscreen.ofs + hlp, 32, 9);
-    blitTEMP($300, vram + hlp, 32, 9);
+    blitTEMP(17, 320);
+
+    blitTEMP($300, playscreen.ofs + hlp, 17, 9);
+    blitTEMP($300, vram + hlp, 17, 9);
 
 
     hlp := row[ys] + xs;
 
     blitTEMP(320, 16);
-    blitTEMP(playscreen.ofs + hlp, $0200, 15, 7);
+    blitTEMP(playscreen.ofs + hlp, $0200, 16, 7);
 
 
     if block>8 then { but if the block is gray (=9) or brown (=10) ... }
@@ -1726,6 +1740,7 @@ begin
     
     blitTEMP($200, playscreen.ofs + hlp, 15, 7);
     blitTEMP($200, vram + hlp, 15, 7);
+
 
     asm
 	fxs FX_MEMS #$00
@@ -1952,7 +1967,7 @@ var i: byte;
              { del blocco colpito (i punti sono nell'array in SCORE_WALL) }
              inc(score.player[cur_player],SCORE_WALL[wall[i]]);
 
-             inc(lett.incoming,random(LETTER_PROB));
+             inc(lett.incoming,rand(LETTER_PROB));
 
              lett.nextx:=(xb shl 4)+9;
              lett.nexty:=((yb+1) shl 3)+22;
@@ -2026,21 +2041,24 @@ var i: byte;
 
 
 procedure ball_hit_block(var ball : BALLTYPE);
-var 
+const
 
+  mul90_16: array [0..15] of word = ( {$eval 16,":1*90"} );
+
+var 
     x,y: byte;
 
-    lx,ly,
-    xb,yb    : shortint;
+    xb,yb    : byte;
 
     ox,oy,
     nx,ny,
+    lx,ly,
     mx,my,
     angle,
     myx,myy  : smallint;
 
-    f1,f2    : word;
-    a,b      : byte;
+    f1,f2    : cardinal;
+    a,b      : word;
 
     emergency,
     mimax,
@@ -2051,15 +2069,15 @@ var
 
     adjw     : array[0..3,0..3] of byte;
 
-    begin
-    emergency:=EMP;    { the emergency rebound indicator }
+begin
+    emergency:=EMP;   { the emergency rebound indicator }
 
-    nx:=ball.x-9;      { nx,ny have the coordinates of the ball with respect to }
-    ny:=ball.y-22;     { the origin fixed in the Northwest corner of }
-                       { field of play (within which the ball moves). }
+    nx:=ball.x-9;     { nx,ny have the coordinates of the ball with respect to }
+    ny:=ball.y-22;    { the origin fixed in the Northwest corner of }
+                           { field of play (within which the ball moves). }
 
-    ox:=ball.oldx-9;   { idem per le vecchie coordinate, l'origine e'   }
-    oy:=ball.oldy-22;  { quindi il punto dello schermo (9,22).          }
+    ox:=ball.oldx-9;  { idem per le vecchie coordinate, l'origine e'   }
+    oy:=ball.oldy-22; { quindi il punto dello schermo (9,22).          }
 
     xb:=nx shr 4;     { xb,yb sono le coordinate del blocco (eventualmente  }
     yb:=ny shr 3;     { ipotetico) su cui si trova ora la pallina.          }
@@ -2082,13 +2100,13 @@ var
           mx:=ball.oldx-nx-9;  { e dal punto di intersezione 2 }
           my:=ball.oldy-ny-22;
 
-	  a:=abs(lx); b:=abs(ly);
+	  a:=abs(lx) and 1023; b:=abs(ly) and 1023;
 
-          f1:=a*a+b*b;         { indi sceglie fra i due il punto di }
+          f1:=sqrtable[a] + sqrtable[b];         { indi sceglie fra i due il punto di }
 
-	  a:=abs(mx); b:=abs(my);
+	  a:=abs(mx) and 1023; b:=abs(my) and 1023;
 
-          f2:=a*a+b*b;         { intersezione piu' vicino alle vecchie coord. }
+          f2:=sqrtable[a] + sqrtable[b];         { intersezione piu' vicino alle vecchie coord. }
 
           if (f1 < f2) then    { f1 e f2 sono il quadrato del modulo del }
                                { vettore distanza (vedi sopra) }
@@ -2345,13 +2363,13 @@ var
           myx:=deflect shr 4;
           myy:=deflect and 15;
 
-          if myx=1 then ball.speedx:=-abs(ball.speedx);
+          if myx=1 then ball.speedx:= -abs(ball.speedx);
           if myx=2 then ball.speedx:= abs(ball.speedx);
-          if myx=3 then ball.speedx:=-    ball.speedx ;
+          if myx=3 then ball.speedx:= -ball.speedx ;
 
-          if myy=1 then ball.speedy:=-abs(ball.speedy);
+          if myy=1 then ball.speedy:= -abs(ball.speedy);
           if myy=2 then ball.speedy:= abs(ball.speedy);
-          if myy=3 then ball.speedy:=-    ball.speedy ;
+          if myy=3 then ball.speedy:= -ball.speedy ;
 
           end;
 
@@ -2361,7 +2379,7 @@ var
     { In case the number of indestructible bricks bumped consecutively   }
     { before bumping a brick of another type exceeds a certain threshold }
 
-    if ball.brwhit>MAXBRWHIT then
+    if ball.brwhit > MAXBRWHIT then
        begin
        { Se emergency e' rimasto a EMP significa che qualcosa e' andato storto }
        if emergency=EMP then fatal_error(err4);
@@ -2419,18 +2437,16 @@ var
 
        repeat
 
-          lx:=90*(mimax shr 4);    { la prima cifra di mimax viene posta in }
-          mx:=90*(mimax and 15);   { lx e la seconda in mx.                 }
+          lx:=mul90_16[mimax shr 4];    { la prima cifra di mimax viene posta in }
+          mx:=mul90_16[mimax and 15];   { lx e la seconda in mx.                 }
 
-          angle:=random(smallint(mx-lx))+lx; { L'angolo e' una variabile casuale fra  }
+          angle:=rand(mx-lx)+lx; { L'angolo e' una variabile casuale fra  }
                                    { lx e mx }
 
        until (mod90(angle)>30) and (mod90(angle)<60);
        { e questo ciclo si ripete finche' la palla ha un inclinazione }
        { compresa fra i 30 e i 60 gradi piu' multipli di 90 gradi.    }
        
-       while angle >= 360 do dec(angle, 360);
-
        set_ball_direction(ball,angle {mod 360});
        set_ball_speed(ball,ball.speed);
 
@@ -2647,6 +2663,7 @@ begin
 	    blitTEMP($200, vram + hlp, explosion.width, 1);
             end;
 
+	pause;
         death_sound(w);   { Il cicalino di quando il vaus viene distrutto }
                           { per ogni valore di w c'e' una nota diversa    }
         end;
@@ -2723,19 +2740,13 @@ begin
 end;
 
 
+(*
 procedure put_digit(px: word; py, num: byte);  { Stampa la cifra digitale num }
                                                { alle coord. px,py.           }
-const
-   mul_6 : array [0..10] of byte = ( {$eval 11,":1*6"} );
-
-//var x,y,a : byte;
+var x,y,a : byte;
 
 begin
 
- blitTEMP(VBXE_DIGIT + mul_6[num], vram + px+row[py], 6, 11 );
-
-
-(*    
     a:=222; { Color 222 is dark red, which is used if the LED in question should appear off.
             { Color 223 is bright red, which is used when the LED is on. }
 
@@ -2806,15 +2817,30 @@ begin
     for y:=1 to 4 do
         //screen[px+5+row[py+y+5]]:=a;
 	putBYTE(vram + px+5+row[py+y+5], a);
-*)
-
 end;
+*)
 
 
 { Print the 5 digits of the score at coordinates px,py }
 procedure write_score(px: word; py : byte; sc : cardinal);
+const
+   mul_6 : array [0..10] of byte = ( {$eval 11,":1*6"} );
+
 var n1 : byte;
     f  : boolean;
+
+
+procedure put_digit(num: byte);        { Stampa la cifra digitale num }
+                                       { alle coord. px,py.           }
+begin
+
+ blitTEMP(VBXE_DIGIT + mul_6[num], vram + hlp, 6, 11 );
+
+ inc(hlp, 7);
+
+end;
+
+
 
 begin
    f:=false; { As long as this remains false, the 0s are not printed. }
@@ -2826,38 +2852,66 @@ begin
     end;
 
    blitTEMP(128, 320);
+   
+   hlp := row[py] + px;
 
    { first digital digit }
-   n1:=mod10table[sc div 100000];
+   
+   n1:=0;
+   while sc >= 100000 do begin
+    dec(sc, 100000);
+    inc(n1);
+   end;
+   n1:=mod10table[n1];
    if n1>0 then f:=true;          { Se la prima cifra e' >0 allora }
-   if f then put_digit(px,py,n1)  { occorre stamparla }
-   else put_digit(px,py,10);      { altrimenti stampa un numero spento }
+   if f then put_digit(n1)        { occorre stamparla }
+   else put_digit(10);            { altrimenti stampa un numero spento }
 
    { second digital digit }
-   n1:=mod10table[sc div 10000];     { Ditto for the remaining blocks }
+   n1:=0;
+   while sc >= 10000 do begin
+    dec(sc, 10000);
+    inc(n1);
+   end;
+   n1:=mod10table[n1];            { Ditto for the remaining blocks }
    if n1>0 then f:=true;
-   if f then put_digit(px+7,py,n1)
-   else put_digit(px+7,py,10);
+   if f then put_digit(n1)
+   else put_digit(10);
 
    { third digital digit }
-   n1:=mod10table[sc div 1000];
+   n1:=0;
+   while sc >= 1000 do begin
+    dec(sc, 1000);
+    inc(n1);
+   end;
+   n1:=mod10table[n1];
    if n1>0 then f:=true;
-   if f then put_digit(px+14,py,n1)
-   else put_digit(px+14,py,10);
+   if f then put_digit(n1)
+   else put_digit(10);
 
    { fourth digital digit }
-   n1:=mod10table[sc div 100];
+   n1:=0;
+   while sc >= 100 do begin
+    dec(sc, 100);
+    inc(n1);
+   end;
+   n1:=mod10table[n1];
    if n1>0 then f:=true;
-   if f then put_digit(px+21,py,n1)
-   else put_digit(px+21,py,10);
+   if f then put_digit(n1)
+   else put_digit(10);
 
    { fifth digital digit }
-   n1:=mod10table[sc div 10];
-   put_digit(px+28,py,n1);
+   n1:=0;
+   while sc >= 10 do begin
+    dec(sc, 10);
+    inc(n1);
+   end;
+   n1:=mod10table[n1];
+   put_digit(n1);
 
    { sixth and last digital digit (which of course is always 0 because }
    { the score travels in multiples of 10 points.                      }
-   put_digit(px+35,py,0);
+   put_digit(0);
 
     asm
 	fxs FX_MEMS #$00
@@ -2898,16 +2952,16 @@ end;
 
 { Print the small vaus in the lower left corner indicating the number of }
 { lives remaining available (not counting the one in play).              }
-procedure plot_lives(lives : smallint);
+procedure plot_lives(lives : byte);
 
 const XLIVES = 11;
       YLIVES = 192;
 
-var x,y,cn: byte;
+var x,y,xl,yl,cn : byte;
 
-    xp,yp,
-    xl,yl   : word;
-    shadow, cl  : byte;
+    xp,yp   : word;
+
+    shadow, cl : byte;
 
 begin
     dec(lives); { The number of lives must be decreased by one   }
@@ -2923,24 +2977,27 @@ begin
     blitTEMP(minivaus.width, minivaus.width);
 
 
-    for cn:=0 to 7 do                       { at most he draws 8 }
+    for cn:=0 to 7 do begin                      { at most he draws 8 }
+
+        xl := XLIVES + byte(minivaus.width) * cn;
+
         for y:=0 to minivaus.height-1 do begin
 
 	    blitTEMP(minivaus.ofs + y*minivaus.width, $280, minivaus.width, 1);	// pom
 
             yl:=y+YLIVES;
 
-	    hlp := XLIVES+cn*minivaus.width;
+            yp := byte(pattern.width) * mody[yl];
 
-	    blitTEMP(playscreen.ofs + hlp + row[yl], $200, minivaus.width, 1);	// scr
+ 	    hlp := row[yl] + xl;
+
+	    blitTEMP(playscreen.ofs + hlp, $200, minivaus.width, 1);		// scr
 
 
             for x:=0 to minivaus.width-1 do
                 begin
-                xl:=x + hlp;
 
-                xp:=modx[xl];
-                yp:=mody[yl]*pattern.width;
+                xp:=modx[xl + x];
 
                 { if the number of lives is greater than the counter }
                 { then draw a vaus.                                  }
@@ -2974,12 +3031,13 @@ begin
                   end;
                 end;
 		
-	hlp := hlp + row[yl];
-
 	blitTEMP($200, vram + hlp, minivaus.width, 1);
 	blitTEMP($200, playscreen.ofs + hlp, minivaus.width, 1);
 		
 	end;
+	
+     end;
+
 
     asm
 	fxs FX_MEMS #$00
@@ -3001,7 +3059,7 @@ end;
 procedure remove_fire;
 begin
 
-   hlp := fire.x+row[fire.y];
+   hlp := fire.x + row[fire.y];
    
    blitBOX(playscreen.ofs + hlp, vram + hlp, shoots.width, shoots.height);
 
@@ -3028,12 +3086,12 @@ var x1,x2,y1,y2 : byte;
           fire.nw:=TRUE;
 
           dec(fire.y,4);
-          if fire.y<22 then fire.shot:=FALSE
+          if fire.y < 22 then fire.shot:=FALSE
           else
               begin
               place_fire;
 
-              if ((fire.y-22)>=0) and ((fire.y-22)<120) then
+              if (byte(fire.y-22) >= 0) and (byte(fire.y-22) < 120) then
                  begin
                  x1:=byte(fire.x-9 ) shr 4;
                  y1:=byte(fire.y-22) shr 3;
@@ -3086,9 +3144,10 @@ var y,fx  : byte;
 
 
 procedure vaus_out;
-var x,y,z : word;
-    begin
-    nosound;
+var x,z : byte;
+begin
+
+//    nosound;
 
     inc(score.player[cur_player],10000);
     remain_blk:=0;
@@ -3115,7 +3174,7 @@ var x,y,z : word;
 
         end;
 
-    end;
+end;
 
 
 procedure check_bonus_type(var b1,b2,b3 : BALLTYPE);
@@ -3213,10 +3272,10 @@ var temp : smallint;
    begin
 
    repeat
-    temp:=get_ball_direction(ball)+random(BALLDEV)-(BALLDEV shr 1);
+    temp:=get_ball_direction(ball) + rand(BALLDEV) - (BALLDEV shr 1);    
    until (mod90(temp)>30) and (mod90(temp)<60);
 
-   set_ball_direction(ball,temp);
+   set_ball_direction(ball, temp);
    set_ball_speed(ball,ball.speed);
    
    ball.sbd:=0;
@@ -3357,7 +3416,7 @@ var
 
   { Alla partenza la variabile lett.incoming assume un valore casuale }
   { fra 0 e LETTER_DROP (costante definita all'inizio della unit.     }
-  lett.incoming:=random(LETTER_DROP);
+  lett.incoming:=rand(LETTER_DROP);
 
   { Shows the animation of the VAUS materializing out of thin air }
   create_vaus;
@@ -3378,9 +3437,9 @@ var
   { - the picture is ended (i.e., no more bricks are left to be destroyed. }
   { - the game is somehow aborted.                 }
 
-  set_ball_direction(ball0,random(15)+60)  ; { random starting angle }
+  set_ball_direction(ball0,rand(15)+60)  ; { random starting angle }
                                              { 60 and 75 degrees }
-  set_ball_speed(ball0,BALLSPEED);
+  set_ball_speed(ball0, BALLSPEED);
 
   { initial speed = constant BALLSPEED }
   ball0.finespeed:=0; { submultiples of the speed are 0  }
@@ -3481,7 +3540,7 @@ var
         ball1:=ball0;    { ball 2 and 3 are placed equal to 1 }
         ball2:=ball0;
 
-        t1:=get_ball_direction(ball0) div 90;
+        t1:=get_ball_direction(ball0) ;//div 90;
         { you the quadrant in which the velocity vector is located }
         t2:=ball0.speed;  { as well as the modulus of the vector itself }
 
@@ -3490,11 +3549,11 @@ var
 
         { At this point the three balls are forced to split up. }
 	
-        hlp:=t1*90;
+        //hlp:=t1*90;
 
-        set_ball_direction(ball0,(hlp+30));
-        set_ball_direction(ball1,(hlp+45));
-        set_ball_direction(ball2,(hlp+60));
+        set_ball_direction(ball0,(t1+30));
+        set_ball_direction(ball1,(t1+45));
+        set_ball_direction(ball2,(t1+60));
 
 
         { Instead, the three velocities remain that of the first ball }
@@ -3744,7 +3803,7 @@ var x,y : smallint;
 
        end;
   *)
-    choose_start_wall:=st + 1;  { e ritorna il numero selezionato }
+    choose_start_wall:=st;  { e ritorna il numero selezionato }
     end;
 
 
