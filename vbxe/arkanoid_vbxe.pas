@@ -44,6 +44,8 @@
 	cmp #$03
 @
 	jne l_22B7
+	
+	
 	mwy BALL :bp2
 	ldy #BALL.SPEEDY-DATAORIGIN
 	lda #$00

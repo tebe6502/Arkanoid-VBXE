@@ -1331,8 +1331,9 @@ end;
 procedure place_vaus;
 var
   i, y: byte;
+  video: cardinal;
 
-  begin
+begin
   inc(vaus.iflash);               { viene incrementato ogni ciclo (1/70 sec.) }
 
   if vaus.iflash>SPEEDFLASH then  { se raggiunge il valore SPEEDFLASH... }
@@ -1359,10 +1360,12 @@ var
 
   hlp := vaus.x + row[vaus.y + 2];
   
+  video := vram + hlp;
+  
   y := vaus.height - 4;
     
   blitTEMP(320, 1);
-  blitTEMP(vram + hlp, $200, 1, y);
+  blitTEMP(video, $200, 1, y);
 
 (* 
   for y:=0 to vaus.height-1 do
@@ -1391,8 +1394,10 @@ var
   for i:=0 to y do scr[i] := FLASH[vaus.flash];
    
   blitTEMP(1, 320);
-  blitTEMP($200, vram + hlp, 1, y);
-  blitTEMP($200, vram + hlp + vaus.width-1, 1, y);
+  blitTEMP($200, video, 1, y);
+  
+  i:=vaus.width-1;
+  blitTEMP($200, video + i, 1, y);
    
   asm
    fxs FX_MEMS #$00
@@ -1808,27 +1813,27 @@ var
     xn,yn,
     xp1,yp1,
     xp2,yp2,
-    xp,yp : smallint;
+    xp,yp : byte;
 
     collision: byte;
 
 begin
-    inc(x1,16);         { incrementa le coordinate di tutti i punti }
-    inc(y1,24);         { per evitare che nel corso delle operazioni }
-    inc(x2,16);         { qualche coordinata diventi negativa }
-    inc(y2,24);         { prima di terminare la proc. li rimette a posto }
+    inc(x1,16);          { incrementa le coordinate di tutti i punti }
+    inc(y1,24);          { per evitare che nel corso delle operazioni }
+    inc(x2,16);          { qualche coordinata diventi negativa }
+    inc(y2,24);          { prima di terminare la proc. li rimette a posto }
 
-    collision:=0;       { number of intersections between segment and grid }
+    collision:=0;        { number of intersections between segment and grid }
 
-    xp1:=x1 shr 4;      { si calcola all'interno di quale mattoncino stanno }
-    yp1:=y1 shr 3;      { i due punti in questione }
-    xp2:=x2 shr 4;
-    yp2:=y2 shr 3;
+    xp1:=byte(x1) shr 4; { calculate which brick contains the two points in question}
+    yp1:=byte(y1) shr 3;
+    xp2:=byte(x2) shr 4;
+    yp2:=byte(y2) shr 3;
 
-    xk:=x1;             { copia temporaneamente le coord. dei due punti }
-    yk:=y1;             { in due vettori in modo da poter operare liberamente }
-    xj:=x2;             { le coord. iniziali vengono passate per indirizzo }
-    yj:=y2;             { e quindi non devono perdersi i valori }
+    xk:=x1;              { copia temporaneamente le coord. dei due punti }
+    yk:=y1;              { in due vettori in modo da poter operare liberamente }
+    xj:=x2;              { le coord. iniziali vengono passate per indirizzo }
+    yj:=y2;              { e quindi non devono perdersi i valori }
 
     xh:=x1;
     yh:=y1;
@@ -1844,28 +1849,28 @@ begin
 //       fatal_error(err1);
 
 
-    if (xp1<>xp2) or (yp1<>yp2) then   { se i due punti non coincidono... }
+    if (xp1<>xp2) or (yp1<>yp2) then   { if the two points do not coincide... }
        begin
-       if (yp1<>yp2) then    { se i due punti hanno diversa y }
+       if (yp1<>yp2) then     { if the two points have different y-values }
           begin
-          collision:=collision or 1; { il bit piu' basso viene messo a 1 }
+          collision:=collision or 1; { the lowest bit is set to 1 }
 
           while ((yn and 7)<>0) and ((yn and 7)<>7) do
             begin
-            x:=(xh+xn) shr 1; { dopo di che continua a dividere il segmento }
-            y:=(yh+yn) shr 1; { (x1,y1)-(x2,y2) finche non trova un inter- }
-                              { sezione con un reticolo }
+            x:=(xh+xn) shr 1; { after which it continues to divide the segment }
+            y:=(yh+yn) shr 1; { (x1,y1)-(x2,y2) until it finds an intersection }
+                              { with a lattice                                 }
             yp:=y shr 3;
 
-            if yp=yp1 then    { dei tre punti (due sono gli estremi del }
-               begin          { segmento) ne scarta uno con lo stesso   }
-               xh:=x;         { principio del teorema di Weierstrass.   }
+            if yp=yp1 then    { of the three points (two are the endpoints }
+               begin          { of the segment), it discards one using the }
+               xh:=x;         { same principle as Weierstrass' theorem.    }
                yh:=y;
                end;
 
-            if yp=yp2 then    { Il punto di mezzo sostituisce cioe' uno }
-               begin          { dei due estremi in modo che il segmento }
-               xn:=x;         { sia ancora a cavallo del reticolo.      }
+            if yp=yp2 then    { the midpoint replaces one of the }
+               begin          { two extremes so that the segment }
+               xn:=x;         { still straddles the lattice.     }
                yn:=y;
                end;
             end;
@@ -1941,7 +1946,7 @@ begin
     { Clipping in this case is simpler.                               }
 
     split_line:=collision;
-    end;
+end;
 
 { Consider hit the xb,yb block: if it is a normal block it takes it down,  }
 { if it is a gray that withstands multiple hits it decreases its strength. }
