@@ -122,11 +122,11 @@ type
 
 
    BALLTYPE = RECORD                   { contiene i dati della pallina }
-              x,y,                     { coordinate x,y attuali }
-              finex,finey,             { submultiples of the coordinates }
+              x,y: smallint;           { coordinate x,y attuali }
+              finex,finey: byte;       { submultiples of the coordinates }
               oldx,oldy,               { vecchie coordinate }
               speed  : smallint;       { velocita' (256 = 70 pixel al sec. }
-              finespeed : smallint;    { speed (submultiple) }
+              finespeed : word;        { speed (submultiple) }
               speedx,                  { velocita' sull'asse x }
               speedy : smallint;       { velocita' sull'asse y }
               sbd    : word;           { to avoid ball loops }
@@ -1812,7 +1812,7 @@ var
 
     collision: byte;
 
-    begin
+begin
     inc(x1,16);         { incrementa le coordinate di tutti i punti }
     inc(y1,24);         { per evitare che nel corso delle operazioni }
     inc(x2,16);         { qualche coordinata diventi negativa }
@@ -1840,8 +1840,8 @@ var
     { and therefore the game quits immediately, reporting the error.      }
     { This error occurs easily if MAXSPEED is set to >> 2000              }
 
-    if (abs(x1-x2)>16) or (abs(y2-y1)>8) then
-       fatal_error(err1);
+//    if (abs(x1-x2)>16) or (abs(y2-y1)>8) then
+//       fatal_error(err1);
 
 
     if (xp1<>xp2) or (yp1<>yp2) then   { se i due punti non coincidono... }
@@ -2455,7 +2455,7 @@ begin
        { between 30 and 60 degrees plus multiples of 90 degrees.  }
        
        set_ball_direction(ball,angle {mod 360});
-       set_ball_speed(ball,ball.speed);
+       set_ball_speed(ball, ball.speed);
 
        ball.brwhit:=0; { Reset emergency counter }
        end;
@@ -3986,7 +3986,7 @@ var nwall : boolean;
 
                 { the chosen wall is assigned to the player }
                 wall_p[cur_player]:=
-                      all_walls[score.wall_n[cur_player]-1];
+                      all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
