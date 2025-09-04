@@ -1023,9 +1023,9 @@ begin
   
   i:=sqrtable[a] + sqrtable[b];
   
-  hlp:=sqrt32(i);
+  f_hlp:=FastSqrt(i);
   
-  vm:=speed / hlp ;//sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
+  vm:=speed / f_hlp ;//sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
                                  { between the old and new speeds                }
                                  { (the direction does not change, only          }
                                  { the modulus changes).                         }
@@ -1126,15 +1126,15 @@ var i: cardinal;
 begin
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
-  
+
   a:=abs(ball.speedx) and 1023;
   b:=abs(ball.speedy) and 1023;
-  
+
   i:=sqrtable[a] + sqrtable[b];
   
-  ball_speed:=sqrt32(i);
+  f_hlp := FastSqrt(i);
 
-  //ball_speed:=trunc(f_hlp);
+  ball_speed:=trunc(f_hlp);
     
 end;
 
@@ -2046,11 +2046,11 @@ const
   mul90_16: array [0..15] of word = ( {$eval 16,":1*90"} );
 
 var 
-    x,y: byte;
+    x,y, i: byte;
 
     xb,yb    : byte;
 
-    ox,oy,
+    ox,oy, sp,
     nx,ny,
     lx,ly,
     mx,my,
@@ -2072,16 +2072,16 @@ var
 begin
     emergency:=EMP;   { the emergency rebound indicator }
 
-    nx:=ball.x-9;     { nx,ny have the coordinates of the ball with respect to }
-    ny:=ball.y-22;    { the origin fixed in the Northwest corner of }
-                           { field of play (within which the ball moves). }
+    nx:=ball.x-9;     { nx,ny have the coordinates of the ball with respect  }
+    ny:=ball.y-22;    { to the origin fixed in the Northwest corner of field }
+                      { of play (within which the ball moves).               }
 
-    ox:=ball.oldx-9;  { idem per le vecchie coordinate, l'origine e'   }
-    oy:=ball.oldy-22; { quindi il punto dello schermo (9,22).          }
+    ox:=ball.oldx-9;  { ditto for the old coordinates, the origin }
+    oy:=ball.oldy-22; { is so the screen point (9,22).            }
 
-    xb:=nx shr 4;     { xb,yb sono le coordinate del blocco (eventualmente  }
-    yb:=ny shr 3;     { ipotetico) su cui si trova ora la pallina.          }
-                      { Ricordarsi che (0,0) e' il blocco in altro a destra }
+    xb:=nx shr 4;     { xb,yb are the coordinates of the (possibly hypothetical) }
+    yb:=ny shr 3;     { block on which the ball is now located. Remember that    }
+                      { (0,0) is the block in the upper right-hand corner        }
 
 
     if wall[byte(xb)+byte(yb)*16]<>0 then  { ...if the block is not hypothetical but exists }
@@ -2094,34 +2094,36 @@ begin
 
        if collision=3 then     { if two collisions have occurred... }
           begin
-          lx:=ball.oldx-ox-9;  { si calcola la distanza della vecchia }
-          ly:=ball.oldy-oy-22; { coordinata dal punto di intersezione 1 }
+          lx:=ball.oldx-ox-9;  { the distance of the old coordinate }
+          ly:=ball.oldy-oy-22; { from intersection point 1 and      }
 
-          mx:=ball.oldx-nx-9;  { e dal punto di intersezione 2 }
+          mx:=ball.oldx-nx-9;  { intersection point 2 is calculated }
           my:=ball.oldy-ny-22;
 
 	  a:=abs(lx) and 1023; b:=abs(ly) and 1023;
 
-          f1:=sqrtable[a] + sqrtable[b];         { indi sceglie fra i due il punto di }
+          f1:=sqrtable[a] + sqrtable[b];         { indi chooses between the two the  }
 
 	  a:=abs(mx) and 1023; b:=abs(my) and 1023;
 
-          f2:=sqrtable[a] + sqrtable[b];         { intersezione piu' vicino alle vecchie coord. }
+          f2:=sqrtable[a] + sqrtable[b];         { intersection point closest to the old coord. }
 
-          if (f1 < f2) then    { f1 e f2 sono il quadrato del modulo del }
-                               { vettore distanza (vedi sopra) }
+          if (f1 < f2) then    { f1 and f2 are the square of the modulus }
+                               { of distance vector (see above)          }
 
              { Consider the case where the closest intersection is number 1. }
 
              begin
-             xb:=min(12,max(word(ox) shr 4,0));  { Vengono assegnate le coord. }
-             yb:=(byte(oy+24) shr 3)-3;        { del blocco relative a tale  }
-                                           { intersezione.               }
+	     i:=ox shr 4;
+             xb:=min(12,max(i,0));           { Vengono assegnate le coord. }
+             yb:=(byte(oy+24) shr 3)-3;      { del blocco relative a tale  }
+                                             { intersezione.               }
 
-             if wall[byte(xb)+byte(yb)*16]=0 then  { Se non vi e' alcun blocco   }
+             if wall[byte(xb)+byte(yb)*16]=0 then  { If there is no blockage }
                 begin
-                xb:=min(12,max(0,word(nx) shr 4)); { Allora l'urto avviene sull' }
-                yb:=(byte(ny+24) shr 3)-3;       { altra intersezione. La n.2  }
+		i:=nx shr 4;
+                xb:=min(12,max(0,i));        { Allora l'urto avviene sull' }
+                yb:=(byte(ny+24) shr 3)-3;   { altra intersezione. La n.2  }
                 end
              else
                 begin                        { Se invece il blocco esiste  }
@@ -2136,41 +2138,42 @@ begin
              { If it is the second intersection closest to the }
              { old coordinates, proceed in the same way.       }
 
-             xb:=min(12,max(0,word(nx) shr 4)); { Si calcolano le coord. del blocco }
-             yb:=(byte(ny+24) shr 3)-3;         { sull'intersezione nx,ny (la seconda) }
+	     i:=nx shr 4;
+             xb:=min(12,max(0,i));        { We calculate the coordinates of the block  }
+             yb:=(byte(ny+24) shr 3)-3;   { on the intersection nx,ny (the second one) }
 
-             if wall[byte(xb)+byte(yb)*16]=0 then     { Se il blocco non c'e'... }
+             if wall[byte(xb)+byte(yb)*16]=0 then    { If the blockade is not there... }
                 begin
-                nx:=ox;                   { allora l'intersezione valida e' }
-                ny:=oy;                   { l'altra, e si procede... }
+                nx:=ox;                   { then the valid intersection is }
+                ny:=oy;                   { the other, and it goes on...   }
 
-                xb:=min(12,max(0,word(nx) shr 4)); { ...riassegnando alle nuove }
-                yb:=(byte(ny+24) shr 3)-3;       { coord. l'intersezione n.1  }
+		i:=nx shr 4;
+                xb:=min(12,max(0,i));         { ...reassigning to the new  }
+                yb:=(byte(ny+24) shr 3)-3;    { coord. the intersection #1 }
                 end;
              end;
 
           end;
 
-       ball.x:=nx+9;    { Le nuove coordinate della palla sono quelle      }
-       ball.y:=ny+22;   { contentenute nelle variabili nx,ny, ritraslando  }
-                        { gli assi. nx,ny avevano i relativi assi centrati }
-                        { in (9,22).                                       }
+       ball.x:=nx + 9;    { The new ball coordinates are those contained    }
+       ball.y:=ny + 22;   { in the variables nx,ny, retranslating the axes. }
+                          { nx,ny had their axes centered in (9,22).        }
 
        shoot_block(xb,yb,ball);  { breaks down the block in question }
 
-       x:=(nx and 15) shr 1;     { si calcola il punto d'urto della palla }
-       y:=(ny and 7);            { rispetto al mattoncino.                }
+       x:=(nx and 15) shr 1;     { you calculate the impact point of   }
+       y:=(ny and 7);            { the ball with respect to the brick. }
 
-       { Dividendo per 2 la coord. x dell'urto si ottiene una sezione d'urto }
-       { su di un mattone quadrato invece che rettangolare che semplifica in }
-       { seguito i calcoli. Il mattone e' infatti di 16x8 pixel dividendo    }
-       { per 2 diventa di 8x8 pixel, e i calcoli sulle diagonali sono piu'   }
-       { semplici. }
+       { Dividing the coord. x of the impact by 2 gives a cross section   }
+       { on a square brick instead of a rectangular one, which simplifies }
+       { in following the calculations. The brick is in fact 16x8 pixels  }
+       { by dividing by 2 becomes 8x8 pixels, and the calculations on the }
+       { diagonals are more simple. }
 
 
-       { Se l'urto non avviene su uno dei bordi del mattone allora vuole }
-       { dire che qualcosa e' andato storto. In teoria non dovrebbe mai  }
-       { verificarsi.                                                    }
+       { If the bump does not occur on one of the edges of the brick then }
+       { it wants to say that something went wrong. In theory it should   }
+       { never occur.                                                     }
        if (x<>0) and (x<>7) and (y<>0) and (y<>7) then
           fatal_error(err3);
 
@@ -2179,49 +2182,47 @@ begin
 
        {                     5     1     8                               }
        {                      -----------                                }
-       {                    2 | mattone | 4                              }
+       {                    2 |  brick  | 4                              }
        {                      -----------                                }
        {                     6     3     7                               }
 
-
-
-       { Se la palla urta il bordo superiore del mattoncino... }
+       { If the ball hits the top edge of the brick... }
 
        if (y<x) and (x<byte(7-y)) then
           begin
-          ball.speedy:=-ball.speedy;   { Si inverte la coord. y della vel. }
-          emergency:=1;                { e segna l'eventiale punto di contatto }
+          ball.speedy:=-ball.speedy;   { It reverses the y-coordinate of vel.    }
+          emergency:=1;                { and marks the eventual point of contact }
           end;
 
        { ...il bordo inferiore... }
        if (byte(7-y) < x) and (x<y) then
           begin
-          ball.speedy:=-ball.speedy;   { inverte la y della vel. }
+          ball.speedy:=-ball.speedy;   { Reverses the y of the vel. }
           emergency:=3;
           end;
 
        { ...il bordo sinistro... }
        if (x<y) and (y<byte(7-x)) then
           begin
-          ball.speedx:=-ball.speedx;   { inverte la x della vel. }
+          ball.speedx:=-ball.speedx;   { Reverses the x of the vel.}
           emergency:=2;
           end;
 
        { ... e quello destro ... }
        if (byte(7-x)<y) and (y<x) then
           begin
-          ball.speedx:=-ball.speedx;   { inverte la x della vel. }
+          ball.speedx:=-ball.speedx;   { Reverses the x of the vel. }
           emergency:=4;
           end;
 
-       { ... se invece avviene su uno dei quattro spigoli ... }
+       { ... if it occurs on one of the four edges instead ... }
        if (x=y) or (x=byte(7-y)) then
           begin
           deflect:=$00;
           touch:=0;
 
-          { touch assume valori diversi a seconda dello spigolo         }
-          { Segue la tabella (per es. 0 = angolo in alto a sinistra)    }
+          { touch takes different values depending on the corner }
+          { Follows the table (e.g., 0 = upper left corner)      }
 
           { 0 1 }
           { 2 3 }
@@ -2233,28 +2234,26 @@ begin
           { Here, fill a 3x3 matrix with 1s or 0s depending on whether }
           { there are other bricks around the blocked block or not     }
 
-          { The left and right edges of the playing field are considered }
-          { as indestructible bricks in this case.                       }
+          { The left and right edges of the playing field are  }
+          { considered as indestructible bricks in this case.  }
 
           for lx:=-1 to 1 do
               for ly:=-1 to 1 do
                   begin
-                  mx:=max(min(byte(xb)+byte(lx),12),0); { When referring to x,      }
-                  my:=yb+ly;                { the coordinate            }
-                                            { must be between 0 and 12. }
-  
+                  mx:=max(min(xb+lx,12),0); { When referring to x, the coordinate }
+                  my:=yb+ly;                { must be between 0 and 12.           }
 
                   if (shortint(xb+lx)<0 ) or
                      (shortint(xb+lx)>12) or
                      (wall[byte(mx)+byte(my)*16]<>0) then
-                        adjw[byte(lx+1),byte(ly+1)]:=1   { There are bricks }
+                        adjw[byte(lx+1),byte(ly+1)]:=$ff  { There are bricks }
                   else
-                     adjw[byte(lx+1),byte(ly+1)]:=0;     { There are no bricks }
+                     adjw[byte(lx+1),byte(ly+1)]:=0;      { There are no bricks }
 
                   end;
 
-          { Around contains a value that represents the state of         }
-          { the bricks surrounding the brick that was hit.               }
+          { Around contains a value that represents the state }
+          { of the bricks surrounding the brick that was hit. }
 
           {        -------------                      }
           {        | 1 | 2 | 4 |                      }
@@ -2264,14 +2263,18 @@ begin
           {        | 64| 32| 16|                      }
           {        -------------                      }
 
-          { Example:                                                      }
-          { if bricks 1, 2, and 128 are located around U, the valu e'     }
-          { of around is 1+2+128=131.                                     }
+          { Example:                                                }
+          { if bricks 1, 2, and 128 are located around U, the value }
+          { of around is 1+2+128=131.                               }
 	  
-          around:=adjw[0,0] or (adjw[1,0] shl 1) or
-                               (adjw[2,0] shl 2) or (adjw[2,1] shl 3) or
-                               (adjw[2,2] shl 4) or (adjw[1,2] shl 5) or
-                               (adjw[0,2] shl 6) or (adjw[0,1] shl 7);
+          around:=(adjw[0,0] and $01) or 
+	          (adjw[1,0] and $02) or
+                  (adjw[2,0] and $04) or 
+		  (adjw[2,1] and $08) or
+                  (adjw[2,2] and $10) or 
+		  (adjw[1,2] and $20) or
+                  (adjw[0,2] and $40) or 
+		  (adjw[0,1] and $80);
 
           { Deflect contains a value that represents in hexadecimal       }
           { the changes to be made to vx (first hexadecimal digit)        }
@@ -2313,7 +2316,7 @@ begin
              shoot_block(xb-1,yb-1,ball);
              end;
 
-          { "and 14" sono i mattoni 2+4+8, gli altri non importa }
+          { “and 14” are the bricks 2+4+8, the others don't matter }
 
           if touch=1 then       { upper right corner }
              begin
@@ -2329,7 +2332,7 @@ begin
              shoot_block(xb+1,yb-1,ball);
              end;
 
-          if touch=2 then       { Spigolo in basso a sinistra }
+          if touch=2 then       { Bottom left corner }
              begin
              if (around and 224)=0    then deflect:=$12;
              if (around and 224)=32   then deflect:=$10;
@@ -2343,7 +2346,7 @@ begin
              shoot_block(xb-1,yb+1,ball);
              end;
 
-          if touch=3 then       { Spigolo in basso a destra   }
+          if touch=3 then       { Bottom right corner }
              begin
              if (around and 56)=0    then deflect:=$22;
              if (around and 56)=8    then deflect:=$02;
@@ -2357,18 +2360,22 @@ begin
              shoot_block(xb+1,yb+1,ball);
              end;
 
-          { La prima cifra hex (esadecimale) viene messa in myx }
-          { e la seconda in myy. }
+          { The first hex (hexadecimal) digit is put in myx }
+          { and the second in myy. }
 
-          myx:=deflect shr 4;
-          myy:=deflect and 15;
+          myx := deflect shr 4;
+          myy := deflect and 15;
+	  
+	  sp:=abs(ball.speedx);
 
-          if myx=1 then ball.speedx:= -abs(ball.speedx);
-          if myx=2 then ball.speedx:= abs(ball.speedx);
+          if myx=1 then ball.speedx:= -sp;
+          if myx=2 then ball.speedx:= sp;
           if myx=3 then ball.speedx:= -ball.speedx ;
 
-          if myy=1 then ball.speedy:= -abs(ball.speedy);
-          if myy=2 then ball.speedy:= abs(ball.speedy);
+	  sp:=abs(ball.speedy);
+
+          if myy=1 then ball.speedy:= -sp;
+          if myy=2 then ball.speedy:= sp;
           if myy=3 then ball.speedy:= -ball.speedy ;
 
           end;
@@ -2381,34 +2388,35 @@ begin
 
     if ball.brwhit > MAXBRWHIT then
        begin
-       { Se emergency e' rimasto a EMP significa che qualcosa e' andato storto }
+       { If emergency stayed in EMP, it means something went wrong. }
        if emergency=EMP then fatal_error(err4);
 
-       mimax:=EMERG_DEV[emergency]; { Altrimenti si calcola la deviazione }
-                                    { massima e minima del mattoncino.    }
+       mimax:=EMERG_DEV[emergency]; { Otherwise the deviation is calculated }
+				    { maximum and minimum of the brick.     }
 
-       { e a seconda di quale spigolo viene urtato e di come sono i mattoni }
-       { attorno a tale spigolo, la deviazione viene modificata. }
+      
+        { and depending on which edge is bumped and how the bricks are }
+	{ around that edge, the deflection is changed.                 }
 
-       { Per quanto il rimbalzo finale possa essere strano, questo controllo }
-       { viene fatto per evitare che la palla si incastri in un loop infinito }
+	{ as strange as the final bounce may be, this control is done  }
+	{ to prevent the ball from getting stuck in an infinite loop   }
 
-       { ovviamente il caso vale per i mattoni indistruttibili perche' gli }
-       { altri prima o poi cadono e quindi non possono bloccare la palla   }
-       { per un tempo infinito.                                            }
+	{ obviously the case applies to indestructible bricks because  }
+	{ the others sooner or later fall and therefore cannot block   }
+	{ the ball for an infinite time.                               }
 
-       { Ogni cifra hex di mimax esprime un angolo a multipli di 90 gradi  }
-       { la prima cifra e' l'angolo minimo, la seconda quello massimo.     }
+	{ Each hex digit of mimax expresses an angle at multiples of 90 degrees }
+	{ the first digit is the minimum angle, the second the maximum angle.   }
 
-       { Es. MIMAX:=$03; singifica angolo minimo 0*90 = 0 gradi, angolo max }
-       { 3*90 = 270 gradi, e cosi' via...                                   }
+	{ E.g., MIMAX:=$03; singifies minimum angle 0*90 = 0 degrees, max angle }
+	{ 3*90 = 270 degrees, and so on...                                      }
 
-       { una scrittura del tipo "mimax:=mimax and $0f or 10" significa }
-       { metti a 1 la prima cifra di mimax indipendentemente da quanto }
-       { vale adesso, lasciando inalterata la seconda.                 }
+	{ a writing such as "mimax:=mimax and $0f or 10" means     }
+	{ put the first digit of mimax to 1 regardless of how much }
+	{ applies now, leaving the second unchanged.               }
 
-       { Analogo il ragionamento per "... and $f0 or $03" che agisce   }
-       { sulla seconda cifra invece che sulla prima...                 }
+	{ Similar reasoning for "... and $f0 or $03" acting }
+	{ on the second digit instead of the first...       }
 
        case emergency of
 
@@ -2437,15 +2445,14 @@ begin
 
        repeat
 
-          lx:=mul90_16[mimax shr 4];    { la prima cifra di mimax viene posta in }
-          mx:=mul90_16[mimax and 15];   { lx e la seconda in mx.                 }
+          lx:=mul90_16[mimax shr 4];    { the first digit of mimax is placed in }
+          mx:=mul90_16[mimax and 15];   { lx and the second in mx.              }
 
-          angle:=rand(mx-lx)+lx; { L'angolo e' una variabile casuale fra  }
-                                   { lx e mx }
+          angle:=rand(mx-lx) + lx;      { Angle is a random variable between lx and mx }
 
-       until (mod90(angle)>30) and (mod90(angle)<60);
-       { e questo ciclo si ripete finche' la palla ha un inclinazione }
-       { compresa fra i 30 e i 60 gradi piu' multipli di 90 gradi.    }
+       until (mod90(angle) > 30) and (mod90(angle) < 60);
+       { and this cycle repeats until the ball has an inclination }
+       { between 30 and 60 degrees plus multiples of 90 degrees.  }
        
        set_ball_direction(ball,angle {mod 360});
        set_ball_speed(ball,ball.speed);
@@ -2503,12 +2510,12 @@ var yb: word;
 
             shadow:=128;              { Shadow = 128 -> shadow not present }
 
-            { Fa l'ombra sul fianco sinistro e superiore dello schermo  }
-            { E' l'ombra proiettata dal bordo metallico sullo sfondo di }
-            { gioco.                                                    }
-            if (y<16) or (x<18) then shadow:=0; { Shadow=0 -> ombra presente }
+            { It makes the shadow on the left and upper side of the screen }
+            { It is the shadow cast by the metal edge on the background of }
+            { play. }
+            if (y<16) or (x<18) then shadow:=0; { Shadow=0 -> shadow present }
 
-            { Disegna il pixel sullo schermo con l'eventuale ombra }
+            { Draw the pixel on the screen with any shadow }
             //playscreen.map[x+row[y]]:=(cl and 127) or shadow;
 
 	    scr[x] := (cl and $7f) or shadow;

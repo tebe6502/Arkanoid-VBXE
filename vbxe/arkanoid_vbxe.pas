@@ -28,13 +28,38 @@
 
 (*
  
- VBXE v1.3 by Tebe/Madteam
+ Arkanoid VBXE v1.6 by Tebe/Madteam
 
- 2025-09-01
- 2025-09-03
  2025-09-04
+
 *)
 
+
+{
+; optimize OK (service.pas), line = 2371
+
+	lda MYY+1
+	bne @+
+	lda MYY
+	cmp #$03
+@
+	jne l_22B7
+	mwy BALL :bp2
+	ldy #BALL.SPEEDY-DATAORIGIN
+	lda #$00
+	sub (:bp2),y
+	sta :STACKORIGIN+9
+	iny
+	lda #$00
+	sbc (:bp2),y
+	sta :STACKORIGIN+STACKWIDTH+9
+	ldy #BALL.SPEEDY-DATAORIGIN
+	lda :STACKORIGIN+9
+	sta (:bp2),y
+	iny
+	lda :STACKORIGIN+STACKWIDTH+9
+	sta (:bp2),y	
+}
 
 program arkanoid;
 
@@ -77,34 +102,54 @@ begin
 end;
 
 
-function rand(a: byte): byte; assembler;
+function rand(range: word): word; assembler;
 asm
-// https://www.romhacking.net/forum/index.php?msg=401374
 
-	lda a
-random_in_range:
-	sta scratch
-	clc
-	sbc #1
-	ora #1
-	ldy #$FF
-	;determine which mask to use by counting leading zeroes
-count	iny
-	rol @
-	bcc count
-	;loop until random <= range-1
-try	lda $d20a
-	and mask_bytes,y
-	cmp scratch: #$00
-	bcs try
- 
+seed = MAIN.SYSTEM.RndSeed
+
+	jsr random16
+
+	lda seed+1
+	and #$03
+	sta Result+1
+	lda seed
 	sta Result
-  
-	jmp @exit
 
-mask_bytes
-	dta $FF, $7F, $3F, $1F, $0F, $07, $03, $01
+loop	cpw Result range
+	bcc @exit
 
+	lsr Result+1
+	ror Result
+
+	jmp loop
+
+Random16:
+	lda seed+1
+	tay ; store copy of high byte
+	; compute seed+1 ($39>>1 = %11100)
+	lsr ; shift to consume zeroes on left...
+	lsr
+	lsr
+	sta seed+1 ; now recreate the remaining bits in reverse order... %111
+	lsr
+	eor seed+1
+	lsr
+	eor seed+1
+	eor seed+0 ; recombine with original low byte
+	sta seed+1
+	; compute seed+0 ($39 = %111001)
+	tya ; original high byte
+	sta seed+0
+	asl
+	eor seed+0
+	asl
+	eor seed+0
+	asl
+	asl
+	asl
+	eor seed+0
+	sta seed+0
+	rts
 end;
 
 
@@ -130,6 +175,7 @@ done:
 end;
 
 
+{
 function sqrt32(r: cardinal): word;
 var b,q,t: cardinal;
 begin
@@ -155,6 +201,16 @@ begin
  
  result:=q;
 
+end;
+}
+
+
+function FastSqrt(x: Single): Single;	// much faster with little less precision
+var
+  i: cardinal absolute x;
+begin
+  i := (i shr 1) + (127 shl 22);
+  Result := PSingle(@i)^;
 end;
 
 
