@@ -197,17 +197,17 @@ var
     shoots     : BTMTYPE;  { e il disegno dei laser }
     flux       : BTMTYPE;
     vaus       : VAUSTYPE; { data relating to the VAUS (see above) }
-    pattern    : BTMTYPE;  { sfondo }
+    pattern    : BTMTYPE;  { background }
 
-    pattern0   : BTMTYPE;  { sfondo }
-    pattern1   : BTMTYPE;  { sfondo }
-    pattern2   : BTMTYPE;  { sfondo }
-    pattern3   : BTMTYPE;  { sfondo }
-    pattern4   : BTMTYPE;  { sfondo }
+    pattern0   : BTMTYPE;  { background }
+    pattern1   : BTMTYPE;  { background }
+    pattern2   : BTMTYPE;  { background }
+    pattern3   : BTMTYPE;  { background }
+    pattern4   : BTMTYPE;  { background }
 
     status     : byte;
 
-    success    : boolean;               { status flag for BTM loading }
+//    success    : boolean;                 { status flag for BTM loading }
 
     remain_blk : byte;                    { bricks still to be knocked down }
     totalwall  : byte;                    { bricks throughout }
@@ -1270,17 +1270,19 @@ var
      remove_ball(ball);  { and the ball is removed from the screen }
      end;
 
-  end;
+end;
+
 
 procedure modify_vaus;
-  begin
+begin
   vaus.oldlen:=vaus.width;
   vaus.width :=playvaus.width;   { larghezza del vaus }
   vaus.height:=playvaus.height;  { altezza del vaus   }
-  end;
+end;
+
 
 procedure set_vaus; { setta i parametri iniziali (di partenza) del vaus }
-  begin
+begin
   vaus.x:=((SCRMAX-SCRMIN) shr 1)-8;
   vaus.y:=VAUS_LINE;
 
@@ -1300,10 +1302,11 @@ procedure set_vaus; { setta i parametri iniziali (di partenza) del vaus }
   vaus.letter:=EMP;
                                  { entrambi sono contenuti nel file .BTM }
 
-  end;
+end;
+
 
 procedure start_vaus;
-  begin
+begin
 //  mouse_x_limit(SCRMIN,(SCRMAX-vaus.width-1) shl 1);
 //  mousemove((SCRMAX-SCRMIN)-16,VAUS_LINE);
   vaus.x:=((SCRMAX-SCRMIN) shr 1)-8;
@@ -1314,7 +1317,8 @@ procedure start_vaus;
   { even the mouse pointer (which is not visible) }
   { is moved to the center }
 
-  end;
+end;
+
 
 procedure remove_vaus;
 begin
@@ -1391,7 +1395,7 @@ begin
      end;
 *)
 
-  for i:=0 to y do scr[i] := FLASH[vaus.flash];
+  for i:=y downto 0 do scr[i] := FLASH[vaus.flash];
    
   blitTEMP(1, 320);
   blitTEMP($200, video, 1, y);
@@ -1410,23 +1414,24 @@ end;
 procedure move_vaus(x,y : smallint);
   begin
 
-  { se le coordinate oldx,oldy sono valide allora bisogna cancellarlo }
-  { da quella posizione }
+  { if oldx,oldy coordinates are valid then you have to delete it }
+  { from that location }
   if(vaus.oldx <> EMP) and (vaus.oldx <> vaus.x) or (vaus.width <> vaus.oldlen) then
      remove_vaus;
 
-  vaus.oldx:=vaus.x; { le nuove coordinate diventano le vecchie }
+  vaus.oldx:=vaus.x; { the new coordinates become the old ones }
   vaus.oldy:=vaus.y;
 
-  { le coordinate x,y diventano le nuove }
-  { viene eseguito un clipping delle coordinate, cioe' se i valori ad }
-  { esempio sono troppo alti, vengono settate al massimo valore accettabile }
-  { analogamente per il minimo }
+  { x,y coordinates become the new ones          }
+  { a coordinate clipping is performed, that is, }
+  { if the values at example are too high,       }
+  { they are set to the maximum acceptable value }
+  { similarly for the minimum                    }
 
   vaus.x:=max(SCRMIN,min(x,(SCRMAX-vaus.width)));
   vaus.y:=max(SCRTOP,min(y,(SCRBOT-vaus.height)));
 
-  place_vaus;  { chiama la funzione placevaus di cui sopra }
+  place_vaus;  { call the above place_vaus function }
   end;
 
 
@@ -1516,7 +1521,7 @@ begin
     i:=0;
 
 //    for y:=ys+4 to ys+12 do begin
-    for y:=0 to 8 do begin
+    for y:=8 downto 0 do begin
 
         //for x:=xs+8 to xs+24 do
         for x:=16 downto 0 do
@@ -1647,7 +1652,7 @@ begin
 
     { now draw the shadow of the brick }
     //for y:=ys+4 to ys+12 do begin
-    for y:=0 to 8 do begin
+    for y:=8 downto 0 do begin
     
         //for x:=xs+8 to xs+24 do
         for x:=16 downto 0 do	
@@ -1770,7 +1775,7 @@ begin
 end;
 
 
-procedure set_wall;             { imposta il muro }
+procedure set_wall;             { set the wall }
 var x,y,wl  : byte;
 //    name    : string;
 
@@ -2477,7 +2482,7 @@ var yb: word;
     { It computes a priori all values of x mod patt.width            }
     { patt.width = width of the small square defining the background }
 
-    for y:=0 to 255 do begin
+    for y:=255 downto 0 do begin
         modx[y]:=y mod patt.width;
 
     { analogamente per y mod patt.height }
@@ -3145,7 +3150,7 @@ var y,fx  : byte;
    if scrflux then
       begin
       
-      for y:=0 to 19 do
+      for y:=19 downto 0 do
           //memcpy(flux.map[(y+fx) shl 3], screen[217+row[y+FLUXLEVEL]], 8);
           blitROW(flux.ofs + (y+fx) shl 3, vram + 217+row[y+FLUXLEVEL], 8);
 
@@ -3449,8 +3454,8 @@ var
   { - the picture is ended (i.e., no more bricks are left to be destroyed. }
   { - the game is somehow aborted.                 }
 
-  set_ball_direction(ball0,rand(15)+60)  ; { random starting angle }
-                                             { 60 and 75 degrees }
+  set_ball_direction(ball0,rand(15)+60);   { random starting angle }
+                                           { 60 and 75 degrees }
   set_ball_speed(ball0, BALLSPEED);
 
   { initial speed = constant BALLSPEED }
@@ -3516,9 +3521,9 @@ var
 
      end;
 
-     { If the coordinates of the ball cn are between 22 and 142 (respectively}
-     { maximum and minimum coordinates at which a brick can be bumped) then  }
-     { you need to check whether the ball actually bumped a brick or not.    }
+     { If the coordinates of the ball cn are between 22 and 142 (respectively }
+     { maximum and minimum coordinates at which a brick can be bumped) then   }
+     { you need to check whether the ball actually bumped a brick or not.     }
 
      check_ball(ball0);
      check_ball(ball1);
@@ -3648,6 +3653,7 @@ var
      { of the cycle, it means that all three have fallen.            }
 
 //     for cn:=0 to 2 do
+	
          if not ball0.inplay then
             begin
             ball0:=ball1;
