@@ -30,38 +30,10 @@
  
  Arkanoid VBXE v1.6 by Tebe/Madteam
 
- 2025-09-04
+ 2025-09-06
 
 *)
 
-
-{
-; optimize OK (service.pas), line = 2371
-
-	lda MYY+1
-	bne @+
-	lda MYY
-	cmp #$03
-@
-	jne l_22B7
-	
-	
-	mwy BALL :bp2
-	ldy #BALL.SPEEDY-DATAORIGIN
-	lda #$00
-	sub (:bp2),y
-	sta :STACKORIGIN+9
-	iny
-	lda #$00
-	sbc (:bp2),y
-	sta :STACKORIGIN+STACKWIDTH+9
-	ldy #BALL.SPEEDY-DATAORIGIN
-	lda :STACKORIGIN+9
-	sta (:bp2),y
-	iny
-	lda :STACKORIGIN+STACKWIDTH+9
-	sta (:bp2),y	
-}
 
 program arkanoid;
 
@@ -69,7 +41,7 @@ uses crt, atari, vbxe, joystick;
 
 {$r arkanoid.rc}
 
-{$define romoff}
+//{$define romoff}
 
 //{$f $c8}
 

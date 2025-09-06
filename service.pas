@@ -58,7 +58,7 @@ const
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 500; { Ball speed (256 = 70 pixels per second }
+   BALLSPEED  = 550; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
@@ -117,7 +117,7 @@ type
               flash  : byte;           { indica il colore attuale dei bordi }
               iflash : byte;           { contatore di ritardo per il }
                                        { il lampeggio dei bordi }
-              letter : shortint;
+              letter : byte;
               end;
 
 
@@ -322,7 +322,7 @@ begin
 end;
 
 
-procedure blitTEMP(swidth, dwidth: word); overload;
+procedure blitTEMP(swidth, dwidth: word); overload; register;
 begin
 
  while BlitterBusy do;
@@ -333,7 +333,7 @@ begin
 end;
 
 
-procedure blitTEMP(src, dst: cardinal; w : word; h: byte); overload;
+procedure blitTEMP(src, dst: cardinal; w : word; h: byte); overload; register;
 begin
 
 
@@ -356,7 +356,7 @@ begin
 end;
 
 
-procedure blitLETTER(src, dst: cardinal);
+procedure blitLETTER(src, dst: cardinal); register;
 begin
 
  asm
@@ -380,7 +380,7 @@ begin
 end;
 
 
-procedure blitBOX(src, dst: cardinal; w: word; h: byte);
+procedure blitBOX(src, dst: cardinal; w: word; h: byte); register;
 begin
 
  asm
@@ -412,7 +412,7 @@ begin
 end;
 
 
-procedure blitZERO(src, dst: cardinal; w : word; h: byte);
+procedure blitZERO(src, dst: cardinal; w : word; h: byte); register;
 begin
 
  asm
@@ -741,6 +741,19 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 	  fxs FX_MEMS #$00
 	end;
 
+ pause;
+ 
+ asm
+  sei
+  lda #0
+  sta nmien
+  sta irqen
+  
+  lda #$fe
+  sta portb
+ end;
+
+
 {$ENDIF}
 
    end; { Fine della procedura InitSVGA }
@@ -749,18 +762,23 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 
 procedure shine_block;    { esegue lo scintillio di un blocco }
 var
-    xb,yb,                { i parametri del blocco sono contenuti nella }
+    xb,yb: byte;          { i parametri del blocco sono contenuti nella }
     frame : word;         { variabile globale SHINEREC }
     xf,yf,
-    fr,og : word;
+    fr : word;
     
     y, i: byte;
 
-    begin
+begin
     xb   :=shinerec.xb;   { mette in xb,yb le coordinate del blocco }
     yb   :=shinerec.yb;
     
     i := xb+yb*16;
+
+    asm
+	fxs FX_MEMS #$80
+    end;
+
 
     if wall[i]>8 then                  { se il blocco e grigio o marrone }
        begin
@@ -769,22 +787,35 @@ var
 
        xf:= 9+(xb shl 4);  { trova le coordinate sullo shermo del blocco }
        yf:=22+(yb shl 3);  { da far scintillare }
-       fr:=frame  shl 7;   { si calcola la posizione del n-esimo frame }
+       fr:=frame shl 7;    { si calcola la posizione del n-esimo frame }
 
+
+       blitTEMP(16,320);
+
+       blitTEMP(shinewall.ofs+fr, vram + xf+row[yf+y], 16, 8);
+
+(*
        for y:=0 to 7 do    { e copia il frame n-esimo sullo schermo }
            begin
-           og:=y shl 4;      { equivale ad y*16, ma piu' veloce }
+           og:=y shl 4;    { equivale ad y*16, ma piu' veloce }
 //           memcpy(shinewall.map[fr+og], screen[xf+row[yf+y]], 16);
 
            blitROW(shinewall.ofs+fr+og, vram + xf+row[yf+y], 16);
            end;
+*)
+
        end;
 
-    inc(shinerec.frame);  { incrementa il frame counter }
-    if shinerec.frame=10 then shinerec.active:=FALSE;
-    { e quando il frame e' l'ultimo allora lo scintillio e' finito }
+       asm
+	  fxs FX_MEMS #$00
+       end;
 
-    end;
+
+    inc(shinerec.frame);  { increase the frame counter }
+    if shinerec.frame=10 then shinerec.active:=FALSE;
+    { and when the frame is the last one, then the sparkle is over }
+
+end;
 
 procedure unshine_block; { interrompe lo scintillio di un blocco se la }
                          { palla urtandone un altro causa lo scintillio }
@@ -818,7 +849,7 @@ function random_letter_drop : smallint;
 var rn,sum,letter : word;
    begin
    repeat
-      rn:=rand(100);  { Tira a caso un numero fra 0 e 99 }
+      rn:=rand(100);    { Tira a caso un numero fra 0 e 99 }
       sum:=0;           { pone la somma a zero             }
       letter:=0;        { e la lettera corrente a 0        }
 
@@ -844,7 +875,7 @@ var fl,fw : word;
 begin
     fl:=(lett.typ shl 10)+(lett.frame shl 4);
 
-    blitLETTER(letters.ofs + fl, vram + lett.x+row[lett.y]);
+    blitLETTER(letters.ofs + fl, vram + lett.x + row[lett.y]);
 end;
 
 
@@ -920,22 +951,11 @@ procedure check_letter;
 
 { Copy the specified drawing to the screen starting from coordinate 0,0 }
 procedure showBTMpicture(BTM : BTMTYPE);
-//var x,y,ofst : word;
-
-  begin
+begin
     
     blitBOX(BTM.ofs, vram, BTM.width, BTM.height);
 
-(*
-  for y:=0 to BTM.height-1 do   { la y varia da 0 all'altezza-1 del disegno }
-     begin
-     ofst:=y*BTM.width;         { calcola l'indirizzo nella matrice del dis.}
-     for x:=0 to BTM.width-1 do
-        screen[x+row[y]]:=BTM.map[x+ofst]; { mette il disegno sullo schermo }
-     end;
-*)
-
-  end;
+end;
 
 
 { Draw the ball on the screen, the coordinates are specified in }
@@ -1412,7 +1432,7 @@ end;
 
 { moves the vaus to coordinates x,y }
 procedure move_vaus(x,y : smallint);
-  begin
+begin
 
   { if oldx,oldy coordinates are valid then you have to delete it }
   { from that location }
@@ -1432,7 +1452,7 @@ procedure move_vaus(x,y : smallint);
   vaus.y:=max(SCRTOP,min(y,(SCRBOT-vaus.height)));
 
   place_vaus;  { call the above place_vaus function }
-  end;
+end;
 
 
 { remove a brick from the screen }
@@ -1513,7 +1533,8 @@ begin
     { pixels on the y-axis. In other words, the edge of the shadow coincides with }
     { the center of the brick }
 
-    hlp := row[ys+4] + xs + 8;
+    inc(xs, 8);
+    hlp := row[ys+4] + xs;// + 8;
 
     blitTEMP(320, 17);
     blitTEMP(playscreen.ofs + hlp, $0300, 17, 9);
@@ -1540,7 +1561,7 @@ begin
 
             { Dunque il caso da tenere in considerazione e' solo x<SCRMAX }
 
-            if x+xs+8 < SCRMAX then
+            if x+xs{+8} < SCRMAX then
                begin
                { prende il colore di sfondo e toglie l'ombra }
                //cl:=playscreen.map[x+row[y]] or 128;
@@ -1764,6 +1785,7 @@ var
     x,y, i: byte;
 
 begin
+
     for y:=0 to 14 do begin
    
 	i:=y*16;
@@ -1771,7 +1793,22 @@ begin
         for x:=0 to 12 do
             if wall[x + i] <> 0 then place_block(x,y,wall[x + i]);
     end;
-    
+
+(*
+
+a = bianco    { normale cade con un colpo }
+b = arancione             ''
+c = ciano                 ''
+d = verde                 ''
+e = rosso                 ''
+f = blu                   ''
+g = porpora               ''
+h = giallo                ''
+i = grigio    { occorrono piu' colpi per abbatterlo }
+j = marrone   { indistruttibile                     }
+
+*)
+
 end;
 
 
@@ -2184,8 +2221,9 @@ begin
        { If the bump does not occur on one of the edges of the brick then }
        { it wants to say that something went wrong. In theory it should   }
        { never occur.                                                     }
-       if (x<>0) and (x<>7) and (y<>0) and (y<>7) then
-          fatal_error(err3);
+
+//       if (x<>0) and (x<>7) and (y<>0) and (y<>7) then
+//          fatal_error(err3);
 
 
        { These are the values assumed by EMERGENCY depending on the point of impact }
@@ -2256,9 +2294,9 @@ begin
                   if (shortint(xb+lx)<0 ) or
                      (shortint(xb+lx)>12) or
                      (wall[byte(mx)+byte(my)*16]<>0) then
-                        adjw[byte(lx+1),byte(ly+1)]:=$ff  { There are bricks }
+                        adjw[byte(lx+1),byte(ly+1)]:=10   { There are bricks }
                   else
-                     adjw[byte(lx+1),byte(ly+1)]:=0;      { There are no bricks }
+                     adjw[byte(lx+1),byte(ly+1)]:=20      { There are no bricks }
 
                   end;
 
@@ -2276,7 +2314,8 @@ begin
           { Example:                                                }
           { if bricks 1, 2, and 128 are located around U, the value }
           { of around is 1+2+128=131.                               }
-	  
+
+{	  
           around:=(adjw[0,0] and $01) or 
 	          (adjw[1,0] and $02) or
                   (adjw[2,0] and $04) or 
@@ -2285,6 +2324,32 @@ begin
 		  (adjw[1,2] and $20) or
                   (adjw[0,2] and $40) or 
 		  (adjw[0,1] and $80);
+}
+
+        asm
+	lda #0
+	sta around
+
+	lda #10
+
+	cmp adr.ADJW
+	ror around
+	cmp adr.ADJW+$04
+	ror around
+	cmp adr.ADJW+$08
+	ror around	
+	cmp adr.ADJW+$09
+	ror around
+	cmp adr.ADJW+$0A
+	ror around
+	cmp adr.ADJW+$06
+	ror around
+	cmp adr.ADJW+$02
+	ror around
+	cmp adr.ADJW+$01
+	ror around
+	end;
+
 
           { Deflect contains a value that represents in hexadecimal       }
           { the changes to be made to vx (first hexadecimal digit)        }
@@ -2978,7 +3043,7 @@ var x,y,xl,yl,cn : byte;
 
     xp,yp   : word;
 
-    shadow, cl : byte;
+    shadow, cl,i : byte;
 
 begin
     dec(lives); { The number of lives must be decreased by one   }
@@ -2992,24 +3057,29 @@ begin
     blitTEMP(pattern.ofs, $300, pattern.width, pattern.height);			// pat
 
     blitTEMP(minivaus.width, minivaus.width);
+    blitTEMP(minivaus.ofs, $280, minivaus.width, minivaus.height);		// pom
 
 
     for cn:=0 to 7 do begin                      { at most he draws 8 }
 
         xl := XLIVES + byte(minivaus.width) * cn;
 
+        hlp := row[YLIVES] + xl;
+
+        blitTEMP(320, minivaus.width);
+        blitTEMP(playscreen.ofs + hlp, $200, minivaus.width, minivaus.height);	// scr
+
+	i:=0;
+
         for y:=0 to minivaus.height-1 do begin
 
-	    blitTEMP(minivaus.ofs + y*minivaus.width, $280, minivaus.width, 1);	// pom
+//	    blitTEMP(minivaus.ofs + y*minivaus.width, $280, minivaus.width, 1);	// pom
 
             yl:=y+YLIVES;
 
             yp := byte(pattern.width) * mody[yl];
 
- 	    hlp := row[yl] + xl;
-
-	    blitTEMP(playscreen.ofs + hlp, $200, minivaus.width, 1);		// scr
-
+//	    blitTEMP(playscreen.ofs + hlp, $200, minivaus.width, 1);		// scr
 
             for x:=0 to minivaus.width-1 do
                 begin
@@ -3018,7 +3088,7 @@ begin
 
                 { if the number of lives is greater than the counter }
                 { then draw a vaus.                                  }
-                if (lives>cn) and (pom[x] <> 0) then
+                if (lives>cn) and (pom[i+x] <> 0) then
                    begin
                    //cl:=minivaus.map[x+y*minivaus.width];
 
@@ -3026,7 +3096,7 @@ begin
 
                    //playscreen.map[xl+row[yl]]:=minivaus.map[x+y*minivaus.width];
 		   
-		   scr[x] := pom[x];
+		   scr[i+x] := pom[i+x];
 
                    end
 
@@ -3035,7 +3105,7 @@ begin
                 else
                   begin
                   //shadow:=playscreen.map[xl+row[yl]] and 128;
-                  shadow:=scr[x] and $80;
+                  shadow:=scr[i+x] and $80;
 
                   //cl:=(pattern.map[xp+yp] and 127) or shadow;
 		  cl:=(pat[xp+yp] and $7f) or shadow;
@@ -3044,14 +3114,17 @@ begin
 
                   //playscreen.map[xl+row[yl]]:=cl;
 
-		  scr[x] := cl;
+		  scr[i+x] := cl;
                   end;
                 end;
 		
-	blitTEMP($200, vram + hlp, minivaus.width, 1);
-	blitTEMP($200, playscreen.ofs + hlp, minivaus.width, 1);
-		
+	inc(i, minivaus.width);
+				
 	end;
+
+        blitTEMP(minivaus.width, 320);
+	blitTEMP($200, vram + hlp, minivaus.width, minivaus.height);
+	blitTEMP($200, playscreen.ofs + hlp, minivaus.width, minivaus.height);
 	
      end;
 
@@ -3143,21 +3216,25 @@ end;
 
 procedure check_flux;
 var y,fx  : byte;
+begin
 
-   begin
    fx:=scrfluxcnt;
 
    if scrflux then
       begin
-      
-      for y:=19 downto 0 do
-          //memcpy(flux.map[(y+fx) shl 3], screen[217+row[y+FLUXLEVEL]], 8);
-          blitROW(flux.ofs + (y+fx) shl 3, vram + 217+row[y+FLUXLEVEL], 8);
+
+      for y:=19 downto 0 do begin
+
+        hlp := (y+fx) shl 3;
+
+        blitROW(flux.ofs + hlp, vram + 217+row[y+FLUXLEVEL], 8);
+
+      end;
 
       inc(scrfluxcnt);
       if scrfluxcnt>20 then scrfluxcnt:=0;
       end;
-   end;
+end;
 
 
 procedure vaus_out;
@@ -3652,13 +3729,24 @@ var
      { in this way, if ball no. 1 is not in play at the end          }
      { of the cycle, it means that all three have fallen.            }
 
+{
 //     for cn:=0 to 2 do
-	
          if not ball0.inplay then
             begin
             ball0:=ball1;
             ball1:=ball2;
             ball2.inplay:=FALSE;
+            end;
+}
+
+         if not ball0.inplay then	    
+	    if ball1.inplay then begin
+             ball0:=ball1;
+             ball1.inplay:=FALSE;
+	    end else
+	     if ball2.inplay then begin
+              ball0:=ball2;
+              ball2.inplay:=FALSE;
             end;
 
 
