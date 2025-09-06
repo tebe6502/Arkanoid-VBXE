@@ -1,8 +1,5 @@
-//unit service;
 
 { ------------------------------------------------------------------------- }
-//                                 interface
-{ ----------------------------------------------------------------------- }
 
 const
 
@@ -92,18 +89,10 @@ type
 
    TText = string[31];
 
-   arr768   = array[0..767] of byte;       { For the 256 colors in RGB (x3) }
-   //arr64k   = array[0..320*250-1] of byte; { for the 320x200 screen }
-
    BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
               width   : word;          { larghezza disegno       }
-              height  : word;          { altezza                 }
+              height  : byte;          { altezza                 }
               ofs : cardinal;
-
-//              trasp   : byte;        { trasparenza (non usato) }
-//              palette : arr768;      { puntatore alla palette di colori }
-//              palused : boolean;     { flag TRUE = la palette esiste }
-//              map     : arr64k;        { dati contenenti il disegno }
               end;
 
    VAUSTYPE = RECORD                   { per i dati del vaus }
@@ -167,7 +156,7 @@ type
                 active   : boolean;    { the letter can be active }
                 incoming : smallint;   { holds the sum, >1000 the letter falls out }
                 nextx,                 { Coordination of where it should fall if activated }
-                nexty,
+                nexty    : byte;
                 nexttype : smallint;   { type of letter that will have to fall }
                 last     : smallint;   { last letter dropped }
                 end;
@@ -233,7 +222,6 @@ var
     hlp: word;
     f_hlp: single;
 
-//    def_pal: arr768;
 
 {$IFDEF ATARI}
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
@@ -292,8 +280,6 @@ function  random_letter_drop : smallint;
 procedure start_game(players : smallint);
 procedure closeprogram;
 
-{ ------------------------------------------------------------------------- }
-//                              implementation
 { ------------------------------------------------------------------------- }
 
 
@@ -817,18 +803,20 @@ begin
 
 end;
 
+
 procedure unshine_block; { interrompe lo scintillio di un blocco se la }
                          { palla urtandone un altro causa lo scintillio }
                          { di un altro blocco }
-    begin
+begin
     shinerec.frame:=9;   { cioe' setta il frame come ultimo }
     shine_block;         { ed esegue lo scintillio del blocco con l'ultimo }
                          { frame, cioe' il blocco torna normale }
-    end;
+end;
+
 
 procedure shine(xb,yb : byte);   { questa procedura imposta lo }
                                  { scintillio di un blocco }
-    begin
+begin
     if shinerec.active then unshine_block;
 
     shinerec.xb    :=xb;  { coordinate del blocco }
@@ -836,18 +824,20 @@ procedure shine(xb,yb : byte);   { questa procedura imposta lo }
     shinerec.frame :=0;   { frame di partenza }
     shinerec.active:=TRUE;                 { scintillio attivo }
     shinerec.block :=wall[byte(xb+yb*16)]; { tipo di blocco (marrone o grigio) }
-    end;
+end;
+
 
 procedure checkshine; { se lo scintillio e' attivato allora lo esegue }
                       { passando al frame successivo }
-    begin
+begin
     if shinerec.active=TRUE then shine_block;
-    end;
+end;
 
 
 function random_letter_drop : smallint;
 var rn,sum,letter : word;
-   begin
+begin
+
    repeat
       rn:=rand(100);    { Tira a caso un numero fra 0 e 99 }
       sum:=0;           { pone la somma a zero             }
@@ -867,13 +857,13 @@ var rn,sum,letter : word;
    until smallint(letter-1) <> lett.last;
 
    random_letter_drop:=(letter-1);
-   end;
+end;
 
 
 procedure put_letter;
 var fl,fw : word;
 begin
-    fl:=(lett.typ shl 10)+(lett.frame shl 4);
+    fl:=(lett.typ shl 10) + (lett.frame shl 4);
 
     blitLETTER(letters.ofs + fl, vram + lett.x + row[lett.y]);
 end;
@@ -900,7 +890,7 @@ procedure disable_letter;
    end;
 
 
-procedure start_letter(xl,yl,letter : word);
+procedure start_letter(xl,yl: byte; letter : word);
    begin
    if lett.active then disable_letter;
 
@@ -1595,16 +1585,16 @@ end;
 
 procedure place_block(xa,ya,block : byte);
 var
-    x,y, i: byte;
+    xs,ys, x,y, i: byte;
     
-    xs,ys, yh: word;
+    yh: word;
     cl,cl2: byte;
     shadow: byte;
 
 begin
 
-    xs:=(xa shl 4)+9;   { calcola le coordinate sullo schermo relativa }
-    ys:=(ya shl 3)+22;  { al mattoncino xa,ya }
+    xs:=(xa shl 4)+9;   { calcola le coordinate sullo schermo relativa }  // xa = [0..12]
+    ys:=(ya shl 3)+22;  { al mattoncino xa,ya }				  // ya = [0..14]
 
     hlp := row[ys] + xs;
 
@@ -2542,8 +2532,8 @@ begin
 procedure fill_picture_with_pattern(var patt : BTMTYPE);
 var yb: word;
     x, y, cl, shadow: byte;
+begin
 
-    begin
     { It computes a priori all values of x mod patt.width            }
     { patt.width = width of the small square defining the background }
 
@@ -2904,7 +2894,7 @@ end;
 
 
 { Print the 5 digits of the score at coordinates px,py }
-procedure write_score(px: word; py : byte; sc : cardinal);
+procedure write_score(py : byte; sc : cardinal);
 const
    mul_6 : array [0..10] of byte = ( {$eval 11,":1*6"} );
 
@@ -2935,7 +2925,7 @@ begin
 
    blitTEMP(128, 320);
    
-   hlp := row[py] + px;
+   hlp := row[py] + 253;
 
    { first digital digit }
    
@@ -3473,9 +3463,9 @@ var
 //  setpalette(playscreen);
 
   { Stampa il punteggio dei 2 giocatori e l'hi-score. }
-  write_score(253,POS_DIGIT[1],score.player[1]);
-  write_score(253,POS_DIGIT[2],score.player[2]);
-  write_score(253,POS_DIGIT[3],score.hiscore);
+  write_score(POS_DIGIT[1],score.player[1]);
+  write_score(POS_DIGIT[2],score.player[2]);
+  write_score(POS_DIGIT[3],score.hiscore);
 
   { Draw the bricks }
   put_wall;
@@ -3667,7 +3657,7 @@ var
      
      if old_scores <> scores then begin
        
-       write_score(253,POS_DIGIT[cur_player], scores);
+       write_score(POS_DIGIT[cur_player], scores);
 
        old_scores := scores;
 
@@ -3680,7 +3670,7 @@ var
         { places the hi-score equal to the player's score }
         score.hiscore:=score.player[cur_player];
         { And prints the hi-score on the screen }
-        write_score(253,POS_DIGIT[3],score.hiscore);
+        write_score(POS_DIGIT[3],score.hiscore);
         end;
 
      { This cycle increases the speed of all balls in play the value        }
@@ -4067,9 +4057,9 @@ var nwall : boolean;
     
 
     { you print the three scores, player 1, 2 and hi-score }
-    write_score(253,POS_DIGIT[1],score.player[1]);
-    write_score(253,POS_DIGIT[2],score.player[2]);
-    write_score(253,POS_DIGIT[3],score.hiscore);
+    write_score(POS_DIGIT[1],score.player[1]);
+    write_score(POS_DIGIT[2],score.player[2]);
+    write_score(POS_DIGIT[3],score.hiscore);
 
     { And you draw the bricks of the wall }
     //put_wall;
@@ -4139,5 +4129,3 @@ var nwall : boolean;
     { or the game is aborted with ALT+A }
     until ((score.lives[1]=0) and (score.lives[2]=0)) or (score.abortplay);
     end;
-
-//end.
