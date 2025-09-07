@@ -1,6 +1,4 @@
 all_walls rcdata 'walls.dat'
-mod90table rcdata 'mod90table.obx'
-mod10table rcdata 'mod10table.obx'
 sqrtable rcdata 'sqrtable.dat'
 sintable rcdata 'sintable.dat'
 vbxe_digit xbmp 'arkanoid_digit.bmp' 0 1

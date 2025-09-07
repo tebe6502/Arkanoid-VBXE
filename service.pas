@@ -232,14 +232,18 @@ var
 
     [striped] row : array[0..255] of word absolute $c000; { array (see initRowArray) }
 
-    Mod90Table: array [0..255] of byte absolute $c000+$200;
-    Mod10Table: array [0..255] of byte absolute $c000+$300;
+    Mod10Table: array [0..255] of byte absolute $c000+$200;
+    Mod90Table: array [0..255] of byte absolute $c000+$300;
+    [striped] Mod360Table: array [0..255] of word absolute $c000+$400;
  
-    sintable: array [0..450-1] of smallint absolute $c000+$400;
+    sintable: array [0..450-1] of smallint absolute $c000+$600;
 
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
-    all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
+
+    [striped] mul90_16: array [0..15] of word absolute $d800+$400;
+
+    all_walls  : WHOLEWALLS absolute $d800+$500;       { all the walls }
 
 
 { ------------------------------------------------------------------------- }
@@ -537,7 +541,7 @@ procedure fatal_error(err_type: byte);
 
 function inkey : word;   { restituisce il codice del tasto premuto }
 //var ch,ch2: char;        { 0 = nessun tasto premuto }
-    begin
+begin
 {
     ch:=#0;
     ch2:=#0;
@@ -552,26 +556,33 @@ function inkey : word;   { restituisce il codice del tasto premuto }
 }
 
  result:=ord('r');
-    end;
+end;
 
 
 procedure initRowArray;  { inizializza l'array ROW; row[n]:=320*n }
 var y : byte;
 begin
-  
+
+  for y:=0 to 15 do
+   mul90_16[y] := y*90;
+
   hlp:=0;
-  
+
   for y:=0 to 255 do begin
-  
+
+    Mod10Table[y] := y mod 10;
+    Mod90Table[y] := (y*256) mod 90;
+    Mod360Table[y] := (y*256) mod 360;
+
     if y>= 200 then
      row[y] := 320*200
     else
      row[y]:=hlp;
-     
+
     inc(hlp, 320);
 
   end;
-  
+
 end;
 
 
@@ -599,7 +610,7 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
  SetOverlayAddress(vram);
 
  vbxe_ram.position:=vram;
- vbxe_ram.size:=320*200;
+ vbxe_ram.size:=320*200+vram;
  vbxe_ram.clear;
 
  dmactl:=0;
@@ -1003,10 +1014,6 @@ procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 //var w : single;
 begin                  { sets the trajectory angle of the ball }
 
-  if angle < 0 then inc(angle, 360);
-
-  while angle >= 360 do dec(angle, 360);
-
   ball.speedx:=sintable[angle+90];  { the velocity is assumed to be unitary }
   ball.speedy:=-sintable[angle];    { v=256 equals 70 pixels per sec. }
 
@@ -1045,9 +1052,7 @@ begin
     if(ball.speedx<0) then inc(w,180);
     
     inc(w,360);
-    //w:=w mod 360;
-    
-    while w >= 360 do dec(w, 360);
+    w:=mod360(w);
     end;
 
   get_ball_direction := w;
@@ -2017,10 +2022,6 @@ var i: byte;
 
 
 procedure ball_hit_block(var ball : BALLTYPE);
-const
-
-  mul90_16: array [0..15] of word = ( {$eval 16,":1*90"} );
-
 var 
     x,y, i: byte;
 
@@ -2458,7 +2459,7 @@ begin
        { and this cycle repeats until the ball has an inclination }
        { between 30 and 60 degrees plus multiples of 90 degrees.  }
        
-       set_ball_direction(ball,angle {mod 360});
+       set_ball_direction(ball, mod360(angle));
        set_ball_speed(ball, ball.speed);
 
        ball.brwhit:=0; { Reset emergency counter }
@@ -3208,9 +3209,10 @@ end;
 
 procedure check_bonus_type(var b1,b2,b3 : BALLTYPE);
 var x : smallint;
-    begin
+begin
     
-      if (vaus.letter > 0) and (vaus.letter < 10) then
+     if vaus.letter <> EMP then    
+      if (vaus.letter > 0) then
          begin
          lett.last:=vaus.letter-1;
          if b2.inplay then remove_ball(b2);
@@ -3292,7 +3294,7 @@ var x : smallint;
            end;
 
         end;
-     end;
+end;
 
 
 procedure deviate_ball(var ball : BALLTYPE);
@@ -3563,7 +3565,7 @@ var
         ball1:=ball0;    { ball 2 and 3 are placed equal to 1 }
         ball2:=ball0;
 
-        t1:=get_ball_direction(ball0) ;//div 90;
+        t1:=get_ball_direction(ball0) div 90;
         { you the quadrant in which the velocity vector is located }
         t2:=ball0.speed;  { as well as the modulus of the vector itself }
 
@@ -3571,6 +3573,8 @@ var
         { first ball, 45 at the second, and 60 at the third.              }
 
         { At this point the three balls are forced to split up. }
+	
+	t1:=mul90_16[byte(t1)];
 
         set_ball_direction(ball0,(t1+30));
         set_ball_direction(ball1,(t1+45));

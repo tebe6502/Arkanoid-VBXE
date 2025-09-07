@@ -106,28 +106,28 @@ seed = MAIN.SYSTEM.RndSeed
 
 Random16:
 	lda seed+1
-	tay ; store copy of high byte
+	tay 		; store copy of high byte
 	; compute seed+1 ($39>>1 = %11100)
-	lsr ; shift to consume zeroes on left...
-	lsr
-	lsr
-	sta seed+1 ; now recreate the remaining bits in reverse order... %111
-	lsr
+	lsr @		; shift to consume zeroes on left...
+	lsr @
+	lsr @
+	sta seed+1	; now recreate the remaining bits in reverse order... %111
+	lsr @
 	eor seed+1
-	lsr
+	lsr @
 	eor seed+1
-	eor seed+0 ; recombine with original low byte
+	eor seed+0	; recombine with original low byte
 	sta seed+1
 	; compute seed+0 ($39 = %111001)
-	tya ; original high byte
+	tya		; original high byte
 	sta seed+0
-	asl
+	asl @
 	eor seed+0
-	asl
+	asl @
 	eor seed+0
-	asl
-	asl
-	asl
+	asl @
+	asl @
+	asl @
 	eor seed+0
 	sta seed+0
 
@@ -144,60 +144,106 @@ loop	cpw Result range
 	ror Result
 
 	jmp loop
-
 end;
 
 
-function mod90(a: smallint): byte; assembler;
+function mod90(a: smallint): smallint; assembler;
 asm
-; N = hi:lo (16-bit)
-; N mod 90 -> A
+    lda a+1
+    sta sign
+  
+    bpl @+
 
-    LDY a+1
-    LDA Mod90Table,Y   ; tablica: (X*256) mod 90
+    lda #0
+    sub a
+    sta a
+    lda #0
+    sbc a+1
+    sta a+1
+@
+    tay
+    LDA adr.Mod90Table,Y	; tablica: (X*256) mod 90
     CLC
-    ADC a              ; dodaj młodszy bajt
-    CMP #90
-    BCC done
-    SBC #90
-    CMP #90
-    BCC done
-    SBC #90            ; max 2 odejmowania bo 256 < 3*90
-done:
-    ; A = reszta mod 90
-
+    ADC a			; dodaj młodszy bajt
     sta Result
+    lda #0
+    adc #0
+    sta Result+1
+
+    cpw Result #90
+    BCC done
+    SBW Result #90
+    
+    cpw Result #90
+    BCC done
+    SBW Result #90
+
+    cpw Result #90
+    BCC done
+    SBW Result #90
+
+done
+
+    lda sign: #$00
+    bpl @exit
+   
+    lda #0
+    sub Result
+    sta Result
+    lda #0
+    sbc Result+1
+    sta Result+1
 end;
 
 
-{
-function sqrt32(r: cardinal): word;
-var b,q,t: cardinal;
-begin
 
- q:=0;
- b:=1 shl 30;
- 
- while b>r do b:=b shr 2;
- 
- while b>0 do begin
-  t:=q+b;
+function mod360(a: smallint): smallint; assembler;
+asm
+    lda a+1
+    sta sign
   
-  q:=q shr 1;
-  
-  if r>=t then begin
-   r:=r-t;
-   q:=q+b;  
-  end;
-  
-  b:=b shr 2;
- 
- end;
- 
- result:=q;
+    bpl @+
 
+    lda #0
+    sub a
+    sta a
+    lda #0
+    sbc a+1
+    sta a+1
+@
+    tay
+    LDA adr.Mod360Table,Y	; tablica: (X*256) mod 360
+    CLC
+    ADC a			; dodaj młodszy bajt
+    sta Result
+    lda adr.Mod360Table+256,Y
+    adc #0
+    sta Result+1
+
+    cpw Result #360
+    BCC done
+    SBW Result #360
+    
+    cpw Result #360
+    BCC done
+    SBW Result #360
+
+    cpw Result #360
+    BCC done
+    SBW Result #360
+
+done
+
+    lda sign: #$00
+    bpl @exit
+   
+    lda #0
+    sub Result
+    sta Result
+    lda #0
+    sbc Result+1
+    sta Result+1
 end;
-}
 
 
 function FastSqrt(x: Single): Single;	// much faster with little less precision
