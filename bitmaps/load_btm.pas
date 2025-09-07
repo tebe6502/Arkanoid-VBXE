@@ -1,8 +1,6 @@
-﻿uses crt;
+﻿uses crt, sysutils;
 
 const
-    vbxe_data = $5000 + 320*200;
-
 
    BALLARRAY  : packed array[0..4,0..4] of byte =
                                            ((0,1,1,1,0),
@@ -61,10 +59,12 @@ var
     
     j: integer;
     
-    dum: array [0..320*256] of byte;
+    dum: array [0..320*1024] of byte;
     
     f: file;
 
+
+{$i exportbmp.pas}
 
 procedure loadBTM(name : string; var BTMREC : BTMTYPE; pal : boolean);
 var
@@ -83,7 +83,7 @@ var
    BTMREC.width:=5;
    BTMREC.height:=5;
      
-   BTMREC.ofs:=ofset - vbxe_data;
+   BTMREC.ofs:=ofset;
    blockwrite(f,BALLARRAY,sizeof(BALLARRAY));   { e si legge l'immagine da disco }
   
    inc(ofset, sizeof(BALLARRAY));
@@ -91,10 +91,7 @@ var
    exit;
   
   end;
-  
-  
-  
-  
+
 
   {$I-}
   assign(h1,name);               { apre il file }
@@ -124,7 +121,7 @@ var
   blockread(h1,BTMREC.map,size,cnt);   { e si legge l'immagine da disco }
 
 
-  BTMREC.ofs:=ofset - vbxe_data;
+  BTMREC.ofs:=ofset;
   blockwrite(f,BTMREC.map,size);   { e si legge l'immagine da disco }
   
   inc(ofset, size);
@@ -148,7 +145,6 @@ begin
 
    { Carica uno dopo l'altro tutti i disegni grafici di cui necessita }
 
-   loadBTM('..\PLAYGR.BTM'  ,playscreen,TRUE);  { lo schermo virtuale }
    loadBTM('..\PRESENT.BTM' ,presents,false);   { la scritta ARKANOID }
    loadBTM('..\EXPLODE.BTM' ,explosion,FALSE);  { l'esplosione del vaus }
    loadBTM('..\NEWVAUS.BTM' ,newvaus,FALSE);    { la creazione del vaus }
@@ -172,6 +168,8 @@ begin
    loadBTM('..\pattern2.BTM' ,pattern2,FALSE);       
    loadBTM('..\pattern3.BTM' ,pattern3,FALSE);       
    loadBTM('..\pattern4.BTM' ,pattern4,FALSE);       
+
+   loadBTM('..\PLAYGR.BTM'  ,playscreen,TRUE);  { lo schermo virtuale }
    
    if not success then writeln('Program can''t find some BTM files');
 
@@ -199,19 +197,15 @@ begin
 
  assign(t, 'btm.inc'); rewrite(t);
 
- writeln(t, #9'playscreen.ofs := VBXE_DATA + ', playscreen.ofs , ';');
- writeln(t, #9'playscreen.width := ', playscreen.width , ';');
- writeln(t, #9'playscreen.height := ', playscreen.height , ';'); 
- writeln(t);
- writeln(t, #9'presents.ofs := VBXE_DATA + ', presents.ofs , ';');
+ writeln(t, #9'presents.ofs := VBXE_DATA + $', intToHex(presents.ofs,8) , ';');
  writeln(t, #9'presents.width := ', presents.width , ';');
  writeln(t, #9'presents.height := ', presents.height , ';');
  writeln(t); 
- writeln(t, #9'explosion.ofs := VBXE_DATA + ', explosion.ofs , ';');
+ writeln(t, #9'explosion.ofs := VBXE_DATA + $', intToHex(explosion.ofs,8) , ';');
  writeln(t, #9'explosion.width := ', explosion.width , ';');
  writeln(t, #9'explosion.height := ', explosion.height , ';');
  writeln(t);
- writeln(t, #9'newvaus.ofs := VBXE_DATA + ', newvaus.ofs , ';');
+ writeln(t, #9'newvaus.ofs := VBXE_DATA + $', intToHex(newvaus.ofs,8) , ';');
  writeln(t, #9'newvaus.width := ', newvaus.width , ';');
  writeln(t, #9'newvaus.height := ', newvaus.height , ';'); 
  writeln(t);
@@ -219,44 +213,44 @@ begin
 // writeln(t, #9'soundfx.width := ', soundfx.width , ';');
 // writeln(t, #9'soundfx.height := ', soundfx.height , ';');
 // writeln(t); 
- writeln(t, #9'shinewall.ofs := VBXE_DATA + ', shinewall.ofs , ';');
+ writeln(t, #9'shinewall.ofs := VBXE_DATA + $', intToHex(shinewall.ofs,8) , ';');
  writeln(t, #9'shinewall.width := ', shinewall.width , ';');
  writeln(t, #9'shinewall.height := ', shinewall.height , ';'); 
  writeln(t);
- writeln(t, #9'minivaus.ofs := VBXE_DATA + ', minivaus.ofs , ';');
+ writeln(t, #9'minivaus.ofs := VBXE_DATA + $', intToHex(minivaus.ofs,8) , ';');
  writeln(t, #9'minivaus.width := ', minivaus.width , ';');
  writeln(t, #9'minivaus.height := ', minivaus.height , ';');
  writeln(t);
- writeln(t, #9'levelsel.ofs := VBXE_DATA + ', levelsel.ofs , ';'); 
+ writeln(t, #9'levelsel.ofs := VBXE_DATA + $', intToHex(levelsel.ofs,8) , ';'); 
  writeln(t, #9'levelsel.width := ', levelsel.width , ';'); 
  writeln(t, #9'levelsel.height := ', levelsel.height , ';'); 
  writeln(t);
- writeln(t, #9'letters.ofs := VBXE_DATA + ', letters.ofs , ';');
+ writeln(t, #9'letters.ofs := VBXE_DATA + $', intToHex(letters.ofs,8) , ';');
  writeln(t, #9'letters.width := ', letters.width , ';');
  writeln(t, #9'letters.height := ', letters.height , ';');
  writeln(t);
- writeln(t, #9'normal.ofs := VBXE_DATA + ', normal.ofs , ';');
+ writeln(t, #9'normal.ofs := VBXE_DATA + $', intToHex(normal.ofs,8) , ';');
  writeln(t, #9'normal.width := ', normal.width , ';');
  writeln(t, #9'normal.height := ', normal.height , ';');
  writeln(t);
- writeln(t, #9'lasers.ofs := VBXE_DATA + ', lasers.ofs , ';');
+ writeln(t, #9'lasers.ofs := VBXE_DATA + $', intToHex(lasers.ofs,8) , ';');
  writeln(t, #9'lasers.width := ', lasers.width , ';');
  writeln(t, #9'lasers.height := ', lasers.height , ';');
  writeln(t);
- writeln(t, #9'enlarged.ofs := VBXE_DATA + ', enlarged.ofs , ';');
+ writeln(t, #9'enlarged.ofs := VBXE_DATA + $', intToHex(enlarged.ofs,8) , ';');
  writeln(t, #9'enlarged.width := ', enlarged.width , ';');
  writeln(t, #9'enlarged.height := ', enlarged.height , ';');
  writeln(t);
- writeln(t, #9'shoots.ofs := VBXE_DATA + ', shoots.ofs , ';');
+ writeln(t, #9'shoots.ofs := VBXE_DATA + $', intToHex(shoots.ofs,8) , ';');
  writeln(t, #9'shoots.width := ', shoots.width , ';');
  writeln(t, #9'shoots.height := ', shoots.height , ';');
  writeln(t);
- writeln(t, #9'flux.ofs := VBXE_DATA + ', flux.ofs , ';');
+ writeln(t, #9'flux.ofs := VBXE_DATA + $', intToHex(flux.ofs,8) , ';');
  writeln(t, #9'flux.width := ', flux.width , ';');
  writeln(t, #9'flux.height := ', flux.height , ';');
  writeln(t);
  
- writeln(t, #9'balldata.ofs := VBXE_DATA + ', balldata.ofs , ';');
+ writeln(t, #9'balldata.ofs := VBXE_DATA + $', intToHex(balldata.ofs,8) , ';');
  writeln(t, #9'balldata.width := ', balldata.width , ';');
  writeln(t, #9'balldata.height := ', balldata.height , ';');
  writeln(t);
@@ -265,25 +259,32 @@ begin
 // writeln(t, #9'pattern.width := ', pattern.width , ';');
 // writeln(t, #9'pattern.height := ', pattern.height , ';');
 // writeln(t);
- writeln(t, #9'pattern0.ofs := VBXE_DATA + ', pattern0.ofs , ';');
+ writeln(t, #9'pattern0.ofs := VBXE_DATA + $', intToHex(pattern0.ofs,8) , ';');
  writeln(t, #9'pattern0.width := ', pattern0.width , ';');
  writeln(t, #9'pattern0.height := ', pattern0.height , ';');
  writeln(t);
- writeln(t, #9'pattern1.ofs := VBXE_DATA + ', pattern1.ofs , ';');
+ writeln(t, #9'pattern1.ofs := VBXE_DATA + $', intToHex(pattern1.ofs,8) , ';');
  writeln(t, #9'pattern1.width := ', pattern1.width , ';');
  writeln(t, #9'pattern1.height := ', pattern1.height , ';');
  writeln(t);
- writeln(t, #9'pattern2.ofs := VBXE_DATA + ', pattern2.ofs , ';');
+ writeln(t, #9'pattern2.ofs := VBXE_DATA + $', intToHex(pattern2.ofs,8) , ';');
  writeln(t, #9'pattern2.width := ', pattern2.width , ';');
  writeln(t, #9'pattern2.height := ', pattern2.height , ';');
  writeln(t);
- writeln(t, #9'pattern3.ofs := VBXE_DATA + ', pattern3.ofs , ';');
+ writeln(t, #9'pattern3.ofs := VBXE_DATA + $', intToHex(pattern3.ofs,8) , ';');
  writeln(t, #9'pattern3.width := ', pattern3.width , ';');
  writeln(t, #9'pattern3.height := ', pattern3.height , ';');
  writeln(t);
- writeln(t, #9'pattern4.ofs := VBXE_DATA + ', pattern4.ofs , ';');
+ writeln(t, #9'pattern4.ofs := VBXE_DATA + $', intToHex(pattern4.ofs,8) , ';');
  writeln(t, #9'pattern4.width := ', pattern4.width , ';');
  writeln(t, #9'pattern4.height := ', pattern4.height , ';');
+ writeln(t);
+ writeln(t, #9'playscreen.ofs := VBXE_DATA + $', intToHex(playscreen.ofs,8) , ';');
+ writeln(t, #9'playscreen.width := ', playscreen.width , ';');
+ writeln(t, #9'playscreen.height := ', playscreen.height , ';'); 
+ writeln(t);
+
+ writeln(t, #9'// ofset = VBXE_DATA + $', intToHex(ofset,8));
  
  flush(t);
  close(t);
@@ -294,13 +295,10 @@ end;
 
 begin
 
- ofset := 0;//vbxe_data;
-
+ ofset := 0;
 
  assign(f, 'btm.dat'); rewrite(f, 1);
- 
- blockwrite(f, dum, ofset);
- 
+  
  Arkanoid;
  
  fillByte(dum, sizeof(dum), 0);
@@ -316,6 +314,13 @@ begin
  blockwrite(f, def_pal, 768);
  close(f);
 
+
+ assign(f, 'btm.dat'); reset(f, 1);
+ blockread(f, dum, sizeof(dum), j);
+ close(f);
+
+
+ ExportBMP('btm.bmp', 320, j div 320);
 
  repeat until keypressed;
 

@@ -30,7 +30,7 @@
  
  Arkanoid VBXE v1.6 by Tebe/Madteam
 
- 2025-09-06
+ 2025-09-07
 
 *)
 
@@ -41,19 +41,36 @@ uses crt, atari, vbxe, joystick;
 
 {$r arkanoid.rc}
 
-//{$define romoff}
 
 //{$f $c8}
 
 
 const
-        VBXE_DATA = VBXE_OVRADR + 320*216;
-	
-	VBXE_DIGIT = VBXE_DATA + $26400;
+	VBXE_DIGIT = $5000;
 
+        VBXE_DATA = $96D5;	// shifting the playscreen address to the beginning of a new 64K block ($020000)
+
+	explosion_ofs   = VBXE_DATA + $0000FA00;
+	shinewall_ofs   = VBXE_DATA + $00012B9D;
+	letters_ofs     = VBXE_DATA + $000138CC;
+	shoots_ofs      = VBXE_DATA + $0001584C;
+	balldata_ofs    = VBXE_DATA + $000159FC;
+
+	playscreen_ofs  = VBXE_DATA + $0001692B;
+	
+	minivaus_width = 20;
+	minivaus_height = 5;
+
+	explosion_width = 42;
+
+	shoots_width = 13;
+	shoots_height = 8;
+	
 var
-	blt: TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
-	blt_letter: TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
+	blt        : TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
+	blt_letter : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
+	blt_box    : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*2;
+	blt_zero   : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*3;
 
 	vbxe_ram: TVBXEMemoryStream;
 
@@ -81,22 +98,6 @@ asm
 
 seed = MAIN.SYSTEM.RndSeed
 
-	jsr random16
-
-	lda seed+1
-	and #$03
-	sta Result+1
-	lda seed
-	sta Result
-
-loop	cpw Result range
-	bcc @exit
-
-	lsr Result+1
-	ror Result
-
-	jmp loop
-
 Random16:
 	lda seed+1
 	tay ; store copy of high byte
@@ -123,7 +124,21 @@ Random16:
 	asl
 	eor seed+0
 	sta seed+0
-	rts
+
+	lda seed+1
+	and #$03
+	sta Result+1
+	lda seed
+	sta Result
+
+loop	cpw Result range
+	bcc @exit
+
+	lsr Result+1
+	ror Result
+
+	jmp loop
+
 end;
 
 

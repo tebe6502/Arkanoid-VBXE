@@ -3,7 +3,7 @@
 
 const
 
-   vram = VBXE_OVRADR; // screen[0]
+   vram = $030000;
 
    err1 = 1; // 'Ball speed exceed program capability'
    err2 = 2; // 'Ball seems to be still'
@@ -223,7 +223,6 @@ var
     f_hlp: single;
 
 
-{$IFDEF ATARI}
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
     pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
     pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
@@ -243,28 +242,7 @@ var
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
     wall       : WALLTYPE absolute $d800+$300;         { wall }
     all_walls  : WHOLEWALLS absolute $d800+$400;       { all the walls }
-{$ELSE}
-    tmp        : array [0..255] of byte;
 
-    row        : array[0..255] of word; { array (see initRowArray) }
-
-    modx       : array[0..319] of byte;
-    mody       : array[0..199] of byte;
-    
-    wall_p : array[0..2] of WALLTYPE; { memorization of the wall itself }
-    wall       : WALLTYPE;            { wall }
-    all_walls  : WHOLEWALLS;          { all the walls }
-{$ENDIF}
-
-
-
-{$IFDEF ATARI}
-//    screen     : array [0..0] of byte;
-{$ELSE}
-    screen     : array [0..255*1024] of byte;
-{$ENDIF}
-               { forcing the screen map to the VGA address }
-               { a000:0000 inherent to the 320x200x256 col. graphics mode }
 
 { ------------------------------------------------------------------------- }
 
@@ -281,9 +259,6 @@ procedure start_game(players : smallint);
 procedure closeprogram;
 
 { ------------------------------------------------------------------------- }
-
-
-{$IFDEF ATARI}
 
 
 procedure mousecoords(var x: smallint);
@@ -308,6 +283,38 @@ begin
 end;
 
 
+procedure blitZERO(src: cardinal; w : word; h: byte); register;
+{
+  dst = vram
+}
+begin
+
+ asm
+   fxs FX_MEMS #$80
+ end;
+
+ blt_zero.src_adr.byte2:=src shr 16;
+ blt_zero.src_adr.byte1:=src shr 8;
+ blt_zero.src_adr.byte0:=src;
+
+ blt_zero.dst_adr.byte1:=hlp shr 8;
+ blt_zero.dst_adr.byte0:=hlp;
+
+ blt_zero.src_step_y:=w;
+ 
+ blt_zero.blt_height:=h-1;
+
+ blt_zero.blt_width:=w-1;
+
+ asm
+   fxs FX_MEMS #$00
+ end;
+
+ RunBCB(blt_zero);
+
+end;
+
+
 procedure blitTEMP(swidth, dwidth: word); overload; register;
 begin
 
@@ -322,7 +329,6 @@ end;
 procedure blitTEMP(src, dst: cardinal; w : word; h: byte); overload; register;
 begin
 
-
  blt.src_adr.byte2:=src shr 16;
  blt.src_adr.byte1:=src shr 8;
  blt.src_adr.byte0:=src;
@@ -330,8 +336,6 @@ begin
  blt.dst_adr.byte2:=dst shr 16;
  blt.dst_adr.byte1:=dst shr 8;
  blt.dst_adr.byte0:=dst;
-
- blt.blt_control := 0;
 
  blt.blt_height:=h-1;
 
@@ -342,183 +346,91 @@ begin
 end;
 
 
-procedure blitLETTER(src, dst: cardinal); register;
+procedure blitSCR(swidth: byte; dwidth: word; w : word; h: byte); register;
 begin
 
- asm
-   fxs FX_MEMS #$80
- end;
+ blt.dst_step_y:=dwidth;
+ blt.src_step_y:=swidth;
+  
+ blt.src_adr.byte1:=$02;	// scr = $0200
+ 
+ blt.src_adr.byte2:=$00;
+ blt.src_adr.byte0:=$00;
 
- blt_letter.src_adr.byte2:=src shr 16;
- blt_letter.src_adr.byte1:=src shr 8;
- blt_letter.src_adr.byte0:=src;
+ blt.dst_adr.byte2:=playscreen_ofs shr 16;
+ blt.dst_adr.byte1:=hlp shr 8;
+ blt.dst_adr.byte0:=hlp;
 
- blt_letter.dst_adr.byte2:=dst shr 16;
- blt_letter.dst_adr.byte1:=dst shr 8;
- blt_letter.dst_adr.byte0:=dst;
+ blt.blt_height:=h-1;
 
- asm
-   fxs FX_MEMS #$00
- end;
+ blt.blt_width:=w-1;
 
- RunBCB(blt_letter);
+ RunBCB(blt);
+
+
+ blt.dst_adr.byte2:=vram shr 16;
+
+ RunBCB(blt);
 
 end;
 
 
-procedure blitBOX(src, dst: cardinal; w: word; h: byte); register;
+procedure blitPAT;
+begin
+
+ blt.dst_step_y:=320;
+ blt.src_step_y:=17;
+  
+ blt.src_adr.byte1:=$03;	// pat = $0300
+ 
+ blt.src_adr.byte2:=$00;
+ blt.src_adr.byte0:=$00;
+
+ blt.dst_adr.byte2:=playscreen_ofs shr 16;
+ blt.dst_adr.byte1:=hlp shr 8;
+ blt.dst_adr.byte0:=hlp;
+
+ blt.blt_height:=9-1;
+
+ blt.blt_width:=17-1;
+
+ RunBCB(blt);
+
+
+ blt.dst_adr.byte2:=vram shr 16;
+
+ RunBCB(blt);
+
+end;
+
+
+procedure blitBOX(w: word; h: byte); register;
+{
+  src = playscreen_ofs
+  dst = vram
+}
 begin
 
  asm
    fxs FX_MEMS #$80
  end;
 
- blt.src_adr.byte2:=src shr 16;
- blt.src_adr.byte1:=src shr 8;
- blt.src_adr.byte0:=src;
+ blt_box.src_adr.byte1:=hlp shr 8;
+ blt_box.dst_adr.byte1:=hlp shr 8;
 
- blt.dst_adr.byte2:=dst shr 16;
- blt.dst_adr.byte1:=dst shr 8;
- blt.dst_adr.byte0:=dst;
+ blt_box.src_adr.byte0:=hlp;
+ blt_box.dst_adr.byte0:=hlp;
 
- blt.dst_step_y:=320;
- blt.src_step_y:=320;
-
- blt.blt_width:=w-1;
- blt.blt_height:=h-1;
-
- blt.blt_control:=0;
+ blt_box.blt_width:=w-1;
+ blt_box.blt_height:=h-1;
 
  asm
    fxs FX_MEMS #$00
  end;
 	
- RunBCB(blt);
+ RunBCB(blt_box);
 	
 end;
-
-
-procedure blitZERO(src, dst: cardinal; w : word; h: byte); register;
-begin
-
- asm
-   fxs FX_MEMS #$80
- end;
-
- blt.src_adr.byte2:=src shr 16;
- blt.src_adr.byte1:=src shr 8;
- blt.src_adr.byte0:=src;
-
- blt.dst_adr.byte2:=dst shr 16;
- blt.dst_adr.byte1:=dst shr 8;
- blt.dst_adr.byte0:=dst;
-
- blt.blt_control := 1;
-
- blt.dst_step_y:=320;
- blt.src_step_y:=w;
- 
- blt.blt_height:=h-1;
-
- blt.blt_width:=w-1;
-
- asm
-   fxs FX_MEMS #$00
- end;
-
- RunBCB(blt);
-
-end;
-
-
-procedure blitROW(src, dst: cardinal; size: word);
-begin
-
- asm
-   fxs FX_MEMS #$80
- end;
-
- blt.src_adr.byte2:=src shr 16;
- blt.src_adr.byte1:=src shr 8;
- blt.src_adr.byte0:=src;
-
- blt.dst_adr.byte2:=dst shr 16;
- blt.dst_adr.byte1:=dst shr 8;
- blt.dst_adr.byte0:=dst;
-
- blt.src_step_y:=0;
- blt.dst_step_y:=0;
- 
- blt.blt_height:=0;
- blt.blt_control := 0;
-
- blt.blt_width:=size-1;
-
- asm
-   fxs FX_MEMS #$00
- end;
-
- RunBCB(blt);
-
-end;
-
-
-{$ELSE}
-
-procedure blitZERO(src, dst: cardinal; size : word);
-var i: word;
-begin
-
- for i := 0 to size-1 do
-  if screen[src + i] <> 0 then screen[dst + i] := screen[src + i];
-
-end;
-
-
-procedure blitTMP(dst: cardinal; size: byte);
-var x: byte;
-begin
-
- for x := 0 to size-1 do
-  screen[dst+x] := tmp[x];
-
-end;
-
-
-procedure blitROW(src, dst: cardinal; size: word);
-var x: word;
-begin
-
- for x := 0 to size-1 do
-  screen[dst+x] := screen[src+x];
-
-end;
-
-
-procedure blitBYTE(src, dst: cardinal);
-begin
-
-  screen[dst] := screen[src];
-
-end;
-
-
-procedure putBYTE(dst: cardinal; v: byte);
-begin
-
-  screen[dst] := v;
-
-end;
-
-
-function getBYTE(src: cardinal): byte;
-begin
-
-  result := screen[src];
-
-end;
-
-{$ENDIF}
 
 
 { ------------------------------------------------------------------------- }
@@ -672,7 +584,6 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 
    begin
    
-{$IFDEF ATARI}   
 
  if VBXE.GraphResult <> VBXE.grOK then begin
   writeln('VBXE not detected');
@@ -687,7 +598,9 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
  SetTopBorder(20);
  SetXDLHeight(200);
 
- vbxe_ram.position:=VBXE_OVRADR;
+ SetOverlayAddress(vram);
+
+ vbxe_ram.position:=vram;
  vbxe_ram.size:=320*200;
  vbxe_ram.clear;
 
@@ -697,17 +610,22 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 	  fxs FX_MEMS #$80
 	end;
 
- fillByte(blt, sizeof(TBCB), 0);
- 
+ fillByte(blt, sizeof(TBCB), 0); 
  fillByte(blt_letter, sizeof(TBCB), 0);
+ fillByte(blt_box, sizeof(TBCB), 0);
+ fillByte(blt_zero, sizeof(TBCB), 0);
  
  
  blt.src_step_x:=1;
  blt.dst_step_x:=1;
 
+// blt.blt_control := 0;
+
  blt.blt_and_mask:=$ff;
 
 
+
+ blt_letter.dst_adr.byte2:=vram shr 16;
 
  blt_letter.src_step_x:=1;
  blt_letter.dst_step_x:=1;
@@ -722,6 +640,36 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
  blt_letter.blt_width:=16-1;
 
  blt_letter.blt_and_mask := $ff;
+
+
+
+ blt_box.src_adr.byte2:=playscreen_ofs shr 16;
+
+ blt_box.dst_adr.byte2:=vram shr 16;
+
+ blt_box.dst_step_y:=320;
+ blt_box.src_step_y:=320;
+
+ blt_box.src_step_x:=1;
+ blt_box.dst_step_x:=1;
+
+// blt_box.blt_control:=0;
+
+ blt_box.blt_and_mask:=$ff;
+
+
+
+ blt_zero.dst_adr.byte2:=vram shr 16;
+
+ blt_zero.dst_step_y:=320;
+
+ blt_zero.src_step_x:=1;
+ blt_zero.dst_step_x:=1;
+
+ blt_zero.blt_control := 1;
+
+ blt_zero.blt_and_mask:=$ff;
+
 
 	asm
 	  fxs FX_MEMS #$00
@@ -739,8 +687,6 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
   sta portb
  end;
 
-
-{$ENDIF}
 
    end; { Fine della procedura InitSVGA }
 
@@ -778,7 +724,7 @@ begin
 
        blitTEMP(16,320);
 
-       blitTEMP(shinewall.ofs+fr, vram + xf+row[yf+y], 16, 8);
+       blitTEMP(shinewall_ofs + fr, vram + xf+row[yf+y], 16, 8);
 
 (*
        for y:=0 to 7 do    { e copia il frame n-esimo sullo schermo }
@@ -861,11 +807,30 @@ end;
 
 
 procedure put_letter;
-var fl,fw : word;
+var src : cardinal;
 begin
-    fl:=(lett.typ shl 10) + (lett.frame shl 4);
 
-    blitLETTER(letters.ofs + fl, vram + lett.x + row[lett.y]);
+     src := letters_ofs + (lett.typ shl 10) + (lett.frame shl 4);
+
+     asm
+       fxs FX_MEMS #$80
+     end;
+
+     blt_letter.src_adr.byte2:=src shr 16;
+     blt_letter.src_adr.byte1:=src shr 8;
+     blt_letter.src_adr.byte0:=src;
+
+     hlp := lett.x + row[lett.y];
+
+     blt_letter.dst_adr.byte1:=hlp shr 8;
+     blt_letter.dst_adr.byte0:=hlp;
+
+     asm
+       fxs FX_MEMS #$00
+     end;
+
+     RunBCB(blt_letter);
+
 end;
 
 
@@ -876,7 +841,7 @@ begin
 
       hlp := lett.x + row[lett.y];
 
-      blitBOX(playscreen.ofs + hlp, vram + hlp, 16, 8);
+      blitBOX(16, 8);
 
     end;  
 
@@ -939,15 +904,6 @@ procedure check_letter;
    end;
 
 
-{ Copy the specified drawing to the screen starting from coordinate 0,0 }
-procedure showBTMpicture(BTM : BTMTYPE);
-begin
-    
-    blitBOX(BTM.ofs, vram, BTM.width, BTM.height);
-
-end;
-
-
 { Draw the ball on the screen, the coordinates are specified in }
 { BALL.x and BALL.y, BALLSPOT.x = BALLSPOT.y is the radius of the ball }
 { in pixels }
@@ -956,7 +912,7 @@ begin
 
   hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];
   
-  blitZERO(balldata.ofs, vram + hlp, BALLDIM, BALLDIM); 
+  blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
 
 end;
 
@@ -968,7 +924,7 @@ begin
 
   hlp := ball.oldx-BALLSPOT+row[ball.oldy-BALLSPOT];
   
-  blitBOX(playscreen.ofs + hlp, vram + hlp, BALLDIM, BALLDIM);
+  blitBOX(BALLDIM, BALLDIM);
   
 end;
 
@@ -989,11 +945,8 @@ procedure Wait_VBL;
 
 *)
 
-{$IFDEF ATARI}
-
 	pause;
 
-{$ENDIF}
 
 //  form1.show_play;
 end;
@@ -1336,7 +1289,7 @@ begin
   
   hlp:=vaus.oldx+row[vaus.oldy];
   
-  blitBOX(playscreen.ofs + hlp, vram + hlp, vaus.oldlen, vaus.height);
+  blitBOX(vaus.oldlen, vaus.height);
 
   vaus.oldlen:=vaus.width;
 end;
@@ -1366,7 +1319,9 @@ begin
   { vaus.flash mentioned above. For example, flash[2]:=211 (see at the beginning in the }
   { declaration of constants. }
 
-  blitZERO(playvaus.ofs, vram + vaus.x + row[vaus.y], vaus.width, vaus.height);
+  hlp := vaus.x + row[vaus.y];
+
+  blitZERO(playvaus.ofs, vaus.width, vaus.height);
 
   asm
    fxs FX_MEMS #$80
@@ -1466,7 +1421,7 @@ begin
     end;
 
     blitTEMP(320, 16);
-    blitTEMP(playscreen.ofs + hlp, $0200, 16, 8);
+    blitTEMP(playscreen_ofs + hlp, $0200, 16, 8);
 
     blitTEMP(pattern.width, pattern.width);
     blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);
@@ -1511,10 +1466,7 @@ begin
 
         end;
 
-        blitTEMP(16, 320);
-    
-	blitTEMP($200, playscreen.ofs + hlp, 16, 8);
-	blitTEMP($200, vram + hlp, 16, 8);
+	blitSCR(16, 320, 16, 8);
 
 
     { In any case, when the brick disappears, its shadow must also disappear }
@@ -1527,7 +1479,7 @@ begin
     hlp := row[ys+4] + xs;// + 8;
 
     blitTEMP(320, 17);
-    blitTEMP(playscreen.ofs + hlp, $0300, 17, 9);
+    blitTEMP(playscreen_ofs + hlp, $0300, 17, 9);
 
     i:=0;
 
@@ -1570,10 +1522,8 @@ begin
 
     end;
 
-    blitTEMP(17, 320);
     
-    blitTEMP($300, playscreen.ofs + hlp, 17, 9);
-    blitTEMP($300, vram + hlp, 17, 9);
+    blitPAT;
 
 
     asm
@@ -1604,11 +1554,10 @@ begin
 
 
     blitTEMP(320, 16);
-    blitTEMP(playscreen.ofs + hlp, $0200, 16, 8);
-
+    blitTEMP(playscreen_ofs + hlp, $0200, 16, 8);
 
     for y:=7 downto 0 do begin
-
+    
         i:=y*16;
 
         for x:=15 downto 0 do
@@ -1623,7 +1572,7 @@ begin
                 { if it is the inside of the brick, draw it in the }
                 { color specified in block }
 
-                cl:=(COLORBLOCK[(block-1) and 15] and $7f) or shadow;
+                cl:=(COLORBLOCK[byte(block-1) and 15] and $7f) or shadow;
 
 		scr[x + i] := cl;
 
@@ -1648,16 +1597,13 @@ begin
     end;
 
 
-    blitTEMP(16, 320);
-
-    blitTEMP($200, playscreen.ofs + hlp, 16, 8);
-    blitTEMP($200, vram + hlp, 16, 8);
+    blitSCR(16, 320, 16,8);
 
 
     hlp := row[ys+4] + xs + 8;
 
     blitTEMP(320, 17);
-    blitTEMP(playscreen.ofs + hlp, $0300, 17, 9);
+    blitTEMP(playscreen_ofs + hlp, $0300, 17, 9);
     
     i:=0;
 
@@ -1688,16 +1634,14 @@ begin
 	inc(i, 17);
     end;
 
-    blitTEMP(17, 320);
-
-    blitTEMP($300, playscreen.ofs + hlp, 17, 9);
-    blitTEMP($300, vram + hlp, 17, 9);
+    
+    blitPAT;
 
 
     hlp := row[ys] + xs;
 
     blitTEMP(320, 16);
-    blitTEMP(playscreen.ofs + hlp, $0200, 16, 7);
+    blitTEMP(playscreen_ofs + hlp, $0200, 16, 7);
 
 
     if block>8 then { but if the block is gray (=9) or brown (=10) ... }
@@ -1757,10 +1701,7 @@ begin
        end;
 
 
-    blitTEMP(16, 320);
-    
-    blitTEMP($200, playscreen.ofs + hlp, 15, 7);
-    blitTEMP($200, vram + hlp, 15, 7);
+    blitSCR(16, 320, 15,7);
 
 
     asm
@@ -2565,7 +2506,7 @@ begin
         yb:=mody[y]*patt.width;
 
 	blitTEMP(320, SCRMAX);
-	blitTEMP(playscreen.ofs + row[y], $0200, SCRMAX, 1);
+	blitTEMP(playscreen_ofs + row[y], $0200, SCRMAX, 1);
 
         for x:=SCRMIN-1 to SCRMAX-1 do
             begin
@@ -2588,7 +2529,7 @@ begin
             end;
 
 	blitTEMP(SCRMAX, 320);
-	blitTEMP($200, playscreen.ofs + row[y], SCRMAX, 1);
+	blitTEMP($200, playscreen_ofs + row[y], SCRMAX, 1);
 
         end;
 
@@ -2641,7 +2582,7 @@ begin
 
     hlp:=row[129] + 72;
 
-    blitBOX(playscreen.ofs + hlp, vram + hlp, 88, 160-129);
+    blitBOX(88, 160-129);
 
 end;
 
@@ -2699,7 +2640,7 @@ begin
 	fxs FX_MEMS #$80
     end;
 
-    blitTEMP(explosion.width, explosion.width);
+    blitTEMP(explosion_width, explosion_width);
 
 
     for w:=0 to 6 do  { w = frame to display, cycles through all frames from 0 to 6 }
@@ -2708,21 +2649,21 @@ begin
         for y:=0 to 15 do
             begin
 
-	    z:=y*explosion.width+w*(explosion.width shl 4);
+	    z:=y*explosion_width+w*(explosion_width shl 4);
 
-	    blitTEMP(explosion.ofs + z, $280, explosion.width, 1);
+	    blitTEMP(explosion_ofs + z, $280, explosion_width, 1);
 
 	    hlp := a+row[y+b];
 
-	    blitTEMP(playscreen.ofs + hlp, $200, explosion.width, 1);
+	    blitTEMP(playscreen_ofs + hlp, $200, explosion_width, 1);
 
-            for x:=0 to explosion.width-1 do
+            for x:=0 to explosion_width-1 do
                 begin
                 { Se il colore e' trasparente o il fotogramma e' il 6 }
                 { allora viene usato il colore del fondale.           }
                 if (w=6) or (pom[x] = 0) then
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
-                   //blitBYTE(playscreen.ofs + hlp + x, vram + hlp + x)
+                   //blitBYTE(playscreen_ofs + hlp + x, vram + hlp + x)
 		   
 		   //scr[x] := scr[x]
                 else
@@ -2732,7 +2673,7 @@ begin
 		   scr[x] := pom[x];
                 end;
 		
-	    blitTEMP($200, vram + hlp, explosion.width, 1);
+	    blitTEMP($200, vram + hlp, explosion_width, 1);
             end;
 
 	pause;
@@ -2781,14 +2722,14 @@ begin
 
 	    blitTEMP(newvaus.ofs + z, $280, newvaus.width, 1);		// pom
 
-	    blitTEMP(playscreen.ofs + hlp, $200, newvaus.width, 1);	// scr
+	    blitTEMP(playscreen_ofs + hlp, $200, newvaus.width, 1);	// scr
 
 	    for x:=0 to newvaus.width-1 do
                 begin
                 if pom[x] = 0 then
 
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
-                   //blitBYTE(playscreen.ofs + x+a+row[y+b], vram + x+a+row[y+b])
+                   //blitBYTE(playscreen_ofs + x+a+row[y+b], vram + x+a+row[y+b])
 
 		   //scr[x] := scr[x]
 
@@ -3015,7 +2956,7 @@ begin
     { Erase the writing by copying the background over it }
     for y:=129 to 140 do
         //memcpy(playscreen.map[66+row[y]], screen[66+row[y]], textwidth('Game Paused')+1);
-        blitROW(playscreen.ofs + 66+row[y], vram + 66+row[y], textwidth('Game Paused')+1);
+        //blitROW(playscreen_ofs + 66+row[y], vram + 66+row[y], textwidth('Game Paused')+1);
 
     { textwidth('Game Paused') is a function that returns the length }
     { in pixels of the text 'Game Paused'.                           }
@@ -3046,32 +2987,32 @@ begin
     blitTEMP(pattern.width, pattern.width);
     blitTEMP(pattern.ofs, $300, pattern.width, pattern.height);			// pat
 
-    blitTEMP(minivaus.width, minivaus.width);
-    blitTEMP(minivaus.ofs, $280, minivaus.width, minivaus.height);		// pom
+    blitTEMP(minivaus_width, minivaus_width);
+    blitTEMP(minivaus.ofs, $280, minivaus_width, minivaus_height);		// pom
 
 
     for cn:=0 to 7 do begin                      { at most he draws 8 }
 
-        xl := XLIVES + byte(minivaus.width) * cn;
+        xl := XLIVES + byte(minivaus_width) * cn;
 
         hlp := row[YLIVES] + xl;
 
-        blitTEMP(320, minivaus.width);
-        blitTEMP(playscreen.ofs + hlp, $200, minivaus.width, minivaus.height);	// scr
+        blitTEMP(320, minivaus_width);
+        blitTEMP(playscreen_ofs + hlp, $200, minivaus_width, minivaus_height);	// scr
 
 	i:=0;
 
-        for y:=0 to minivaus.height-1 do begin
+        for y:=0 to minivaus_height-1 do begin
 
-//	    blitTEMP(minivaus.ofs + y*minivaus.width, $280, minivaus.width, 1);	// pom
+//	    blitTEMP(minivaus.ofs + y*minivaus_width, $280, minivaus_width, 1);	// pom
 
             yl:=y+YLIVES;
 
             yp := byte(pattern.width) * mody[yl];
 
-//	    blitTEMP(playscreen.ofs + hlp, $200, minivaus.width, 1);		// scr
+//	    blitTEMP(playscreen_ofs + hlp, $200, minivaus_width, 1);		// scr
 
-            for x:=0 to minivaus.width-1 do
+            for x:=minivaus_width-1 downto 0 do
                 begin
 
                 xp:=modx[xl + x];
@@ -3108,13 +3049,11 @@ begin
                   end;
                 end;
 		
-	inc(i, minivaus.width);
+	inc(i, minivaus_width);
 				
 	end;
 
-        blitTEMP(minivaus.width, 320);
-	blitTEMP($200, vram + hlp, minivaus.width, minivaus.height);
-	blitTEMP($200, playscreen.ofs + hlp, minivaus.width, minivaus.height);
+	blitSCR(minivaus_width, 320, minivaus_width, minivaus_height);
 	
      end;
 
@@ -3131,7 +3070,7 @@ begin
 
     hlp := fire.x + row[fire.y];
 
-    blitZERO(shoots.ofs, vram + hlp, shoots.width, shoots.height);
+    blitZERO(shoots_ofs, shoots_width, shoots_height);
 
 end;
 
@@ -3141,7 +3080,7 @@ begin
 
    hlp := fire.x + row[fire.y];
    
-   blitBOX(playscreen.ofs + hlp, vram + hlp, shoots.width, shoots.height);
+   blitBOX(shoots_width, shoots_height);
 
 end;
 
@@ -3153,8 +3092,8 @@ var x1,x2,y1,y2 : byte;
        begin
        if (mouseclick=1) and (fire.avl) and (not fire.shot) then
           begin
-          fire.x:=vaus.x+byte(vaus.width-shoots.width) shr 1;
-          fire.y:=vaus.y-shoots.height;
+          fire.x:=vaus.x+byte(vaus.width-shoots_width) shr 1;
+          fire.y:=vaus.y-shoots_height;
           fire.shot:=TRUE;
           fire.nw  :=FALSE;
           ball_block_sound(700,5);
@@ -3176,7 +3115,7 @@ var x1,x2,y1,y2 : byte;
                  x1:=byte(fire.x-9 ) shr 4;
                  y1:=byte(fire.y-22) shr 3;
 
-                 x2:=byte(fire.x+shoots.width-9) shr 4;
+                 x2:=byte(fire.x+shoots_width-9) shr 4;
                  y2:=y1;
 
                  if (wall[byte(x1+y1*16)]<>0) or (wall[byte(x2+y2*16)]<>0) then
@@ -3199,7 +3138,7 @@ begin
 
     hlp := row[FLUXLEVEL] + 217;
 
-    blitBOX(playscreen.ofs + hlp, vram + hlp, 8, 20);
+    blitBOX(8, 20);
     
 end;
 
@@ -3207,19 +3146,26 @@ end;
 procedure check_flux;
 var y,fx  : byte;
 begin
-
-   fx:=scrfluxcnt;
-
+  
    if scrflux then
       begin
 
-      for y:=19 downto 0 do begin
+      fx:=scrfluxcnt shl 3;
 
-        hlp := (y+fx) shl 3;
 
-        blitROW(flux.ofs + hlp, vram + 217+row[y+FLUXLEVEL], 8);
-
+      asm
+	fxs FX_MEMS #$80
       end;
+
+
+      blitTEMP(8, 320);
+      blitTEMP(flux.ofs + fx, vram + 217+row[FLUXLEVEL], 8, 20);
+
+
+      asm
+	fxs FX_MEMS #$00
+      end;
+
 
       inc(scrfluxcnt);
       if scrfluxcnt>20 then scrfluxcnt:=0;
@@ -3254,7 +3200,7 @@ begin
 	
 	hlp := row[vaus.y] + 225;
 	
-	blitBOX(playscreen.ofs + hlp, vram + hlp, 40, vaus.height);
+	blitBOX(40, vaus.height);
 
         end;
 
@@ -3380,7 +3326,6 @@ var
   key  : smallint;
 //  ball : array[0..2] of BALLTYPE;
   t1,t2: smallint;
-  hlp: smallint;
 
 //  cn: byte;
 
@@ -3394,23 +3339,22 @@ var
   procedure check_ball(var ball: BALLTYPE);
   begin
 
-         if (ball.inplay) then  { all considerations apply if the ball }
-                                { is in play.                          }
-            begin
+//         if ball.inplay then  { all considerations apply if the ball is in play. }
+//            begin
             if (ball.y>=22) and (ball.y<142) then
                ball_hit_block(ball);
 
             set_ball(ball);
             ball.speed:=ball_speed(ball);
-            end;
+//            end;
   end;
 
 
   procedure test_ball(var ball: BALLTYPE);
   begin
 
-         if ball.inplay then
-            begin
+//         if ball.inplay then
+//            begin
             inc(ball.finespeed);
 
             if ball.finespeed > LEVEL[lv] then
@@ -3431,7 +3375,7 @@ var
             { random by an angle between -BALLDEV/2 and +BALLDEV/2 }
             if (ball.sbd >= SBDIR) and (ball.speedy < 0) then
                deviate_ball(ball);
-            end;
+//            end;
 
   end;
 
@@ -3453,7 +3397,8 @@ var
   fill_picture_with_pattern(pattern);
 
   { Disegna il quadro di gioco con lo sfondo pocanzi settato}
-  showBTMpicture(playscreen);
+  hlp:=0;
+  blitBOX(320, 200);
 
   { Print the number of lives of the current player        }
   { cur_player=1 or 2 depending on which player is to play }
@@ -3537,13 +3482,6 @@ var
      begin
      Wait_VBL; { Waits for the vertical blank }
 
-{$IFDEF ATARI}
-
-
-{$ELSE}
-     form1.show_play;
-{$ENDIF}
-
      mousecoords(x);  { reads mouse coordinates }
 
      {  if trainer (VAUS in automatic mode) is not active }
@@ -3592,9 +3530,9 @@ var
      { maximum and minimum coordinates at which a brick can be bumped) then   }
      { you need to check whether the ball actually bumped a brick or not.     }
 
-     check_ball(ball0);
-     check_ball(ball1);
-     check_ball(ball2);
+     if ball0.inplay then check_ball(ball0);
+     if ball1.inplay then check_ball(ball1);
+     if ball2.inplay then check_ball(ball2);
   (*
      for cn:=0 to 2 do
          begin
@@ -3615,7 +3553,7 @@ var
      check_fire;     { whether a laser shot was fired }
      check_flux;
 
-     if ((vaus.x+vaus.width) = (SCRMAX-1)) and (scrflux) then vaus_out;
+     if ((vaus.x+vaus.width) = byte(SCRMAX-1)) and (scrflux) then vaus_out;
 
      if vaus.letter=4 then   { In case a D has been collected the balls }
         begin                { become 3.                                }
@@ -3632,8 +3570,6 @@ var
         { first ball, 45 at the second, and 60 at the third.              }
 
         { At this point the three balls are forced to split up. }
-	
-        //hlp:=t1*90;
 
         set_ball_direction(ball0,(t1+30));
         set_ball_direction(ball1,(t1+45));
@@ -3677,9 +3613,9 @@ var
      { of LEVEL[lv] obviously depends on the lv, that is, the level         }
      { selected before starting the game.                                   }     
 
-     test_ball(ball0);
-     test_ball(ball1);
-     test_ball(ball2);
+     if ball0.inplay then test_ball(ball0);
+     if ball1.inplay then test_ball(ball1);
+     if ball2.inplay then test_ball(ball2);
 (*
      for cn:=0 to 2 do
          begin
@@ -3992,7 +3928,19 @@ var x,y,z : word;
     { via the procedure written in assembler. }
     //memcpy(presents.map, screen, 64000);
 
-    blitBOX(presents.ofs, vram, 320, 200);
+
+
+    asm
+      fxs FX_MEMS #$80
+    end;
+
+    blitTEMP(320, 320);
+    blitTEMP(presents.ofs, vram, 320, 200);
+
+    asm
+      fxs FX_MEMS #$00
+    end;
+  
   
 
 //    soundicon;         { draw the sound icon }
@@ -4050,7 +3998,9 @@ var nwall : boolean;
     set_wall;                             { e lo si disegna }
 
     fill_picture_with_pattern(pattern);   { si imposta lo sfondo }
-    showBTMpicture(playscreen);           { e si disegna tutto quanto sullo }
+    
+    hlp:=0;
+    blitBOX(320, 200);                    { e si disegna tutto quanto sullo }
                                           { schermo }
 
 //    setpalette(playscreen);               { si impostano i colori. }
