@@ -3,8 +3,6 @@
 
 const
 
-   vram = $030000;
-
    err1 = 1; // 'Ball speed exceed program capability'
    err2 = 2; // 'Ball seems to be still'
    err3 = 3; // 'Ball hit a block not on its surface'
@@ -3146,6 +3144,7 @@ end;
 procedure check_flux;
 var y,fx  : byte;
 begin
+
   
    if scrflux then
       begin
@@ -3159,7 +3158,7 @@ begin
 
 
       blitTEMP(8, 320);
-      blitTEMP(flux.ofs + fx, vram + 217+row[FLUXLEVEL], 8, 20);
+      blitTEMP(flux_ofs + fx, vram + 217+row[FLUXLEVEL], 8, 20);
 
 
       asm
@@ -3211,7 +3210,7 @@ procedure check_bonus_type(var b1,b2,b3 : BALLTYPE);
 var x : smallint;
     begin
     
-      if vaus.letter>0 then
+      if (vaus.letter > 0) and (vaus.letter < 10) then
          begin
          lett.last:=vaus.letter-1;
          if b2.inplay then remove_ball(b2);
@@ -3478,24 +3477,26 @@ var
   
   x:=vaus.x;
 
+  
   while(ball0.inplay) and (remain_blk>0) and (not score.abortplay) do
      begin
      Wait_VBL; { Waits for the vertical blank }
 
      mousecoords(x);  { reads mouse coordinates }
 
+
      {  if trainer (VAUS in automatic mode) is not active }
      { moves VAUS to mouse coord.x }
 
-     if trainer=0 then move_vaus(x,VAUS_LINE)
-
+     {if trainer=0 then} move_vaus(x,VAUS_LINE);
+(*
      { if it is active, however, it dictates that the x of the VAUS is equal }
      { to the x of the ball, with an appropriate translation coefficient    }
      { so that the ball hits the center of the vaus and not the left edge.  }
 
      else if trainer=1 then
           move_vaus(min(SCRMAX-32,max(ball0.x-ball0.onvaus,SCRMIN)),VAUS_LINE);
-
+*)
      { ball[0].launch is worth TRUE if the ball is attached to the VAUS and }
      { is to be thrown. Otherwise, when it is in play it is worth false.    }
 
@@ -3935,7 +3936,7 @@ var x,y,z : word;
     end;
 
     blitTEMP(320, 320);
-    blitTEMP(presents.ofs, vram, 320, 200);
+    blitTEMP(presents_ofs, vram, 320, 200);
 
     asm
       fxs FX_MEMS #$00

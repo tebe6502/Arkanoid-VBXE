@@ -103,10 +103,13 @@ var
   if pal = TRUE then begin
     blockread(h1,DEF_PAL,768,cnt);      { legge la palette dei colori }
 
+    close(h1);
+    exit;
+
 //    BTMREC.palused:=TRUE;
   end else begin
     blockread(h1,pl,768,cnt);      { legge la palette dei colori }
-
+    
 //    BTMREC.palused:=FALSE;
   end;
 
@@ -145,10 +148,10 @@ begin
 
    { Carica uno dopo l'altro tutti i disegni grafici di cui necessita }
 
-   loadBTM('..\PRESENT.BTM' ,presents,false);   { la scritta ARKANOID }
+//   loadBTM('..\PRESENT.BTM' ,presents,false);   { la scritta ARKANOID }
    loadBTM('..\EXPLODE.BTM' ,explosion,FALSE);  { l'esplosione del vaus }
    loadBTM('..\NEWVAUS.BTM' ,newvaus,FALSE);    { la creazione del vaus }
-   //loadBTM('..\SOUNDFX.BTM' ,soundfx,FALSE);    { l'icona sound on/off  }
+//   loadBTM('..\SOUNDFX.BTM' ,soundfx,FALSE);    { l'icona sound on/off  }
    loadBTM('..\SHINEWAL.BTM',shinewall,FALSE);  { il lucchichio dei mattoni }
    loadBTM('..\MINIVAUS.BTM',minivaus,FALSE);   { i vaus che indicano le vite }
    loadBTM('..\LEVELSEL.BTM',levelsel,FALSE);   { l'icona del livello di gioco }
@@ -197,10 +200,13 @@ begin
 
  assign(t, 'btm.inc'); rewrite(t);
 
+{
  writeln(t, #9'presents.ofs := VBXE_DATA + $', intToHex(presents.ofs,8) , ';');
  writeln(t, #9'presents.width := ', presents.width , ';');
  writeln(t, #9'presents.height := ', presents.height , ';');
  writeln(t); 
+}
+
  writeln(t, #9'explosion.ofs := VBXE_DATA + $', intToHex(explosion.ofs,8) , ';');
  writeln(t, #9'explosion.width := ', explosion.width , ';');
  writeln(t, #9'explosion.height := ', explosion.height , ';');
@@ -279,10 +285,13 @@ begin
  writeln(t, #9'pattern4.width := ', pattern4.width , ';');
  writeln(t, #9'pattern4.height := ', pattern4.height , ';');
  writeln(t);
+
+{ 
  writeln(t, #9'playscreen.ofs := VBXE_DATA + $', intToHex(playscreen.ofs,8) , ';');
  writeln(t, #9'playscreen.width := ', playscreen.width , ';');
  writeln(t, #9'playscreen.height := ', playscreen.height , ';'); 
  writeln(t);
+}
 
  writeln(t, #9'// ofset = VBXE_DATA + $', intToHex(ofset,8));
  
@@ -301,9 +310,8 @@ begin
   
  Arkanoid;
  
- fillByte(dum, sizeof(dum), 0);
- 
- blockwrite(f, dum, 21);
+ fillByte(dum, sizeof(dum), 0); 
+ blockwrite(f, dum, 320);
   
  close(f);
 
@@ -319,6 +327,7 @@ begin
  blockread(f, dum, sizeof(dum), j);
  close(f);
 
+ inc(j, 320);
 
  ExportBMP('btm.bmp', 320, j div 320);
 

@@ -48,15 +48,21 @@ uses crt, atari, vbxe, joystick;
 const
 	VBXE_DIGIT = $5000;
 
-        VBXE_DATA = $96D5;	// shifting the playscreen address to the beginning of a new 64K block ($020000)
+        VBXE_DATA = $6000;
 
-	explosion_ofs   = VBXE_DATA + $0000FA00;
-	shinewall_ofs   = VBXE_DATA + $00012B9D;
-	letters_ofs     = VBXE_DATA + $000138CC;
-	shoots_ofs      = VBXE_DATA + $0001584C;
-	balldata_ofs    = VBXE_DATA + $000159FC;
+	playscreen_ofs  = $020000;
 
-	playscreen_ofs  = VBXE_DATA + $0001692B;
+	vram = $030000;
+
+	explosion_ofs   = VBXE_DATA;
+	shinewall_ofs   = VBXE_DATA + $0000319D;
+	letters_ofs     = VBXE_DATA + $00003ECC;
+	shoots_ofs      = VBXE_DATA + $00005E4C;
+	flux_ofs	= VBXE_DATA + $00005EB4;
+	balldata_ofs    = VBXE_DATA + $00005FFC;
+
+	presents_ofs = VBXE_DATA + 90*320;
+
 	
 	minivaus_width = 20;
 	minivaus_height = 5;
