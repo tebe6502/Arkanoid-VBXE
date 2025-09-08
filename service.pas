@@ -1,259 +1,10 @@
 
 { ------------------------------------------------------------------------- }
 
-const
-
-   err1 = 1; // 'Ball speed exceed program capability'
-   err2 = 2; // 'Ball seems to be still'
-   err3 = 3; // 'Ball hit a block not on its surface'
-   err4 = 4; // 'No collisions detected'
-
-
-   SCRMIN     = 10;  { X coordinate of the left edge of the playing area  }
-   SCRMAX     = 216; { X coordinate of the right edge of the playing area }
-   SCRTOP     = 12;  { Y coordinate of the upper edge of the playing area }
-   SCRBOT     = 200; { Y coordinate of the lower edge of the playing area }
-
-   VAUS_W     = 34;  { Width of the VAUS in pixels                        }
-   VAUS_H     = 4;   { Height of the VAUS in pixels                       }
-   VAUS_LINE  = 184; { Y coordinate on which the VAUS moves horizontally  }
-   EMP        = 255; { Use EMP (empty) instead of 255                     }
-   BALLDIM    = 5;   { Diameter of the ball (in pixels)                   }
-   BALLSPOT   = 3;   { Radius of the ball (in pixels) = diameter/2 +1     }
-
-(*
-   BALLARRAY  : packed array[0..4,0..4] of byte =
-                                           ((0,1,1,1,0),
-                                            (1,1,2,1,1),
-                                            (1,2,1,1,1),
-                                            (1,1,1,1,1),
-                                            (0,1,1,1,0));
-                                            { Ball design }
-
-*)
-
-   BALLDEV    = 30; { Angle of deviation when hitting }
-                    { the red edges of the VAUS       }
-
-   SPEEDFLASH = 10; { Number of 50ths of a second to wait before changing }
-                    { the color of the VAUS borders                       }
-
-   FLASH      : array[0..10] of byte = ( 255,212,211,210,209, 208,207,206,205,204,203);
-           { Colors that the extremes of the VAUS take on during flashing }
-
-   SCORE_WALL : array[0..10] of word = (0, 10,20,30,40,50,100,200,250,500,1000 );
-
-
-   EMERG_DEV  : array[0..8] of byte = (0, $02,$13,$24,$35,$12,$23,$34,$45 );
-
-
-   COLORBLOCK : array[0..9] of byte = ( 212,211,210,209,208, 207,206,205,204,203 );
-                                         { Color of the bricks }
-
-
-   GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
-   STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 550; { Ball speed (256 = 70 pixels per second }
-   MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
-   MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
-                     { before splashing off changing speed          }
-
-   PATNUMBER  = 4;   { Number of available backdrops }
-
-   POS_DIGIT  : array[0..3] of byte = (0, 60,93,128);
-   { Y coordinate of the three scores (player 1, player 2, hiscore) }
-
-
-   DIGITS     : array[0..10] of byte = ( 125,96,55,103,106,79, 95,97,127,111,0 );
-   { Data for displaying digital digits in scores }
-
-   LEVEL      : array[0..5] of word = (0, 1000,300,100,60,35);
-
-   SBDIR      = 600; { Cycles it must do before the ball you have to (dev. adjust) }
-   DEFLEVEL   = 3;   { Default game level }
-
-   LETTER_PROB= 300; { range in which the random number of the letter is drawn }
-   LETTER_DROP= 1000;{ Number that must reach the sum to drop the letter }
-   LETTER_NUMB= 8;   { number of letters+1 }
-   LETTER_FRM = 8;   { Number of frames that constitute the animation of the letter }
-   LETTER_SBF = 5;   { Number of cycles it must complete before moving to the next frame }
-
-   { Probability of letter drop in % }  {  L   E  B   D   S   C  P }
-   LETTER_DIS : array[0..7] of byte = ( 0, 16, 20, 3, 18, 20, 20, 3 );
-
-   FLUXLEVEL  = 176;
-
-type
-
-   TText = string[31];
-
-   BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
-              width   : word;          { larghezza disegno       }
-              height  : byte;          { altezza                 }
-              ofs : cardinal;
-              end;
-
-   VAUSTYPE = RECORD                   { per i dati del vaus }
-              x,y: byte;               { attuali coordinate x,y }
-
-              oldx,                    { vecchie coordinate del vaus }
-              oldy   : smallint;
-              oldlen : smallint;       { e vecchia lunghezza }
-              width,                   { larghezza }
-              height : byte;           { spessore (o altezza) }
-              flash  : byte;           { indica il colore attuale dei bordi }
-              iflash : byte;           { contatore di ritardo per il }
-                                       { il lampeggio dei bordi }
-              letter : byte;
-              end;
-
-
-   BALLTYPE = RECORD                   { contiene i dati della pallina }
-              x,y: smallint;           { coordinate x,y attuali }
-              finex,finey: byte;       { submultiples of the coordinates }
-              oldx,oldy,               { vecchie coordinate }
-              speed  : smallint;       { velocita' (256 = 70 pixel al sec. }
-              finespeed : word;        { speed (submultiple) }
-              speedx,                  { velocita' sull'asse x }
-              speedy : smallint;       { velocita' sull'asse y }
-              sbd    : word;           { to avoid ball loops }
-              brwhit : byte;           { number of brown blocks affected in succession }
-              inplay : boolean;        { flag, TRUE if the ball is in play }
-              launch : boolean;        { flag, TRUE if the ball must be }
-                                       { thrown again }
-              onvaus : smallint;       { width in pixels of the vaus }
-              stm    : byte;           { magnet counter }
-              end;
-
-   WALLTYPE = array [0..16*16-1] of byte;//array[0..12,-1..15] of byte; { for the wall (13x15 bricks) }
-
-   WHOLEWALLS = array[0..32] of WALLTYPE;  { for all 33 walls }
-
-   SCORETYPE  = RECORD                            { keeps score }
-                player : array[0..2] of cardinal; { player 1 and 2 }
-                wall_n : array[0..2] of byte;     { current wall }
-                lives  : array[0..2] of byte;     { remaining lives }
-                hiscore: cardinal;                { record }
-                pl_numb: byte;                    { current player }
-                roundsel : array[0..2] of boolean;
-                abortplay : boolean;
-                end;
-
-   SHREC      = RECORD                 { for the sparkle of the bricks }
-                xb, yb      : byte;
-                frame       : byte;
-                block       : byte;
-                active      : boolean;
-                end;
-
-   LETTERREC  = RECORD                 { data related to the letter }
-                x,y      : byte;       { coord. }
-                typ      : word;       { Type, B,C,E,L,P,D,S }
-                frame    : byte;       { frame number }
-                subframe : byte;       { number of cycles per frame }
-                active   : boolean;    { the letter can be active }
-                incoming : smallint;   { holds the sum, >1000 the letter falls out }
-                nextx,                 { Coordination of where it should fall if activated }
-                nexty    : byte;
-                nexttype : smallint;   { type of letter that will have to fall }
-                last     : smallint;   { last letter dropped }
-                end;
-
-   FIRETYPE   = RECORD                 { for lasers }
-                x,y  : byte;           { coord. }
-                shot : boolean;        { if the shot went off }
-                avl  : boolean;        { if it's available (thanks to L) }
-                nw   : boolean;        { if he just left VAUS }
-                end;
-
-var
-    balldata   : BTMTYPE;
-    playscreen : BTMTYPE;  { area di gioco (320x200) }
-    playvaus   : BTMTYPE;  { vaus }
-    normal     : BTMTYPE;  { vaus normale }
-    enlarged   : BTMTYPE;  { allargato }
-    lasers     : BTMTYPE;  { traformato per sparare }
-    explosion  : BTMTYPE;  { esplosione vaus }
-    newvaus    : BTMTYPE;  { sequenza di animazione di partenza }
-    presents   : BTMTYPE;  { scritta ARKANOID }
-//    soundfx    : BTMTYPE;  { l'icona con la nota e la nota sbarrata }
-    shinewall  : BTMTYPE;  { luccichio dei mattoncini grigi e beige }
-    minivaus   : BTMTYPE;  { vaus piccolino che indica le vite }
-    levelsel   : BTMTYPE;  { 5 frames dei numeri per scegliere il livello }
-    letters    : BTMTYPE;  { le animazioni delle 7 lettere }
-    shoots     : BTMTYPE;  { e il disegno dei laser }
-    flux       : BTMTYPE;
-    vaus       : VAUSTYPE; { data relating to the VAUS (see above) }
-    pattern    : BTMTYPE;  { background }
-
-    pattern0   : BTMTYPE;  { background }
-    pattern1   : BTMTYPE;  { background }
-    pattern2   : BTMTYPE;  { background }
-    pattern3   : BTMTYPE;  { background }
-    pattern4   : BTMTYPE;  { background }
-
-    status     : byte;
-
-//    success    : boolean;                 { status flag for BTM loading }
-
-    remain_blk : byte;                    { bricks still to be knocked down }
-    totalwall  : byte;                    { bricks throughout }
-    score      : SCORETYPE;               { current score }
-    cur_player : byte;                    { current player }
-
-    shinerec   : shrec;                   { holds the data of the block }
-                                          { that is currently flashing }
-
-    lv         : smallint;                { level of play }
-    trainer    : byte;
-
-    lett       : LETTERREC;               { the parameters of the letters }
-    fire       : FIRETYPE;                { and laser beams }
-    balls_in_play : byte;                 { number of balls in play }
-    scrflux    : boolean;
-    scrfluxcnt : byte;
-
-    sound_on   : Boolean;
-    
-    old_scores : cardinal;
-    
-    hlp: word;
-    f_hlp: single;
-
-
-    scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
-    pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
-    pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
-
-    mody       : array[0..255] of byte absolute $0500;
-    modx       : array[0..255] of byte absolute $0600;
-    
-    sqrtable : array [0..1023] of cardinal absolute $a000;
-
-    [striped] row : array[0..255] of word absolute $c000; { array (see initRowArray) }
-
-    Mod10Table: array [0..255] of byte absolute $c000+$200;
-    Mod90Table: array [0..255] of byte absolute $c000+$300;
-    [striped] Mod360Table: array [0..255] of word absolute $c000+$400;
- 
-    sintable: array [0..450-1] of smallint absolute $c000+$600;
-
-    wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
-    wall       : WALLTYPE absolute $d800+$300;         { wall }
-
-    [striped] mul90_16: array [0..15] of word absolute $d800+$400;
-
-    all_walls  : WHOLEWALLS absolute $d800+$500;       { all the walls }
-
-
-{ ------------------------------------------------------------------------- }
-
 { These are the functions that must be seen by the main program.            }
-   {
+{
 function  mainscreen : smallint;
 procedure fatal_error(err_type : string);
-procedure loadBTM(name : string; var BTMREC : BTMTYPE; pal : boolean);
-procedure load_all_walls;
 procedure InitSVGA;
 procedure initRowArray;
 function  random_letter_drop : smallint;
@@ -985,8 +736,13 @@ var
   i: cardinal;
   
   a,b: word;
-
 begin
+
+  if speed = ball.old_speed then exit;
+  
+  ball.old_speed := speed;
+   
+
   sx:=ball.speedx;  { stores the x and y components of velocity }
   sy:=ball.speedy;  { in sx and sy, respectively                }
   
@@ -995,20 +751,23 @@ begin
   
   i:=sqrtable[a] + sqrtable[b];
   
-  f_hlp:=FastSqrt(i);
+  f_hlp := FastSqrt(i);
   
   vm:=speed / f_hlp ;//sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
                                  { between the old and new speeds                }
                                  { (the direction does not change, only          }
                                  { the modulus changes).                         }
 
-  ball.speedx:=trunc(sx * vm);   { e quindi moltiplica per tale coef. }
-  ball.speedy:=trunc(sy * vm);   { le due proiezioni della velocita'. }
+  ball.speedx:=trunc(sx * vm);   { and then multiply by that coefficient. }
+  ball.speedy:=trunc(sy * vm);   { the two projections of the velocity.   }
     
+
   if ball.speedx = 0 then ball.speedx := $a0;
   if ball.speedy = 0 then ball.speedy := $a0;
 
 end;
+
+
 
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 //var w : single;
@@ -1030,6 +789,8 @@ function get_ball_direction(var ball : BALLTYPE): smallint;
 var w : smallint; { Returns the direction in which the ball is moving }
 begin
 
+
+(*
   if ball.speedx=0 then begin
    
    if ball.speedy >= 0 then
@@ -1041,7 +802,7 @@ begin
   else
     begin
     { calculates the arcotangent and adds multiples of 90 degrees depending on }
-    { signs of ball.speedx and ballspeed.y }
+    { signs of ball.speedx and ball.speedy }
       
     f_hlp := -ball.speedy / ball.speedx;
     
@@ -1054,6 +815,10 @@ begin
     inc(w,360);
     w:=mod360(w);
     end;
+*)
+
+  w := scale360[ Atan2(-ball.speedy, ball.speedx) ];
+
 
   get_ball_direction := w;
 end;
@@ -3346,6 +3111,7 @@ var
                ball_hit_block(ball);
 
             set_ball(ball);
+	    ball.old_speed:=low(smallint);
             ball.speed:=ball_speed(ball);
 //            end;
   end;
@@ -3482,7 +3248,15 @@ var
   
   while(ball0.inplay) and (remain_blk>0) and (not score.abortplay) do
      begin
-     Wait_VBL; { Waits for the vertical blank }
+     //Wait_VBL; { Waits for the vertical blank }
+     
+     
+     asm
+      mva #$00 $d01a
+      lda:rne vcount
+      mva #$0f $d01a       
+     end;
+     
 
      mousecoords(x);  { reads mouse coordinates }
 

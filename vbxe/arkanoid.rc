@@ -1,6 +1,7 @@
 all_walls rcdata 'walls.dat'
 sqrtable rcdata 'sqrtable.dat'
 sintable rcdata 'sintable.dat'
+atan_tab rcdata 'atan_tab.dat'
 vbxe_digit xbmp 'arkanoid_digit.bmp' 0 1
 presents_ofs xbmp 'title.bmp' 0 1
 playscreen_ofs xbmp 'playscreen.bmp' 0 1
