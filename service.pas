@@ -736,6 +736,7 @@ var
   a, b, len: word;
   i: cardinal;
 begin
+
   sx := ball.speedx;
   sy := ball.speedy;
 
@@ -3289,7 +3290,9 @@ var
      
      asm
       mva #$00 $d01a
-      lda:rne vcount
+      @: lda vcount
+      cmp #110
+      bne @-
       mva #$0f $d01a       
      end;
      
@@ -3565,8 +3568,8 @@ var
 *)
      end;
 
-  { BounceBall esce con false se la palla e' stata persa, con true se }
-  { il quadro e' stato finito. }
+  { BounceBall exits with false if the ball was lost, with true if }
+  { the picture was finished. }
 
   Result:=FALSE;
   if remain_blk=0 then Result:=TRUE;
