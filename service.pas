@@ -729,7 +729,49 @@ var b0, b1: Boolean;
   end;
 
 
-procedure set_ball_speed(var ball : BALLTYPE; speed : smallint);
+
+procedure set_ball_speed(var ball : BALLTYPE; speed : word);
+var
+  sx, sy, x,y: smallInt;
+  a, b, len: word;
+  i: cardinal;
+begin
+  sx := ball.speedx;
+  sy := ball.speedy;
+
+  a:=abs(sx) and 1023;
+  b:=abs(sy) and 1023;
+  
+  i:=sqrtable[a] + sqrtable[b];
+  
+  len := trunc( FastSqrt(i) );
+  
+  if len = 0 then
+    Exit;
+
+  // skalowanie w integerach (zaokrąglamy najbliżej)
+  x := (a * speed) div len;
+  
+  if (x = 0) then exit;  
+  
+  y := (b * speed) div len;
+
+  if (y = 0) then exit;
+    
+  if x > MAXSPEED then x := MAXSPEED;
+  if y > MAXSPEED then y := MAXSPEED;
+  
+  if sx < 0 then x:=-x;
+  if sy < 0 then y:=-y;
+  
+  ball.speedx := x;
+  ball.speedy := y;
+end;
+
+
+
+(*
+procedure set_ball_speed(var ball : BALLTYPE; speed : word);
 var
   sx,sy : smallint;   { Sets the speed of the ball based on the speed }
   vm : single;        { vector module passed in SPEED: smallint.      }
@@ -737,11 +779,6 @@ var
   
   a,b: word;
 begin
-
-  if speed = ball.old_speed then exit;
-  
-  ball.old_speed := speed;
-   
 
   sx:=ball.speedx;  { stores the x and y components of velocity }
   sy:=ball.speedy;  { in sx and sy, respectively                }
@@ -766,7 +803,7 @@ begin
   if ball.speedy = 0 then ball.speedy := $a0;
 
 end;
-
+*)
 
 
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
@@ -3111,7 +3148,6 @@ var
                ball_hit_block(ball);
 
             set_ball(ball);
-	    ball.old_speed:=low(smallint);
             ball.speed:=ball_speed(ball);
 //            end;
   end;

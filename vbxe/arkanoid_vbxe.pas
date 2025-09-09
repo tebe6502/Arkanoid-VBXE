@@ -28,9 +28,9 @@
 
 (*
  
- Arkanoid VBXE v1.7 by Tebe/Madteam
+ Arkanoid VBXE v1.8 by Tebe/Madteam
 
- 2025-09-08
+ 2025-09-09
 
 *)
 
@@ -73,9 +73,8 @@ type
    BALLTYPE = RECORD                   { contiene i dati della pallina }
               x,y: smallint;           { coordinate x,y attuali }
               finex,finey: byte;       { submultiples of the coordinates }
-              oldx,oldy,               { vecchie coordinate }
-	      old_speed,
-              speed  : smallint;       { velocita' (256 = 70 pixel al sec. }
+              oldx,oldy: smallint;     { vecchie coordinate }
+              speed  : word;           { velocita' (256 = 70 pixel al sec. }
               finespeed : word;        { speed (submultiple) }
               speedx,                  { velocita' sull'asse x }
               speedy : smallint;       { velocita' sull'asse y }
