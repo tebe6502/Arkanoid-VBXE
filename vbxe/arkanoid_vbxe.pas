@@ -140,6 +140,9 @@ const
 	playscreen_ofs  = $020000;
 
 	vram = $030000;
+	
+	pattern_temp = $040000;
+
 
 	explosion_ofs   = VBXE_DATA;
 	shinewall_ofs   = VBXE_DATA + $0000319D;

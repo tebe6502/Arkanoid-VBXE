@@ -1216,7 +1216,7 @@ var
     cl, shadow: byte;
 
 begin
-
+  
     xs:=(xa shl 4)+9;      { si calcola le coordinate sullo schermo }
     ys:=(ya shl 3)+22;     { del mattoncino es. 0,0 ---schermo---> 9,22 }
 
@@ -1225,14 +1225,24 @@ begin
     asm
 	fxs FX_MEMS #$80
     end;
+    
+    
+    fillByte(scr, 256, 0);
+
+
+    blt.blt_and_mask:=$80;
+    blt.blt_xor_mask:=$00;
 
     blitTEMP(320, 16);
-    blitTEMP(playscreen_ofs + hlp, $0200, 16, 8);
+    blitTEMP(playscreen_ofs + hlp, $0200, 16, 8);			// scr
 
-    blitTEMP(pattern.width, pattern.width);
-    blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);
+//    blitTEMP(pattern.width, pattern.width);
+//    blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);	// pat
 
+    //shadow:=scr[0] and $80;
+    
 
+(*
     for y:=7 downto 0 do
         begin
         yh:=byte(pattern.width)*mody[ys+y]; { calcola la coord. y relativa alla }
@@ -1271,8 +1281,27 @@ begin
                end;
 
         end;
+*)
 
-	blitSCR(16, 320, 16, 8);
+    blt.blt_and_mask:=$7f;
+    blt.blt_xor_mask:=$00;
+    
+    blt.blt_control := 3;	// OR
+
+    blitTEMP(pattern_temp + hlp, $200, 16,8);
+
+
+    blitTEMP(16, 320);
+    blt.blt_control := 0;
+
+    blitTEMP($200, playscreen_ofs + hlp, 16,8);
+    blitTEMP($200, vram + hlp, 16,8);
+
+
+//    blitTEMP(pattern.width, 320);
+
+//    blitTEMP($300, playscreen_ofs + hlp, 16,8);
+    //blitTEMP($300, vram + hlp, 16,8);
 
 
     { In any case, when the brick disappears, its shadow must also disappear }
@@ -1284,9 +1313,22 @@ begin
     inc(xs, 8);
     hlp := row[ys+4] + xs;// + 8;
 
-    blitTEMP(320, 17);
-    blitTEMP(playscreen_ofs + hlp, $0300, 17, 9);
 
+    blt.blt_and_mask:=$7f;
+    blt.blt_xor_mask:=$80;
+
+    blitTEMP(320, 320);
+    blt.blt_control := 1;
+
+    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 17, 9);
+    
+        
+    blitTEMP(vram + hlp, vram + hlp, 17, 9);
+
+
+
+
+(*
     i:=0;
 
 //    for y:=ys+4 to ys+12 do begin
@@ -1328,8 +1370,20 @@ begin
 
     end;
 
-    
+  
     blitPAT;
+*)
+
+{
+    blitTEMP(17, 320);
+
+    blitTEMP($300, playscreen_ofs + hlp, 17,9);
+    blitTEMP($300, vram + hlp, 17,9);
+}
+    blt.blt_and_mask:=$ff;
+    blt.blt_xor_mask:=0;
+
+    blt.blt_control := 0;
 
 
     asm
@@ -2335,6 +2389,11 @@ begin
 
         end;
 
+   blitTEMP(320,320);
+   
+   blitTEMP(playscreen_ofs, pattern_temp, 320, 200);	
+   while BlitterBusy do;
+   
     asm
 	fxs FX_MEMS #$00
     end;
