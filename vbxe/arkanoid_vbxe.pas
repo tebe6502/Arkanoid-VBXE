@@ -317,7 +317,7 @@ var
     
     sqrtable : array [0..1023] of cardinal absolute $a000;
 
-    [striped] row : array[0..255] of word absolute $c000; { array (see initRowArray) }
+    [striped] row : array[0..255] of WORD absolute $c000; { array (see initRowArray) }
 
     Mod10Table: array [0..255] of byte absolute $c000+$200;
     Mod90Table: array [0..255] of byte absolute $c000+$300;
@@ -341,7 +341,6 @@ var
 
 
 { ------------------------------------------------------------------------- }
-
 
 
 procedure start_level;
@@ -456,7 +455,6 @@ done
 end;
 
 
-
 function mod360(a: smallint): smallint; assembler;
 asm
     ldy a+1
@@ -507,10 +505,10 @@ function FastSqrt(x: Single): Single;	// much faster with little less precision
 var
   i: cardinal absolute x;
 begin
-  i := (i shr 1) + (127 shl 22);
+  i := (i shr 1) + $1fc00000;
+
   Result := PSingle(@i)^;
 end;
-
 
 
 function Q0(x, y: byte): byte;
@@ -528,7 +526,6 @@ begin
    Result := atan_tab[byte(ly - lx)];
 
 end;
-
 
 
 function Atan2(y, x: smallint): byte;
