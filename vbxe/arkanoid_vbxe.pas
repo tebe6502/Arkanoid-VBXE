@@ -32,7 +32,8 @@
  
 
  2025-09-10 
- - 'remove_block' fully accelerated by blitter
+ - 'remove_block', 'plot_lives' fully accelerated by blitter
+ - 'place_block' accelerated by blitter
 
 *)
 
@@ -149,6 +150,8 @@ const
 	explosion_ofs   = VBXE_DATA;
 	shinewall_ofs   = VBXE_DATA + $0000319D;
 	letters_ofs     = VBXE_DATA + $00003ECC;
+	minivaus_ofs	= VBXE_DATA + $0000369D;
+
 	shoots_ofs      = VBXE_DATA + $00005E4C;
 	flux_ofs	= VBXE_DATA + $00005EB4;
 	balldata_ofs    = VBXE_DATA + $00005FFC;
@@ -321,6 +324,7 @@ var
     modx       : array[0..255] of byte absolute $0600;
     
     sqrtable : array [0..1023] of cardinal absolute $a000;
+
 
     [striped] row : array[0..255] of WORD absolute $c000; { array (see initRowArray) }
 

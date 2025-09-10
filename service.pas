@@ -811,8 +811,8 @@ procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 //var w : single;
 begin                  { sets the trajectory angle of the ball }
 
-  ball.speedx:=sintable[angle+90];  { the velocity is assumed to be unitary }
-  ball.speedy:=-sintable[angle];    { v=256 equals 70 pixels per sec. }
+  ball.speedx := sintable[angle+90];  { the velocity is assumed to be unitary }
+  ball.speedy := -sintable[angle];    { v=256 equals 70 pixels per sec. }
 
 (*
   w:=angle*pi/180.0;     { w viene espresso in gradi }
@@ -1284,24 +1284,17 @@ begin
 
 
 
-    blitTEMP(16, 320);
-
     blt.blt_and_mask:=$ff;
     blt.blt_xor_mask:=$00;
 
     blt.blt_control := 0;
 
+    //blitTEMP(16, 320);
+    //blitTEMP($200, playscreen_ofs + hlp, 16,8);
+    //blitTEMP($200, vram + hlp, 16,8);
 
-    blitTEMP($200, playscreen_ofs + hlp, 16,8);
-    blitTEMP($200, vram + hlp, 16,8);
+    blitSCR(16,320,16,8);
 
-
-
-
-//    blitTEMP(pattern.width, 320);
-
-//    blitTEMP($300, playscreen_ofs + hlp, 16,8);
-    //blitTEMP($300, vram + hlp, 16,8);
 
 
     { In any case, when the brick disappears, its shadow must also disappear }
@@ -1376,13 +1369,6 @@ begin
     blitPAT;
 *)
 
-{
-    blitTEMP(17, 320);
-
-    blitTEMP($300, playscreen_ofs + hlp, 17,9);
-    blitTEMP($300, vram + hlp, 17,9);
-}
-
 
     blt.blt_and_mask:=$ff;
     blt.blt_xor_mask:=0;
@@ -1401,9 +1387,11 @@ procedure place_block(xa,ya,block : byte);
 var
     xs,ys, x,y, i: byte;
     
-    yh: word;
+//    yh: word;
+
     cl,cl2: byte;
-    shadow: byte;
+
+//    shadow: byte;
 
 begin
 
@@ -1416,10 +1404,26 @@ begin
 	  fxs FX_MEMS #$80
     end;
 
+    
+    blitTEMP(320, 320);
+    blt.blt_and_mask := $80;
+    blt.blt_xor_mask := $00;
 
-    blitTEMP(320, 16);
-    blitTEMP(playscreen_ofs + hlp, $0200, 16, 8);
+    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 16, 8);
+    blitTEMP(vram + hlp, vram + hlp, 16, 8);
 
+
+    blt.blt_and_mask := $80;
+    blt.blt_xor_mask := (COLORBLOCK[byte(block-1) and 15] and $7f);
+
+    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 15, 7);
+    blitTEMP(vram + hlp, vram + hlp, 15, 7);
+
+    blt.blt_and_mask := $ff;
+    blt.blt_xor_mask := $00;
+
+
+(*
     for y:=7 downto 0 do begin
     
         i:=y*16;
@@ -1460,17 +1464,40 @@ begin
 
     end;
 
-
     blitSCR(16, 320, 16,8);
+*)
 
 
     hlp := row[ys+4] + xs + 8;
-
+{
     blitTEMP(320, 17);
     blitTEMP(playscreen_ofs + hlp, $0300, 17, 9);
     
     i:=0;
+}
 
+    blitTEMP(320, 320);
+  
+    blt.blt_and_mask:=$7f;
+    blt.blt_xor_mask:=$00;
+
+    if xs+8+17 > SCRMAX then 
+     i:=xs+8+17 - SCRMAX
+    else
+     i:=17;
+    
+
+    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, i, 9);
+        
+    blitTEMP(vram + hlp, vram + hlp, i, 9);
+
+
+    blt.blt_and_mask:=$ff;
+    blt.blt_xor_mask:=$00;
+
+
+
+(*
     { now draw the shadow of the brick }
     //for y:=ys+4 to ys+12 do begin
     for y:=8 downto 0 do begin
@@ -1500,7 +1527,7 @@ begin
 
     
     blitPAT;
-
+*)
 
     hlp := row[ys] + xs;
 
@@ -1523,18 +1550,21 @@ begin
        else if block=10 then cl2:=201;
        { if the block is brown, the color is no. 201 }
 
+
+       i:=0;
+
        { draw the top edge of the brick }
        for y:=6 downto 0 do
            begin
 
-	   i:=y*16;
+	   //i:=y*16;
 
            { takes the pixel xs,y+ys from the screen, adds a shadow to it }
            { i.e., makes the color darker }
            //cl:=playscreen.map[xs+row[y+ys]] and 128;
-	   cl := scr[i] and $80;
+	   //cl := scr[i] and $80;
 
-           cl2:=(cl2 and 127) or cl;
+           cl2:=(cl2 and $7f) or (scr[i] and $80);
 
            { ... e lo rimette sullo schermo fisico }
            //screen[xs+row[ys+y]]:=cl2;
@@ -1542,6 +1572,8 @@ begin
            { ... e su quello virtuale }
            //playscreen.map[xs+row[ys+y]]:=cl2;
 	   scr[i] := cl2;
+	   
+	   inc(i, 16);
 	   
            end;
 
@@ -1552,9 +1584,9 @@ begin
 
            { comments similar to above }
            //cl:=playscreen.map[xs+x+row[ys]] and 128;
-	   cl:=scr[x] and $80;
+	   //cl:=scr[x] and $80;
 
-	   scr[x] := (cl2 and $7f) or cl;
+	   scr[x] := (cl2 and $7f) or (scr[x] and $80);
 
            //screen[xs+x+row[ys]]:=cl2;
 
@@ -2857,6 +2889,44 @@ begin
 	fxs FX_MEMS #$80
     end;
 
+    hlp := row[YLIVES] + XLIVES;
+	
+    blitTEMP(320, 320);
+    blitTEMP(pattern_temp + hlp, playscreen_ofs + hlp, 8*minivaus_width, minivaus_height);    
+    blitTEMP(pattern_temp + hlp, vram + hlp, 8*minivaus_width, minivaus_height);  
+
+
+    if lives > 0 then begin
+
+
+    if lives > 7 then
+     i:=7
+    else
+     i:=lives-1;
+
+    blitTEMP(minivaus_width, 320);
+
+    blt.blt_control := 1;
+     
+
+	for cn:=0 to i do begin                      { at most he draws 8 }
+
+		//hlp := row[YLIVES] + XLIVES;
+
+		while BlitterBusy do;
+
+		blitTEMP(minivaus_ofs, playscreen_ofs + hlp, minivaus_width, minivaus_height);
+		blitTEMP(minivaus_ofs, vram + hlp, minivaus_width, minivaus_height);
+
+		inc(hlp, minivaus_width);
+	end;
+
+    blt.blt_control := 0;
+
+
+    end;
+
+(*
     blitTEMP(pattern.width, pattern.width);
     blitTEMP(pattern.ofs, $300, pattern.width, pattern.height);			// pat
 
@@ -2929,7 +2999,7 @@ begin
 	blitSCR(minivaus_width, 320, minivaus_width, minivaus_height);
 	
      end;
-
+*)
 
     asm
 	fxs FX_MEMS #$00
