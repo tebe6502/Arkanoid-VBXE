@@ -29,8 +29,10 @@
 (*
  
  Arkanoid VBXE v1.8 by Tebe/Madteam
+ 
 
- 2025-09-09
+ 2025-09-10 
+ - 'remove_block' fully accelerated by blitter
 
 *)
 

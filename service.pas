@@ -1209,11 +1209,11 @@ end;
 { remove a brick from the screen }
 procedure remove_block(xa,ya : byte);
 var
-    x,y, i: byte;
+//    x,y, i: byte;
+//    yh : word;
+//    cl, shadow: byte;
 
-    xs,ys : byte;
-    yh : word;
-    cl, shadow: byte;
+    i, xs,ys : byte;
 
 begin
   
@@ -1225,9 +1225,6 @@ begin
     asm
 	fxs FX_MEMS #$80
     end;
-    
-    
-    fillByte(scr, 256, 0);
 
 
     blt.blt_and_mask:=$80;
@@ -1235,12 +1232,7 @@ begin
 
     blitTEMP(320, 16);
     blitTEMP(playscreen_ofs + hlp, $0200, 16, 8);			// scr
-
-//    blitTEMP(pattern.width, pattern.width);
-//    blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);	// pat
-
-    //shadow:=scr[0] and $80;
-    
+  
 
 (*
     for y:=7 downto 0 do
@@ -1285,17 +1277,25 @@ begin
 
     blt.blt_and_mask:=$7f;
     blt.blt_xor_mask:=$00;
-    
-    blt.blt_control := 3;	// OR
 
+    blt.blt_control := 3;	// OR
+    
     blitTEMP(pattern_temp + hlp, $200, 16,8);
 
 
+
     blitTEMP(16, 320);
+
+    blt.blt_and_mask:=$ff;
+    blt.blt_xor_mask:=$00;
+
     blt.blt_control := 0;
+
 
     blitTEMP($200, playscreen_ofs + hlp, 16,8);
     blitTEMP($200, vram + hlp, 16,8);
+
+
 
 
 //    blitTEMP(pattern.width, 320);
@@ -1318,14 +1318,16 @@ begin
     blt.blt_xor_mask:=$80;
 
     blitTEMP(320, 320);
-    blt.blt_control := 1;
-
-    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 17, 9);
     
+    if xs+17 > SCRMAX then 
+     i:=xs+17 - SCRMAX
+    else
+     i:=17;
+    
+
+    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, i, 9);
         
-    blitTEMP(vram + hlp, vram + hlp, 17, 9);
-
-
+    blitTEMP(vram + hlp, vram + hlp, i, 9);
 
 
 (*
@@ -1380,6 +1382,8 @@ begin
     blitTEMP($300, playscreen_ofs + hlp, 17,9);
     blitTEMP($300, vram + hlp, 17,9);
 }
+
+
     blt.blt_and_mask:=$ff;
     blt.blt_xor_mask:=0;
 
@@ -2391,8 +2395,16 @@ begin
 
    blitTEMP(320,320);
    
-   blitTEMP(playscreen_ofs, pattern_temp, 320, 200);	
+   blt.blt_and_mask:=$7f;
+   blt.blt_xor_mask:=$80;   
+   
+   blitTEMP(playscreen_ofs, pattern_temp, 320, 200);	// copy (playscreen_ofs and $7f) or $80 -> pattern_temp
    while BlitterBusy do;
+
+
+   blt.blt_and_mask:=$ff;
+   blt.blt_xor_mask:=$00;   
+
    
     asm
 	fxs FX_MEMS #$00
