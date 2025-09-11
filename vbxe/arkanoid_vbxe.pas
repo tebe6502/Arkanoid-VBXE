@@ -321,9 +321,6 @@ var
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
     pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
     pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
-
-    mody       : array[0..255] of byte absolute $0500;
-    modx       : array[0..255] of byte absolute $0600;
     
     sqrtable : array [0..1023] of cardinal absolute $a000;
 

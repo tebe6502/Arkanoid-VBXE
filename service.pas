@@ -64,14 +64,13 @@ begin
  end;
 
  RunBCB(blt_zero);
+ while BlitterBusy do;
 
 end;
 
 
 procedure blitTEMP(swidth, dwidth: word); overload; register;
 begin
-
- while BlitterBusy do;
 
  blt.dst_step_y:=dwidth;
  blt.src_step_y:=swidth;
@@ -95,6 +94,7 @@ begin
  blt.blt_width:=w-1;
 
  RunBCB(blt);
+ while BlitterBusy do;
 
 end;
 
@@ -119,13 +119,11 @@ begin
  blt.blt_width:=w-1;
 
  RunBCB(blt);
-
  while BlitterBusy do;
 
  blt.dst_adr.byte2:=vram shr 16;
 
  RunBCB(blt);
-
  while BlitterBusy do;
 
 end;
@@ -151,11 +149,12 @@ begin
  blt.blt_width:=w-1;
 
  RunBCB(blt);
-
+ while BlitterBusy do;
 
  blt.dst_adr.byte2:=vram shr 16;
 
  RunBCB(blt);
+ while BlitterBusy do;
 
 end;
 
@@ -180,11 +179,12 @@ begin
  blt.blt_width:=17-1;
 
  RunBCB(blt);
-
+ while BlitterBusy do;
 
  blt.dst_adr.byte2:=vram shr 16;
 
  RunBCB(blt);
+ while BlitterBusy do;
 
 end;
 
@@ -214,7 +214,8 @@ begin
  end;
 	
  RunBCB(blt_box);
-	
+ while BlitterBusy do;
+
 end;
 
 
@@ -2394,22 +2395,11 @@ begin
 
 
 { Draw the backdrop on the playing field }
-procedure fill_picture_with_pattern(var patt : BTMTYPE);
+procedure fill_picture_with_pattern;
 var yb: word;
-    x, y, cl, shadow: byte;
+    x, y, i: byte;
+//    cl, shadow: byte;
 begin
-
-    { It computes a priori all values of x mod patt.width            }
-    { patt.width = width of the small square defining the background }
-
-    for y:=255 downto 0 do begin
-        modx[y]:=y mod patt.width;
-
-    { analogamente per y mod patt.height }
-
-//    for y:=0 to 255 do
-        mody[y]:=y mod patt.height;
-    end; 
 
     { Runs the main loop and the secondary loop filling the }
     { screen with as many background squares as needed      }
@@ -2419,18 +2409,8 @@ begin
 	fxs FX_MEMS #$80
     end;
 
-{
-    blitTEMP(pattern.width, pattern.width);
-    
-    blt.blt_and_mask := $7f;
 
-    
-    blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);
-
-    blt.blt_and_mask := $ff;
-
-}
-
+// kopiujemy pattern wykorzystując VBXE pattern_feature, zastępuje to potrzebę użycia tablicy MODX
 
     blitTEMP(pattern.width, 320);
 
@@ -2439,64 +2419,72 @@ begin
 
     blt.pattern_feature:=(pattern.width-1) or $80;
 
-    hlp:=SCRMIN-1 + row[SCRTOP-2];
+    hlp := row[SCRTOP-2] + SCRMIN-1;
 
-
-    for y:=SCRTOP-2 to SCRBOT-2 do begin
+ 
+    yb:=0;
+    i:=0;
     
-        yb:=mody[y]*pattern.width;  
+    for y:=SCRTOP-2 to SCRBOT-2 do begin
 
         blitTEMP(pattern.ofs + yb, playscreen_ofs + hlp, SCRMAX-SCRMIN+1, 1);
      
 	inc(hlp, 320);
+	
+	inc(yb, pattern.width);
+	
+	inc(i);
+	if i = pattern.height then begin
+	  yb:=0;
+          i:=0;
+	end;
+	
     end;
 
+    blt.pattern_feature:=0;
 
-   blt.pattern_feature:=0;
 
-   blt.blt_and_mask := $ff;
-   blt.blt_xor_mask := $00;
-  
+// kopiujemy ekran bez cieni do pattern_temp
 
-(*
-    for y:=SCRTOP-2 to 15 do
+    blitTEMP(320, 320);
+
+    blt.blt_and_mask:=$ff;
+    blt.blt_xor_mask:=$00;   
+   
+    blitTEMP(playscreen_ofs, pattern_temp, 320, 200);	// playscreen_ofs -> pattern_temp
+ 
+
+
+// dodajemy cienie z lewej strony i od góry
+
+    i:=SCRMAX-1;
+
+    for y:=SCRTOP-2 to SCRBOT-2 do
         begin
 
-        yb:=mody[y]*patt.width;
-
-	blitTEMP(playscreen_ofs + row[y], $0200, SCRMAX, 1);
-
-        for x:=SCRMIN-1 to SCRMAX-1 do scr[x] := pat[ modx[x] + yb ];
-
-	blitTEMP($200, playscreen_ofs + row[y], SCRMAX, 1);
-
-        end;
-
-
-
-    for y:=16 to SCRBOT-2 do
-        begin
-
-        yb:=mody[y]*patt.width;
+        //yb:=mody[y]*patt.width;
 
 	blitTEMP(playscreen_ofs + row[y], $0200, SCRMAX, 1);
 	
+	
+	if y>=16 then i:=17;
+	
 
-        for x:=SCRMIN-1 to SCRMAX-1 do
+        for x:=SCRMIN-1 to i do
             begin
             //cl:=patt.map[modx[x]+yb]; { Takes the pixel from the background }
 	    
-	    cl := pat[ modx[x] + yb ];
+	    //cl := pat[ modx[x] + yb ];
 
             //shadow:=128;              { Shadow = 128 -> shadow not present }
 
             { It makes the shadow on the left and upper side of the screen }
             { It is the shadow cast by the metal edge on the background of }
             { play. }
-            if {(y<16) or} (x<18) then //shadow:=0; { Shadow=0 -> shadow present }
-	     scr[x] := cl
-	    else
-	     scr[x] := cl or $80;
+            if (y<16) or (x<18) then //shadow:=0; { Shadow=0 -> shadow present }
+	     scr[x] := scr[x] and $7f;
+	    //else
+	     //scr[x] := cl or $80;
 
             { Draw the pixel on the screen with any shadow }
             //playscreen.map[x+row[y]]:=(cl and 127) or shadow;
@@ -2508,19 +2496,7 @@ begin
 	blitTEMP($200, playscreen_ofs + row[y], SCRMAX, 1);
 
         end;
-*)
 
-   blitTEMP(320, 320);
-
-   blt.blt_and_mask:=$7f;
-   blt.blt_xor_mask:=$80;   
-   
-   blitTEMP(playscreen_ofs, pattern_temp, 320, 200);	// copy (playscreen_ofs and $7f) or $80 -> pattern_temp
-   while BlitterBusy do;
-
-
-   blt.blt_and_mask:=$ff;
-   blt.blt_xor_mask:=$00;   
 
    
     asm
@@ -3022,8 +2998,6 @@ begin
 
 		//hlp := row[YLIVES] + XLIVES;
 
-		while BlitterBusy do;
-
 		blitTEMP(minivaus_ofs, playscreen_ofs + hlp, minivaus_width, minivaus_height);
 		blitTEMP(minivaus_ofs, vram + hlp, minivaus_width, minivaus_height);
 
@@ -3448,7 +3422,7 @@ var
   lett.active:=FALSE;
 
   { Mette lo sfondo giusto a seconda del muro }
-  fill_picture_with_pattern(pattern);
+  fill_picture_with_pattern;
 
   { Disegna il quadro di gioco con lo sfondo pocanzi settato}
   hlp:=0;
@@ -4065,7 +4039,7 @@ var nwall : boolean;
                                           { quello del giocatore corrente }
     set_wall;                             { e lo si disegna }
 
-    fill_picture_with_pattern(pattern);   { si imposta lo sfondo }
+    fill_picture_with_pattern;            { si imposta lo sfondo }
     
     hlp:=0;
     blitBOX(320, 200);                    { e si disegna tutto quanto sullo }
