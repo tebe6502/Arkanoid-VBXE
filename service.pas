@@ -2419,19 +2419,46 @@ begin
 	fxs FX_MEMS #$80
     end;
 
-
+{
     blitTEMP(pattern.width, pattern.width);
     
     blt.blt_and_mask := $7f;
+
     
     blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);
 
     blt.blt_and_mask := $ff;
 
+}
 
-    blitTEMP(320, 320);
+
+    blitTEMP(pattern.width, 320);
+
+    blt.blt_and_mask := $7f;
+    blt.blt_xor_mask := $80;
+
+    blt.pattern_feature:=(pattern.width-1) or $80;
+
+    hlp:=SCRMIN-1 + row[SCRTOP-2];
 
 
+    for y:=SCRTOP-2 to SCRBOT-2 do begin
+    
+        yb:=mody[y]*pattern.width;  
+
+        blitTEMP(pattern.ofs + yb, playscreen_ofs + hlp, SCRMAX-SCRMIN+1, 1);
+     
+	inc(hlp, 320);
+    end;
+
+
+   blt.pattern_feature:=0;
+
+   blt.blt_and_mask := $ff;
+   blt.blt_xor_mask := $00;
+  
+
+(*
     for y:=SCRTOP-2 to 15 do
         begin
 
@@ -2466,7 +2493,7 @@ begin
             { It makes the shadow on the left and upper side of the screen }
             { It is the shadow cast by the metal edge on the background of }
             { play. }
-            if (y<16) or (x<18) then //shadow:=0; { Shadow=0 -> shadow present }
+            if {(y<16) or} (x<18) then //shadow:=0; { Shadow=0 -> shadow present }
 	     scr[x] := cl
 	    else
 	     scr[x] := cl or $80;
@@ -2481,7 +2508,9 @@ begin
 	blitTEMP($200, playscreen_ofs + row[y], SCRMAX, 1);
 
         end;
+*)
 
+   blitTEMP(320, 320);
 
    blt.blt_and_mask:=$7f;
    blt.blt_xor_mask:=$80;   

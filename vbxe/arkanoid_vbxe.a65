@@ -10087,343 +10087,157 @@ l_23C8
 
 	fxs FX_MEMS #$80
     
-; optimize OK (service.pas), line = 2423
-
-	lda PATTERN.WIDTH
-	sta BLITTEMP.@0201810000181000.SWIDTH
-	lda PATTERN.WIDTH+1
-	sta BLITTEMP.@0201810000181000.SWIDTH+1
-	lda PATTERN.WIDTH
-	sta BLITTEMP.@0201810000181000.DWIDTH
-	lda PATTERN.WIDTH+1
-	sta BLITTEMP.@0201810000181000.DWIDTH+1
-	jsr BLITTEMP.@0201810000181000
-
-; optimize OK (service.pas), line = 2425
-
-	lda #$7F
-	sta BLT.BLT_AND_MASK
-
-; optimize OK (service.pas), line = 2427
-
-	lda PATTERN.OFS
-	sta BLITTEMP.@040180000018100001820000182000.SRC
-	lda PATTERN.OFS+1
-	sta BLITTEMP.@040180000018100001820000182000.SRC+1
-	lda PATTERN.OFS+2
-	sta BLITTEMP.@040180000018100001820000182000.SRC+2
-	lda PATTERN.OFS+3
-	sta BLITTEMP.@040180000018100001820000182000.SRC+3
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.DST
-	lda #$03
-	sta BLITTEMP.@040180000018100001820000182000.DST+1
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.DST+2
-	sta BLITTEMP.@040180000018100001820000182000.DST+3
-	lda PATTERN.WIDTH
-	sta BLITTEMP.@040180000018100001820000182000.W
-	lda PATTERN.WIDTH+1
-	sta BLITTEMP.@040180000018100001820000182000.W+1
-	lda PATTERN.HEIGHT
-	sta BLITTEMP.@040180000018100001820000182000.H
-	jsr BLITTEMP.@040180000018100001820000182000
-
-; optimize OK (service.pas), line = 2429
-
-	lda #$FF
-	sta BLT.BLT_AND_MASK
-
-; optimize OK (service.pas), line = 2432
-
-	lda #$40
-	sta BLITTEMP.@0201810000181000.SWIDTH
-	lda #$01
-	sta BLITTEMP.@0201810000181000.SWIDTH+1
-	lda #$40
-	sta BLITTEMP.@0201810000181000.DWIDTH
-	lda #$01
-	sta BLITTEMP.@0201810000181000.DWIDTH+1
-	jsr BLITTEMP.@0201810000181000
-
 ; optimize OK (service.pas), line = 2435
 
-	lda #$0A
-	sta Y
-
-l_240B
-; --- ForToDoCondition
-	ldy Y
-	cpy #$10
-	jcs l_2419
-
-; optimize OK (service.pas), line = 2438
-
-	lda adr.MODY,y
-	sta :eax
-	mwy PATT :bp2
-	ldy #PATT.WIDTH-DATAORIGIN
-	lda (:bp2),y
-	sta :ecx
-	iny
-	lda (:bp2),y
-	sta :ecx+1
-	lda #$00
-	sta :eax+1
-	.ifdef fmulinit
-	fmulu_16
-	els
-	imulCX
-	eif
-	lda :eax
-	sta YB
-	lda :eax+1
-	sta YB+1
-
-; optimize OK (service.pas), line = 2440
-
-	ldy Y
-	lda adr.ROW,y
-	sta BLITTEMP.@040180000018100001820000182000.SRC
-	lda adr.ROW+256,y
-	sta BLITTEMP.@040180000018100001820000182000.SRC+1
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.SRC+2
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.SRC+3
-	sta BLITTEMP.@040180000018100001820000182000.DST
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.DST+1
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.DST+2
-	sta BLITTEMP.@040180000018100001820000182000.DST+3
-	lda #$D8
-	sta BLITTEMP.@040180000018100001820000182000.W
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.W+1
+	lda PATTERN.WIDTH
+	sta BLITTEMP.@0201810000181000.SWIDTH
+	lda PATTERN.WIDTH+1
+	sta BLITTEMP.@0201810000181000.SWIDTH+1
+	lda #$40
+	sta BLITTEMP.@0201810000181000.DWIDTH
 	lda #$01
-	sta BLITTEMP.@040180000018100001820000182000.H
-	jsr BLITTEMP.@040180000018100001820000182000
+	sta BLITTEMP.@0201810000181000.DWIDTH+1
+	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 2442
-
-	lda #$09
-	sta X
-
-l_243D
-; --- ForToDoCondition
-	ldy X
-	cpy #$D8
-	jcs l_244B
-	lda adr.MODX,y
-	add YB
-	sta :STACKORIGIN+10
-	lda #$00
-	adc YB+1
-	sta :STACKORIGIN+STACKWIDTH+10
-	lda #$00
-	add :STACKORIGIN+10
-	tay
-	lda #$B3
-	adc :STACKORIGIN+STACKWIDTH+10
-	sta :bp+1
-	lda (:bp),y
-	ldy X
-	sta adr.SCR,y
-
-; --- ForToDoEpilog
-	inc X
-	jne l_243D
-l_244B
-
-; optimize OK (service.pas), line = 2444
-
-	ldy Y
-	lda adr.ROW,y
-	sta BLITTEMP.@040180000018100001820000182000.DST
-	lda adr.ROW+256,y
-	sta BLITTEMP.@040180000018100001820000182000.DST+1
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.DST+2
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.DST+3
-	sta BLITTEMP.@040180000018100001820000182000.SRC
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.SRC+1
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.SRC+2
-	sta BLITTEMP.@040180000018100001820000182000.SRC+3
-	lda #$D8
-	sta BLITTEMP.@040180000018100001820000182000.W
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.W+1
-	lda #$01
-	sta BLITTEMP.@040180000018100001820000182000.H
-	jsr BLITTEMP.@040180000018100001820000182000
-
-; --- ForToDoEpilog
-	inc Y
-	jne l_240B
-l_2419
-
-; optimize OK (service.pas), line = 2450
-
-	lda #$10
-	sta Y
-
-l_247F
-; --- ForToDoCondition
-	ldy Y
-	cpy #$C7
-	jcs l_248D
-
-; optimize OK (service.pas), line = 2453
-
-	lda adr.MODY,y
-	sta :eax
-	mwy PATT :bp2
-	ldy #PATT.WIDTH-DATAORIGIN
-	lda (:bp2),y
-	sta :ecx
-	iny
-	lda (:bp2),y
-	sta :ecx+1
-	lda #$00
-	sta :eax+1
-	.ifdef fmulinit
-	fmulu_16
-	els
-	imulCX
-	eif
-	lda :eax
-	sta YB
-	lda :eax+1
-	sta YB+1
-
-; optimize OK (service.pas), line = 2455
-
-	ldy Y
-	lda adr.ROW,y
-	sta BLITTEMP.@040180000018100001820000182000.SRC
-	lda adr.ROW+256,y
-	sta BLITTEMP.@040180000018100001820000182000.SRC+1
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.SRC+2
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.SRC+3
-	sta BLITTEMP.@040180000018100001820000182000.DST
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.DST+1
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.DST+2
-	sta BLITTEMP.@040180000018100001820000182000.DST+3
-	lda #$D8
-	sta BLITTEMP.@040180000018100001820000182000.W
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.W+1
-	lda #$01
-	sta BLITTEMP.@040180000018100001820000182000.H
-	jsr BLITTEMP.@040180000018100001820000182000
-
-; optimize OK (service.pas), line = 2458
-
-	lda #$09
-	sta X
-
-l_24B1
-; --- ForToDoCondition
-	ldy X
-	cpy #$D8
-	jcs l_24BF
-
-; optimize OK (service.pas), line = 2462
-
-	lda adr.MODX,y
-	adc YB
-	sta :STACKORIGIN+9
-	lda #$00
-	adc YB+1
-	sta :STACKORIGIN+STACKWIDTH+9
-	lda #$00
-	add :STACKORIGIN+9
-	tay
-	lda #$B3
-	adc :STACKORIGIN+STACKWIDTH+9
-	sta :bp+1
-	lda (:bp),y
-	sta CL
-
-; optimize OK (service.pas), line = 2469
-
-	lda Y
-	cmp #$10
-	jcc l_24EEx
-	lda X
-	cmp #$12
-	jcs l_24EE
-l_24EEx
-
-; optimize OK (service.pas), line = 2470
-
-	ldy X
-	lda CL
-	jmp l_2501
-l_24EE
-
-; optimize OK (service.pas), line = 2472
-
-	lda CL
-	ora #$80
-	ldy X
-l_2501
-	sta adr.SCR,y
-
-; --- ForToDoEpilog
-	inc X
-	jne l_24B1
-l_24BF
-
-; optimize OK (service.pas), line = 2481
-
-	ldy Y
-	lda adr.ROW,y
-	sta BLITTEMP.@040180000018100001820000182000.DST
-	lda adr.ROW+256,y
-	sta BLITTEMP.@040180000018100001820000182000.DST+1
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.DST+2
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.DST+3
-	sta BLITTEMP.@040180000018100001820000182000.SRC
-	lda #$02
-	sta BLITTEMP.@040180000018100001820000182000.SRC+1
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.SRC+2
-	sta BLITTEMP.@040180000018100001820000182000.SRC+3
-	lda #$D8
-	sta BLITTEMP.@040180000018100001820000182000.W
-	lda #$00
-	sta BLITTEMP.@040180000018100001820000182000.W+1
-	lda #$01
-	sta BLITTEMP.@040180000018100001820000182000.H
-	jsr BLITTEMP.@040180000018100001820000182000
-
-; --- ForToDoEpilog
-	inc Y
-	jne l_247F
-l_248D
-
-; optimize OK (service.pas), line = 2486
+; optimize OK (service.pas), line = 2437
 
 	lda #$7F
 	sta BLT.BLT_AND_MASK
 
-; optimize OK (service.pas), line = 2487
+; optimize OK (service.pas), line = 2438
 
 	lda #$80
 	sta BLT.BLT_XOR_MASK
 
-; optimize OK (service.pas), line = 2489
+; optimize OK (service.pas), line = 2440
+
+	lda PATTERN.WIDTH
+	sub #$01
+	ora #$80
+	sta BLT.PATTERN_FEATURE
+
+; optimize OK (service.pas), line = 2442
+
+	lda #$09
+	add adr.ROW+$0A
+	sta HLP
+	lda #$00
+	adc adr.ROW+256+$0A
+	sta HLP+1
+
+; optimize OK (service.pas), line = 2445
+
+	lda #$0A
+	sta Y
+
+l_241A
+; --- ForToDoCondition
+	ldy Y
+	cpy #$C7
+	jcs l_2428
+
+; optimize OK (service.pas), line = 2447
+
+	lda adr.MODY,y
+	sta :eax
+	lda #$00
+	sta :eax+1
+	lda PATTERN.WIDTH
+	sta :ecx
+	lda PATTERN.WIDTH+1
+	sta :ecx+1
+	.ifdef fmulinit
+	fmulu_16
+	els
+	imulCX_AL
+	eif
+	lda :eax
+	sta YB
+	lda :eax+1
+	sta YB+1
+
+; optimize OK (service.pas), line = 2449
+
+	lda HLP
+	sta BLITTEMP.@040180000018100001820000182000.DST
+	lda HLP+1
+	sta BLITTEMP.@040180000018100001820000182000.DST+1
+	lda #$02
+	sta BLITTEMP.@040180000018100001820000182000.DST+2
+	lda #$00
+	sta BLITTEMP.@040180000018100001820000182000.DST+3
+	lda PATTERN.OFS
+	add YB
+	sta BLITTEMP.@040180000018100001820000182000.SRC
+	lda PATTERN.OFS+1
+	adc YB+1
+	sta BLITTEMP.@040180000018100001820000182000.SRC+1
+	lda PATTERN.OFS+2
+	adc #$00
+	sta BLITTEMP.@040180000018100001820000182000.SRC+2
+	lda PATTERN.OFS+3
+	adc #$00
+	sta BLITTEMP.@040180000018100001820000182000.SRC+3
+	lda #$CF
+	sta BLITTEMP.@040180000018100001820000182000.W
+	lda #$00
+	sta BLITTEMP.@040180000018100001820000182000.W+1
+	lda #$01
+	sta BLITTEMP.@040180000018100001820000182000.H
+	jsr BLITTEMP.@040180000018100001820000182000
+
+; optimize OK (service.pas), line = 2451
+
+	lda HLP
+	add #$40
+	sta HLP
+	lda HLP+1
+	adc #$01
+	sta HLP+1
+
+; --- ForToDoEpilog
+	inc Y
+	jne l_241A
+l_2428
+
+; optimize OK (service.pas), line = 2455
+
+	lda #$00
+	sta BLT.PATTERN_FEATURE
+
+; optimize OK (service.pas), line = 2457
+
+	lda #$FF
+	sta BLT.BLT_AND_MASK
+
+; optimize OK (service.pas), line = 2458
+
+	lda #$00
+	sta BLT.BLT_XOR_MASK
+
+; optimize OK (service.pas), line = 2513
+
+	lda #$40
+	sta BLITTEMP.@0201810000181000.SWIDTH
+	lda #$01
+	sta BLITTEMP.@0201810000181000.SWIDTH+1
+	lda #$40
+	sta BLITTEMP.@0201810000181000.DWIDTH
+	lda #$01
+	sta BLITTEMP.@0201810000181000.DWIDTH+1
+	jsr BLITTEMP.@0201810000181000
+
+; optimize OK (service.pas), line = 2515
+
+	lda #$7F
+	sta BLT.BLT_AND_MASK
+
+; optimize OK (service.pas), line = 2516
+
+	lda #$80
+	sta BLT.BLT_XOR_MASK
+
+; optimize OK (service.pas), line = 2518
 
 	lda #$00
 	sta BLITTEMP.@040180000018100001820000182000.SRC
@@ -10447,20 +10261,20 @@ l_248D
 	jsr BLITTEMP.@040180000018100001820000182000
 
 ; --- WhileProlog
-l_2535
+l_246A
 
-; optimize FAIL ('VBXE.BLITTERBUSY', service.pas), line = 2490
+; optimize FAIL ('VBXE.BLITTERBUSY', service.pas), line = 2519
 
 	jsr VBXE.BLITTERBUSY
 	lda VBXE.BLITTERBUSY.RESULT
-	jne l_2535
+	jne l_246A
 
-; optimize OK (service.pas), line = 2493
+; optimize OK (service.pas), line = 2522
 
 	lda #$FF
 	sta BLT.BLT_AND_MASK
 
-; optimize OK (service.pas), line = 2494
+; optimize OK (service.pas), line = 2523
 
 	lda #$00
 	sta BLT.BLT_XOR_MASK
@@ -10520,7 +10334,7 @@ Y	= DATAORIGIN+$02CB
 
 .local	REMOVE_ROUND_LEVEL				; PROCEDURE
 
-; optimize OK (service.pas), line = 2544
+; optimize OK (service.pas), line = 2573
 
 	lda adr.ROW+$81
 	add #$48
@@ -10529,7 +10343,7 @@ Y	= DATAORIGIN+$02CB
 	adc #$00
 	sta HLP+1
 
-; optimize OK (service.pas), line = 2546
+; optimize OK (service.pas), line = 2575
 
 	lda #$58
 	sta BLITBOX.W
@@ -10577,15 +10391,15 @@ adr.SC	= [DATAORIGIN+$02D1] .array [21]
 
 .local	DESTROY_VAUS					; PROCEDURE
 
-; optimize OK (service.pas), line = 2592
+; optimize OK (service.pas), line = 2621
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 2593
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 2622
 
 	jsr MODIFY_VAUS
 
-; optimize OK (service.pas), line = 2595
+; optimize OK (service.pas), line = 2624
 
 	lda VAUS.X
 	sta MOVE_VAUS.X
@@ -10597,13 +10411,13 @@ adr.SC	= [DATAORIGIN+$02D1] .array [21]
 	sta MOVE_VAUS.Y+1
 	jsr MOVE_VAUS
 
-; optimize OK (service.pas), line = 2597
+; optimize OK (service.pas), line = 2626
 
 	lda VAUS.X
 	sub #$04
 	sta A
 
-; optimize OK (service.pas), line = 2598
+; optimize OK (service.pas), line = 2627
 
 	lda VAUS.Y
 	sub #$05
@@ -10613,7 +10427,7 @@ adr.SC	= [DATAORIGIN+$02D1] .array [21]
 
 	fxs FX_MEMS #$80
     
-; optimize OK (service.pas), line = 2605
+; optimize OK (service.pas), line = 2634
 
 	lda #$2A
 	sta BLITTEMP.@0201810000181000.SWIDTH
@@ -10625,41 +10439,41 @@ adr.SC	= [DATAORIGIN+$02D1] .array [21]
 	sta BLITTEMP.@0201810000181000.DWIDTH+1
 	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 2607
+; optimize OK (service.pas), line = 2636
 
 	lda #$00
 	sta VM
 	sta VM+1
 
-; optimize OK (service.pas), line = 2609
+; optimize OK (service.pas), line = 2638
 
 	sta W
 
-l_258C
+l_24C1
 ; --- ForToDoCondition
 	lda W
 	cmp #$07
-	jcs l_259A
+	jcs l_24CF
 
-; optimize OK (service.pas), line = 2612
+; optimize OK (service.pas), line = 2641
 
 	lda VM
 	sta Z
 	lda VM+1
 	sta Z+1
 
-; optimize OK (service.pas), line = 2614
+; optimize OK (service.pas), line = 2643
 
 	lda #$00
 	sta Y
 
-l_25A8
+l_24DD
 ; --- ForToDoCondition
 	lda Y
 	cmp #$10
-	jcs l_25B6
+	jcs l_24EB
 
-; optimize OK (service.pas), line = 2619
+; optimize OK (service.pas), line = 2648
 
 	lda Z
 	sta BLITTEMP.@040180000018100001820000182000.SRC
@@ -10687,7 +10501,7 @@ l_25A8
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2621
+; optimize OK (service.pas), line = 2650
 
 	lda Y
 	add B
@@ -10699,7 +10513,7 @@ l_25A8
 	adc adr.ROW+256,y
 	sta HLP+1
 
-; optimize OK (service.pas), line = 2623
+; optimize OK (service.pas), line = 2652
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.SRC
@@ -10723,42 +10537,42 @@ l_25A8
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2625
+; optimize OK (service.pas), line = 2654
 
 	lda #$00
 	sta X
 
-l_25E7
+l_251C
 ; --- ForToDoCondition
 	lda X
 	cmp #$2A
-	jcs l_25F5
+	jcs l_252A
 
-; optimize OK (service.pas), line = 2629
+; optimize OK (service.pas), line = 2658
 
 	lda W
 	cmp #$06
-	jeq l_2616x
+	jeq l_254Bx
 	ldy X
 	lda adr.POM,y
-	jne l_2616
-l_2616x
-	jmp l_2620
-l_2616
+	jne l_254B
+l_254Bx
+	jmp l_2555
+l_254B
 
-; optimize OK (service.pas), line = 2638
+; optimize OK (service.pas), line = 2667
 
 	ldy X
 	lda adr.POM,y
 	sta adr.SCR,y
-l_2620
+l_2555
 
 ; --- ForToDoEpilog
 	inc X
-	jne l_25E7
-l_25F5
+	jne l_251C
+l_252A
 
-; optimize OK (service.pas), line = 2641
+; optimize OK (service.pas), line = 2670
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.DST
@@ -10782,7 +10596,7 @@ l_25F5
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2643
+; optimize OK (service.pas), line = 2672
 
 	lda Z
 	add #$2A
@@ -10792,10 +10606,10 @@ l_25F5
 
 ; --- ForToDoEpilog
 	inc Y
-	jne l_25A8
-l_25B6
+	jne l_24DD
+l_24EB
 
-; optimize OK (service.pas), line = 2646
+; optimize OK (service.pas), line = 2675
 
 	lda VM
 	add #$A0
@@ -10804,15 +10618,15 @@ l_25B6
 	adc #$02
 	sta VM+1
 
-; optimize FAIL ('SYSTEM.PAUSE.@00', service.pas), line = 2648
+; optimize FAIL ('SYSTEM.PAUSE.@00', service.pas), line = 2677
 
 	jsr SYSTEM.PAUSE.@00
 
-; optimize FAIL ('SYSTEM.PAUSE.@00', service.pas), line = 2649
+; optimize FAIL ('SYSTEM.PAUSE.@00', service.pas), line = 2678
 
 	jsr SYSTEM.PAUSE.@00
 
-; optimize OK (service.pas), line = 2650
+; optimize OK (service.pas), line = 2679
 
 	lda W
 	sta DEATH_SOUND.A
@@ -10822,14 +10636,14 @@ l_25B6
 
 ; --- ForToDoEpilog
 	inc W
-	jne l_258C
-l_259A
+	jne l_24C1
+l_24CF
 
 ; -------------------  ASM Block 00000162  -------------------
 
 	fxs FX_MEMS #$00
     
-; optimize OK (service.pas), line = 2659
+; optimize OK (service.pas), line = 2688
 
 	lda #$07
 	sta DEATH_SOUND.A
@@ -10837,7 +10651,7 @@ l_259A
 	sta DEATH_SOUND.A+1
 	jsr DEATH_SOUND
 
-; optimize OK (service.pas), line = 2660
+; optimize OK (service.pas), line = 2689
 
 	lda #$96
 	sta MYDELAY.A
@@ -10845,7 +10659,7 @@ l_259A
 	sta MYDELAY.A+1
 	jsr MYDELAY
 
-; optimize FAIL ('DISABLE_LETTER', service.pas), line = 2661
+; optimize FAIL ('DISABLE_LETTER', service.pas), line = 2690
 
 	jsr DISABLE_LETTER
 
@@ -10876,18 +10690,18 @@ VM	= DATAORIGIN+$02ED
 
 .local	CREATE_VAUS					; PROCEDURE
 
-; optimize FAIL ('NOSOUND', service.pas), line = 2673
+; optimize FAIL ('NOSOUND', service.pas), line = 2702
 
 	jsr NOSOUND
 
-; optimize OK (service.pas), line = 2675
+; optimize OK (service.pas), line = 2704
 
 	lda #$5B
 	sta A
 	lda #$00
 	sta A+1
 
-; optimize OK (service.pas), line = 2676
+; optimize OK (service.pas), line = 2705
 
 	lda #$B3
 	sta B
@@ -10898,7 +10712,7 @@ VM	= DATAORIGIN+$02ED
 
 	fxs FX_MEMS #$80
     
-; optimize OK (service.pas), line = 2682
+; optimize OK (service.pas), line = 2711
 
 	lda NEWVAUS.WIDTH
 	sta BLITTEMP.@0201810000181000.SWIDTH
@@ -10910,7 +10724,7 @@ VM	= DATAORIGIN+$02ED
 	sta BLITTEMP.@0201810000181000.DWIDTH+1
 	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 2684
+; optimize OK (service.pas), line = 2713
 
 	lda #$00
 	sta :STACKORIGIN+STACKWIDTH+9
@@ -10927,36 +10741,36 @@ VM	= DATAORIGIN+$02ED
 	lda :STACKORIGIN+STACKWIDTH+9
 	sta MW+1
 
-; optimize OK (service.pas), line = 2686
+; optimize OK (service.pas), line = 2715
 
 	lda #$00
 	sta J
 	sta J+1
 
-; optimize OK (service.pas), line = 2688
+; optimize OK (service.pas), line = 2717
 
 	lda #$0B
 	sta W
 
-l_267A
+l_25AF
 ; --- ForToDoCondition
 	lda J
 	sta Z
 	lda J+1
 	sta Z+1
 
-; optimize OK (service.pas), line = 2692
+; optimize OK (service.pas), line = 2721
 
 	lda #$00
 	sta Y
 
-l_2696
+l_25CB
 ; --- ForToDoCondition
 	lda Y
 	cmp #$10
-	jcs l_26A4
+	jcs l_25D9
 
-; optimize OK (service.pas), line = 2697
+; optimize OK (service.pas), line = 2726
 
 	adc B
 	tay
@@ -10967,7 +10781,7 @@ l_2696
 	adc adr.ROW+256,y
 	sta HLP+1
 
-; optimize OK (service.pas), line = 2699
+; optimize OK (service.pas), line = 2728
 
 	lda NEWVAUS.OFS
 	add Z
@@ -10996,7 +10810,7 @@ l_2696
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2701
+; optimize OK (service.pas), line = 2730
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.SRC
@@ -11020,41 +10834,41 @@ l_2696
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2703
+; optimize OK (service.pas), line = 2732
 
 	lda #$00
 	sta X
 	ldy NEWVAUS.WIDTH
 	dey
-	sty @FORTMP_26D7_0
+	sty @FORTMP_260C_0
 
-l_26DA
+l_260F
 ; --- ForToDoCondition
-	lda @FORTMP_26D7_0::#$00
+	lda @FORTMP_260C_0::#$00
 	cmp X
-	jcc l_26E8
+	jcc l_261D
 
-; optimize OK (service.pas), line = 2705
+; optimize OK (service.pas), line = 2734
 
 	ldy X
 	lda adr.POM,y
-	jne l_26FD
-	jmp l_2707
-l_26FD
+	jne l_2632
+	jmp l_263C
+l_2632
 
-; optimize OK (service.pas), line = 2716
+; optimize OK (service.pas), line = 2745
 
 	ldy X
 	lda adr.POM,y
 	sta adr.SCR,y
-l_2707
+l_263C
 
 ; --- ForToDoEpilog
 	inc X
-	jne l_26DA
-l_26E8
+	jne l_260F
+l_261D
 
-; optimize OK (service.pas), line = 2719
+; optimize OK (service.pas), line = 2748
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.DST
@@ -11078,7 +10892,7 @@ l_26E8
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2721
+; optimize OK (service.pas), line = 2750
 
 	lda Z
 	add NEWVAUS.WIDTH
@@ -11089,14 +10903,14 @@ l_26E8
 
 ; --- ForToDoEpilog
 	inc Y
-	jne l_2696
-l_26A4
+	jne l_25CB
+l_25D9
 
-; optimize FAIL ('SYSTEM.PAUSE.@00', service.pas), line = 2724
+; optimize FAIL ('SYSTEM.PAUSE.@00', service.pas), line = 2753
 
 	jsr SYSTEM.PAUSE.@00
 
-; optimize OK (service.pas), line = 2726
+; optimize OK (service.pas), line = 2755
 
 	lda J
 	add MW
@@ -11107,8 +10921,8 @@ l_26A4
 
 ; --- ForToDoEpilog
 	dec W
-	jpl l_267A
-l_2688
+	jpl l_25AF
+l_25BD
 
 ; -------------------  ASM Block 00000164  -------------------
 
@@ -11142,12 +10956,12 @@ MW	= DATAORIGIN+$02FA
 
 .local	WRITE_SCORE					; PROCEDURE
 
-	jmp l_2736
+	jmp l_266B
 
 .local	PUT_DIGIT					; PROCEDURE
 	sta NUM
 
-; optimize OK (service.pas), line = 2832
+; optimize OK (service.pas), line = 2861
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.DST
@@ -11173,7 +10987,7 @@ MW	= DATAORIGIN+$02FA
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2834
+; optimize OK (service.pas), line = 2863
 
 	lda HLP
 	add #$07
@@ -11199,9 +11013,9 @@ NUM	= DATAORIGIN+$0304
 	rts						; ret
 	eif
 .endl
-l_2736
+l_266B
 
-; optimize OK (service.pas), line = 2841
+; optimize OK (service.pas), line = 2870
 
 	lda #$00
 	sta F
@@ -11210,7 +11024,7 @@ l_2736
 
 	fxs FX_MEMS #$80
     
-; optimize OK (service.pas), line = 2849
+; optimize OK (service.pas), line = 2878
 
 	lda #$80
 	sta BLITTEMP.@0201810000181000.SWIDTH
@@ -11222,7 +11036,7 @@ l_2736
 	sta BLITTEMP.@0201810000181000.DWIDTH+1
 	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 2851
+; optimize OK (service.pas), line = 2880
 
 	ldy PY
 	lda adr.ROW,y
@@ -11232,7 +11046,7 @@ l_2736
 	adc #$00
 	sta HLP+1
 
-; optimize OK (service.pas), line = 2856
+; optimize OK (service.pas), line = 2885
 
 	lda SC_
 	sta SC
@@ -11243,16 +11057,16 @@ l_2736
 	lda SC_+3
 	sta SC+3
 
-; optimize OK (service.pas), line = 2858
+; optimize OK (service.pas), line = 2887
 
 	lda #$00
 	sta N1
 
 ; --- WhileProlog
-	jmp l_276B
-l_276C
+	jmp l_26A0
+l_26A1
 
-; optimize OK (service.pas), line = 2860
+; optimize OK (service.pas), line = 2889
 
 	lda SC
 	sub #$A0
@@ -11267,12 +11081,12 @@ l_276C
 	sbc #$00
 	sta SC+3
 
-; optimize FAIL (0, service.pas), line = 2861
+; optimize FAIL (0, service.pas), line = 2890
 
 	inc N1
-l_276B
+l_26A0
 
-; optimize OK (service.pas), line = 2859
+; optimize OK (service.pas), line = 2888
 
 	lda SC+3
 	cmp #$00
@@ -11286,46 +11100,46 @@ l_276B
 	lda SC
 	cmp #$A0
 @
-	jcs l_276C
+	jcs l_26A1
 
-; optimize OK (service.pas), line = 2863
+; optimize OK (service.pas), line = 2892
 
 	ldy N1
 	lda adr.MOD10TABLE,y
 	sta N1
 
-; optimize OK (service.pas), line = 2864
+; optimize OK (service.pas), line = 2893
 
 	tya
-	jeq l_2796
+	jeq l_26CB
 	lda #$01
 	sta F
-l_2796
+l_26CB
 
-; optimize OK (service.pas), line = 2865
+; optimize OK (service.pas), line = 2894
 
 	lda F
-	jeq l_27A9
+	jeq l_26DE
 	lda N1
-	jmp l_27B7
-l_27A9
+	jmp l_26EC
+l_26DE
 
-; optimize OK (service.pas), line = 2866
+; optimize OK (service.pas), line = 2895
 
 	lda #$0A
-l_27B7
+l_26EC
 	jsr PUT_DIGIT
 
-; optimize OK (service.pas), line = 2869
+; optimize OK (service.pas), line = 2898
 
 	lda #$00
 	sta N1
 
 ; --- WhileProlog
-	jmp l_27BF
-l_27C0
+	jmp l_26F4
+l_26F5
 
-; optimize OK (service.pas), line = 2871
+; optimize OK (service.pas), line = 2900
 
 	lda SC
 	sub #$10
@@ -11340,12 +11154,12 @@ l_27C0
 	sbc #$00
 	sta SC+3
 
-; optimize FAIL (0, service.pas), line = 2872
+; optimize FAIL (0, service.pas), line = 2901
 
 	inc N1
-l_27BF
+l_26F4
 
-; optimize OK (service.pas), line = 2870
+; optimize OK (service.pas), line = 2899
 
 	lda SC+3
 	cmp #$00
@@ -11359,46 +11173,46 @@ l_27BF
 	lda SC
 	cmp #$10
 @
-	jcs l_27C0
+	jcs l_26F5
 
-; optimize OK (service.pas), line = 2874
+; optimize OK (service.pas), line = 2903
 
 	ldy N1
 	lda adr.MOD10TABLE,y
 	sta N1
 
-; optimize OK (service.pas), line = 2875
+; optimize OK (service.pas), line = 2904
 
 	tya
-	jeq l_27EA
+	jeq l_271F
 	lda #$01
 	sta F
-l_27EA
+l_271F
 
-; optimize OK (service.pas), line = 2876
+; optimize OK (service.pas), line = 2905
 
 	lda F
-	jeq l_27FD
+	jeq l_2732
 	lda N1
-	jmp l_280B
-l_27FD
+	jmp l_2740
+l_2732
 
-; optimize OK (service.pas), line = 2877
+; optimize OK (service.pas), line = 2906
 
 	lda #$0A
-l_280B
+l_2740
 	jsr PUT_DIGIT
 
-; optimize OK (service.pas), line = 2880
+; optimize OK (service.pas), line = 2909
 
 	lda #$00
 	sta N1
 
 ; --- WhileProlog
-	jmp l_2813
-l_2814
+	jmp l_2748
+l_2749
 
-; optimize OK (service.pas), line = 2882
+; optimize OK (service.pas), line = 2911
 
 	lda SC
 	sub #$E8
@@ -11413,12 +11227,12 @@ l_2814
 	sbc #$00
 	sta SC+3
 
-; optimize FAIL (0, service.pas), line = 2883
+; optimize FAIL (0, service.pas), line = 2912
 
 	inc N1
-l_2813
+l_2748
 
-; optimize OK (service.pas), line = 2881
+; optimize OK (service.pas), line = 2910
 
 	lda SC+1
 	cmp #$03
@@ -11426,46 +11240,46 @@ l_2813
 	lda SC
 	cmp #$E8
 @
-	jcs l_2814
+	jcs l_2749
 
-; optimize OK (service.pas), line = 2885
+; optimize OK (service.pas), line = 2914
 
 	ldy N1
 	lda adr.MOD10TABLE,y
 	sta N1
 
-; optimize OK (service.pas), line = 2886
+; optimize OK (service.pas), line = 2915
 
 	tya
-	jeq l_283E
+	jeq l_2773
 	lda #$01
 	sta F
-l_283E
+l_2773
 
-; optimize OK (service.pas), line = 2887
+; optimize OK (service.pas), line = 2916
 
 	lda F
-	jeq l_2851
+	jeq l_2786
 	lda N1
-	jmp l_285F
-l_2851
+	jmp l_2794
+l_2786
 
-; optimize OK (service.pas), line = 2888
+; optimize OK (service.pas), line = 2917
 
 	lda #$0A
-l_285F
+l_2794
 	jsr PUT_DIGIT
 
-; optimize OK (service.pas), line = 2891
+; optimize OK (service.pas), line = 2920
 
 	lda #$00
 	sta N1
 
 ; --- WhileProlog
-	jmp l_2867
-l_2868
+	jmp l_279C
+l_279D
 
-; optimize OK (service.pas), line = 2893
+; optimize OK (service.pas), line = 2922
 
 	lda SC
 	sub #$64
@@ -11480,57 +11294,57 @@ l_2868
 	sbc #$00
 	sta SC+3
 
-; optimize FAIL (0, service.pas), line = 2894
+; optimize FAIL (0, service.pas), line = 2923
 
 	inc N1
-l_2867
+l_279C
 
-; optimize OK (service.pas), line = 2892
+; optimize OK (service.pas), line = 2921
 
 	lda SC+1
-	jne l_2868
+	jne l_279D
 	lda SC
 	cmp #$64
-	jcs l_2868
+	jcs l_279D
 
-; optimize OK (service.pas), line = 2896
+; optimize OK (service.pas), line = 2925
 
 	ldy N1
 	lda adr.MOD10TABLE,y
 	sta N1
 
-; optimize OK (service.pas), line = 2897
+; optimize OK (service.pas), line = 2926
 
 	tya
-	jeq l_2892
+	jeq l_27C7
 	lda #$01
 	sta F
-l_2892
+l_27C7
 
-; optimize OK (service.pas), line = 2898
+; optimize OK (service.pas), line = 2927
 
 	lda F
-	jeq l_28A5
+	jeq l_27DA
 	lda N1
-	jmp l_28B3
-l_28A5
+	jmp l_27E8
+l_27DA
 
-; optimize OK (service.pas), line = 2899
+; optimize OK (service.pas), line = 2928
 
 	lda #$0A
-l_28B3
+l_27E8
 	jsr PUT_DIGIT
 
-; optimize OK (service.pas), line = 2902
+; optimize OK (service.pas), line = 2931
 
 	lda #$00
 	sta N1
 
 ; --- WhileProlog
-	jmp l_28BB
-l_28BC
+	jmp l_27F0
+l_27F1
 
-; optimize OK (service.pas), line = 2904
+; optimize OK (service.pas), line = 2933
 
 	lda SC
 	sub #$0A
@@ -11545,24 +11359,24 @@ l_28BC
 	sbc #$00
 	sta SC+3
 
-; optimize FAIL (0, service.pas), line = 2905
+; optimize FAIL (0, service.pas), line = 2934
 
 	inc N1
-l_28BB
+l_27F0
 
-; optimize OK (service.pas), line = 2903
+; optimize OK (service.pas), line = 2932
 
 	lda SC
 	cmp #$0A
-	jcs l_28BC
+	jcs l_27F1
 
-; optimize OK (service.pas), line = 2908
+; optimize OK (service.pas), line = 2937
 
 	ldy N1
 	lda adr.MOD10TABLE,y
 	jsr PUT_DIGIT
 
-; optimize OK (service.pas), line = 2912
+; optimize OK (service.pas), line = 2941
 
 	lda #$00
 	jsr PUT_DIGIT
@@ -11596,7 +11410,7 @@ SC	= :STACKORIGIN-4
 .local	PLOT_LIVES					; PROCEDURE
 	sta LIVES
 
-; optimize FAIL (0, service.pas), line = 2965
+; optimize FAIL (0, service.pas), line = 2994
 
 	dec LIVES
 
@@ -11604,7 +11418,7 @@ SC	= :STACKORIGIN-4
 
 	fxs FX_MEMS #$80
     
-; optimize OK (service.pas), line = 2972
+; optimize OK (service.pas), line = 3001
 
 	lda adr.ROW+$C0
 	add #$0B
@@ -11613,7 +11427,7 @@ SC	= :STACKORIGIN-4
 	adc #$00
 	sta HLP+1
 
-; optimize OK (service.pas), line = 2976
+; optimize OK (service.pas), line = 3005
 
 	lda #$A0
 	sta BLITCLR.W
@@ -11623,31 +11437,31 @@ SC	= :STACKORIGIN-4
 	sta BLITCLR.H
 	jsr BLITCLR
 
-; optimize OK (service.pas), line = 2979
+; optimize OK (service.pas), line = 3008
 
 	lda LIVES
-	jeq l_28FF
+	jeq l_2834
 
-; optimize OK (service.pas), line = 2982
+; optimize OK (service.pas), line = 3011
 
 	cmp #$08
-	jcc l_2912
+	jcc l_2847
 
-; optimize OK (service.pas), line = 2983
+; optimize OK (service.pas), line = 3012
 
 	lda #$07
 	sta I
-	jmp l_2920
-l_2912
+	jmp l_2855
+l_2847
 
-; optimize OK (service.pas), line = 2985
+; optimize OK (service.pas), line = 3014
 
 	ldy LIVES
 	dey
 	sty I
-l_2920
+l_2855
 
-; optimize OK (service.pas), line = 2987
+; optimize OK (service.pas), line = 3016
 
 	lda #$14
 	sta BLITTEMP.@0201810000181000.SWIDTH
@@ -11659,33 +11473,33 @@ l_2920
 	sta BLITTEMP.@0201810000181000.DWIDTH+1
 	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 2989
+; optimize OK (service.pas), line = 3018
 
 	lda #$01
 	sta BLT.BLT_CONTROL
 
-; optimize OK (service.pas), line = 2992
+; optimize OK (service.pas), line = 3021
 
 	lda #$00
 	sta CN
 
-l_293C
+l_2871
 ; --- ForToDoCondition
 	lda CN
 	cmp I
 	scc
-	jne l_294A
+	jne l_287F
 
 ; --- WhileProlog
-l_294D
+l_2882
 
-; optimize FAIL ('VBXE.BLITTERBUSY', service.pas), line = 2996
+; optimize FAIL ('VBXE.BLITTERBUSY', service.pas), line = 3025
 
 	jsr VBXE.BLITTERBUSY
 	lda VBXE.BLITTERBUSY.RESULT
-	jne l_294D
+	jne l_2882
 
-; optimize OK (service.pas), line = 2998
+; optimize OK (service.pas), line = 3027
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.DST
@@ -11710,7 +11524,7 @@ l_294D
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 2999
+; optimize OK (service.pas), line = 3028
 
 	lda HLP
 	sta BLITTEMP.@040180000018100001820000182000.DST
@@ -11735,7 +11549,7 @@ l_294D
 	sta BLITTEMP.@040180000018100001820000182000.H
 	jsr BLITTEMP.@040180000018100001820000182000
 
-; optimize OK (service.pas), line = 3001
+; optimize OK (service.pas), line = 3030
 
 	lda HLP
 	add #$14
@@ -11745,14 +11559,14 @@ l_294D
 
 ; --- ForToDoEpilog
 	inc CN
-	jne l_293C
-l_294A
+	jne l_2871
+l_287F
 
-; optimize OK (service.pas), line = 3004
+; optimize OK (service.pas), line = 3033
 
 	lda #$00
 	sta BLT.BLT_CONTROL
-l_28FF
+l_2834
 
 ; -------------------  ASM Block 00000168  -------------------
 
@@ -11791,7 +11605,7 @@ I	= DATAORIGIN+$0311
 
 .local	PLACE_FIRE					; PROCEDURE
 
-; optimize OK (service.pas), line = 3094
+; optimize OK (service.pas), line = 3123
 
 	ldy FIRE.Y
 	lda FIRE.X
@@ -11801,7 +11615,7 @@ I	= DATAORIGIN+$0311
 	adc adr.ROW+256,y
 	sta HLP+1
 
-; optimize OK (service.pas), line = 3096
+; optimize OK (service.pas), line = 3125
 
 	lda #$4C
 	sta BLITZERO.SRC
@@ -11832,7 +11646,7 @@ I	= DATAORIGIN+$0311
 
 .local	REMOVE_FIRE					; PROCEDURE
 
-; optimize OK (service.pas), line = 3104
+; optimize OK (service.pas), line = 3133
 
 	ldy FIRE.Y
 	lda FIRE.X
@@ -11842,7 +11656,7 @@ I	= DATAORIGIN+$0311
 	adc adr.ROW+256,y
 	sta HLP+1
 
-; optimize OK (service.pas), line = 3106
+; optimize OK (service.pas), line = 3135
 
 	lda #$0D
 	sta BLITBOX.W
@@ -11866,12 +11680,12 @@ I	= DATAORIGIN+$0311
 
 .local	CHECK_FIRE					; PROCEDURE
 
-; optimize OK (service.pas), line = 3114
+; optimize OK (service.pas), line = 3143
 
 	lda FIRE.AVL
-	jeq l_29AC
+	jeq l_28E1
 
-; optimize FAIL ('MOUSECLICK', service.pas), line = 3116
+; optimize FAIL ('MOUSECLICK', service.pas), line = 3145
 
 	jsr MOUSECLICK
 	ldy #1
@@ -11890,9 +11704,9 @@ I	= DATAORIGIN+$0311
 @
 	tya
 	and :STACKORIGIN+1,x
-	jeq l_29CC
+	jeq l_2901
 
-; optimize OK (service.pas), line = 3118
+; optimize OK (service.pas), line = 3147
 
 	lda VAUS.WIDTH
 	sub #$0D
@@ -11900,23 +11714,23 @@ I	= DATAORIGIN+$0311
 	add VAUS.X
 	sta FIRE.X
 
-; optimize OK (service.pas), line = 3119
+; optimize OK (service.pas), line = 3148
 
 	lda VAUS.Y
 	sub #$08
 	sta FIRE.Y
 
-; optimize OK (service.pas), line = 3120
+; optimize OK (service.pas), line = 3149
 
 	lda #$01
 	sta FIRE.SHOT
 
-; optimize OK (service.pas), line = 3121
+; optimize OK (service.pas), line = 3150
 
 	lda #$00
 	sta FIRE.NW
 
-; optimize OK (service.pas), line = 3122
+; optimize OK (service.pas), line = 3151
 
 	lda #$BC
 	sta BALL_BLOCK_SOUND.A
@@ -11927,56 +11741,56 @@ I	= DATAORIGIN+$0311
 	lda #$00
 	sta BALL_BLOCK_SOUND.B+1
 	jsr BALL_BLOCK_SOUND
-l_29CC
+l_2901
 
-; optimize OK (service.pas), line = 3125
+; optimize OK (service.pas), line = 3154
 
 	lda FIRE.SHOT
-	jeq l_2A04
+	jeq l_2939
 
-; optimize OK (service.pas), line = 3127
+; optimize OK (service.pas), line = 3156
 
 	lda FIRE.NW
-	jeq l_2A11
+	jeq l_2946
 	jsr REMOVE_FIRE
-l_2A11
+l_2946
 
-; optimize OK (service.pas), line = 3128
+; optimize OK (service.pas), line = 3157
 
 	lda #$01
 	sta FIRE.NW
 
-; optimize OK (service.pas), line = 3130
+; optimize OK (service.pas), line = 3159
 
 	lda FIRE.Y
 	sub #$04
 	sta FIRE.Y
 
-; optimize OK (service.pas), line = 3131
+; optimize OK (service.pas), line = 3160
 
 	cmp #$16
-	jcs l_2A2C
+	jcs l_2961
 	lda #$00
 	sta FIRE.SHOT
-	jmp l_2A3A
-l_2A2C
+	jmp l_296F
+l_2961
 
-; optimize FAIL ('PLACE_FIRE', service.pas), line = 3134
+; optimize FAIL ('PLACE_FIRE', service.pas), line = 3163
 
 	jsr PLACE_FIRE
 
-; optimize OK (service.pas), line = 3136
+; optimize OK (service.pas), line = 3165
 
 	lda FIRE.Y
 	sub #$16
 	cmp #$00
-	jcc l_2A61
+	jcc l_2996
 	lda FIRE.Y
 	sub #$16
 	cmp #$78
-	jcs l_2A61
+	jcs l_2996
 
-; optimize OK (service.pas), line = 3138
+; optimize OK (service.pas), line = 3167
 
 	lda FIRE.X
 	sub #$09
@@ -11986,7 +11800,7 @@ l_2A2C
 	lsr @
 	sta X1
 
-; optimize OK (service.pas), line = 3139
+; optimize OK (service.pas), line = 3168
 
 	lda FIRE.Y
 	sub #$16
@@ -11995,7 +11809,7 @@ l_2A2C
 	lsr @
 	sta Y1
 
-; optimize OK (service.pas), line = 3141
+; optimize OK (service.pas), line = 3170
 
 	lda FIRE.X
 	add #$04
@@ -12005,12 +11819,12 @@ l_2A2C
 	lsr @
 	sta X2
 
-; optimize OK (service.pas), line = 3142
+; optimize OK (service.pas), line = 3171
 
 	lda Y1
 	sta Y2
 
-; optimize OK (service.pas), line = 3144
+; optimize OK (service.pas), line = 3173
 
 	asl @
 	asl @
@@ -12019,7 +11833,7 @@ l_2A2C
 	add X1
 	tay
 	lda adr.WALL,y
-	jne l_2ACEx
+	jne l_2A03x
 	lda Y2
 	asl @
 	asl @
@@ -12028,19 +11842,19 @@ l_2A2C
 	add X2
 	tay
 	lda adr.WALL,y
-	jeq l_2ACE
-l_2ACEx
+	jeq l_2A03
+l_2A03x
 
-; optimize FAIL ('REMOVE_FIRE', service.pas), line = 3146
+; optimize FAIL ('REMOVE_FIRE', service.pas), line = 3175
 
 	jsr REMOVE_FIRE
 
-; optimize OK (service.pas), line = 3147
+; optimize OK (service.pas), line = 3176
 
 	lda #$00
 	sta FIRE.SHOT
 
-; optimize OK (service.pas), line = 3149
+; optimize OK (service.pas), line = 3178
 
 	lda X1
 	sta SHOOT_BLOCK_WITH_FIRE.XB
@@ -12048,18 +11862,18 @@ l_2ACEx
 	sta SHOOT_BLOCK_WITH_FIRE.YB
 	jsr SHOOT_BLOCK_WITH_FIRE
 
-; optimize OK (service.pas), line = 3150
+; optimize OK (service.pas), line = 3179
 
 	lda X2
 	sta SHOOT_BLOCK_WITH_FIRE.XB
 	lda Y2
 	sta SHOOT_BLOCK_WITH_FIRE.YB
 	jsr SHOOT_BLOCK_WITH_FIRE
-l_2A3A
-l_2ACE
-l_2A61
-l_2A04
-l_29AC
+l_296F
+l_2A03
+l_2996
+l_2939
+l_28E1
 
 ; ------------------------------------------------------------
 
@@ -12085,7 +11899,7 @@ Y2	= DATAORIGIN+$0315
 
 .local	REMOVE_FLUX					; PROCEDURE
 
-; optimize OK (service.pas), line = 3162
+; optimize OK (service.pas), line = 3191
 
 	lda adr.ROW+$B0
 	add #$D9
@@ -12094,7 +11908,7 @@ Y2	= DATAORIGIN+$0315
 	adc #$00
 	sta HLP+1
 
-; optimize OK (service.pas), line = 3164
+; optimize OK (service.pas), line = 3193
 
 	lda #$08
 	sta BLITBOX.W
@@ -12118,12 +11932,12 @@ Y2	= DATAORIGIN+$0315
 
 .local	CHECK_FLUX					; PROCEDURE
 
-; optimize OK (service.pas), line = 3174
+; optimize OK (service.pas), line = 3203
 
 	lda SCRFLUX
-	jeq l_2B0B
+	jeq l_2A40
 
-; optimize OK (service.pas), line = 3177
+; optimize OK (service.pas), line = 3206
 
 	lda SCRFLUXCNT
 	asl @
@@ -12135,7 +11949,7 @@ Y2	= DATAORIGIN+$0315
 
 	fxs FX_MEMS #$80
       
-; optimize OK (service.pas), line = 3185
+; optimize OK (service.pas), line = 3214
 
 	lda #$08
 	sta BLITTEMP.@0201810000181000.SWIDTH
@@ -12147,7 +11961,7 @@ Y2	= DATAORIGIN+$0315
 	sta BLITTEMP.@0201810000181000.DWIDTH+1
 	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 3186
+; optimize OK (service.pas), line = 3215
 
 	lda #$D9
 	add adr.ROW+$B0
@@ -12185,19 +11999,19 @@ Y2	= DATAORIGIN+$0315
 
 	fxs FX_MEMS #$00
       
-; optimize FAIL (0, service.pas), line = 3194
+; optimize FAIL (0, service.pas), line = 3223
 
 	inc SCRFLUXCNT
 
-; optimize OK (service.pas), line = 3195
+; optimize OK (service.pas), line = 3224
 
 	lda SCRFLUXCNT
 	cmp #$15
-	jcc l_2B44
+	jcc l_2A79
 	lda #$00
 	sta SCRFLUXCNT
-l_2B44
-l_2B0B
+l_2A79
+l_2A40
 
 ; ------------------------------------------------------------
 
@@ -12221,7 +12035,7 @@ FX	= DATAORIGIN+$0317
 
 .local	VAUS_OUT					; PROCEDURE
 
-; optimize OK (service.pas), line = 3206
+; optimize OK (service.pas), line = 3235
 
 	lda CUR_PLAYER
 	asl @
@@ -12240,70 +12054,70 @@ FX	= DATAORIGIN+$0317
 	adc #$00
 	sta adr.SCORE.PLAYER+3,y
 
-; optimize OK (service.pas), line = 3207
+; optimize OK (service.pas), line = 3236
 
 	lda #$00
 	sta REMAIN_BLK
 
-; optimize OK (service.pas), line = 3209
+; optimize OK (service.pas), line = 3238
 
 	lda VAUS.X
 	sta Z
 
-; optimize FAIL ('WAIT_VBL', service.pas), line = 3211
+; optimize FAIL ('WAIT_VBL', service.pas), line = 3240
 
 	jsr WAIT_VBL
 
-; optimize FAIL ('REMOVE_VAUS', service.pas), line = 3212
+; optimize FAIL ('REMOVE_VAUS', service.pas), line = 3241
 
 	jsr REMOVE_VAUS
 
-; optimize FAIL ('PLACE_VAUS', service.pas), line = 3213
+; optimize FAIL ('PLACE_VAUS', service.pas), line = 3242
 
 	jsr PLACE_VAUS
 
-; optimize OK (service.pas), line = 3215
+; optimize OK (service.pas), line = 3244
 
 	lda Z
 	sta X
 	add #$2C
-	sta @FORTMP_2B70_0
+	sta @FORTMP_2AA5_0
 
-l_2B73
+l_2AA8
 ; --- ForToDoCondition
-	lda @FORTMP_2B70_0::#$00
+	lda @FORTMP_2AA5_0::#$00
 	cmp X
-	jcc l_2B81
+	jcc l_2AB6
 
-; optimize FAIL ('WAIT_VBL', service.pas), line = 3217
+; optimize FAIL ('WAIT_VBL', service.pas), line = 3246
 
 	jsr WAIT_VBL
 
-; optimize OK (service.pas), line = 3219
+; optimize OK (service.pas), line = 3248
 
 	lda VAUS.X
 	sta VAUS.OLDX
 	lda #$00
 	sta VAUS.OLDX+1
 
-; optimize OK (service.pas), line = 3220
+; optimize OK (service.pas), line = 3249
 
 	lda X
 	sta VAUS.X
 
-; optimize FAIL ('REMOVE_VAUS', service.pas), line = 3221
+; optimize FAIL ('REMOVE_VAUS', service.pas), line = 3250
 
 	jsr REMOVE_VAUS
 
-; optimize FAIL ('CHECK_FLUX', service.pas), line = 3222
+; optimize FAIL ('CHECK_FLUX', service.pas), line = 3251
 
 	jsr CHECK_FLUX
 
-; optimize FAIL ('PLACE_VAUS', service.pas), line = 3223
+; optimize FAIL ('PLACE_VAUS', service.pas), line = 3252
 
 	jsr PLACE_VAUS
 
-; optimize OK (service.pas), line = 3225
+; optimize OK (service.pas), line = 3254
 
 	ldy VAUS.Y
 	lda adr.ROW,y
@@ -12313,7 +12127,7 @@ l_2B73
 	adc #$00
 	sta HLP+1
 
-; optimize OK (service.pas), line = 3227
+; optimize OK (service.pas), line = 3256
 
 	lda #$28
 	sta BLITBOX.W
@@ -12325,8 +12139,8 @@ l_2B73
 
 ; --- ForToDoEpilog
 	inc X
-	jne l_2B73
-l_2B81
+	jne l_2AA8
+l_2AB6
 
 ; ------------------------------------------------------------
 
@@ -12350,18 +12164,18 @@ Z	= DATAORIGIN+$0319
 
 .local	CHECK_BONUS_TYPE				; PROCEDURE
 
-; optimize OK (service.pas), line = 3238
+; optimize OK (service.pas), line = 3267
 
 	lda VAUS.LETTER
 	cmp #$FF
-	jeq l_2BBD
+	jeq l_2AF2
 
-; optimize OK (service.pas), line = 3239
+; optimize OK (service.pas), line = 3268
 
 	lda VAUS.LETTER
-	jeq l_2BD0
+	jeq l_2B05
 
-; optimize OK (service.pas), line = 3241
+; optimize OK (service.pas), line = 3270
 
 	sub #$01
 	sta LETT.LAST
@@ -12369,225 +12183,225 @@ Z	= DATAORIGIN+$0319
 	sbc #$00
 	sta LETT.LAST+1
 
-; optimize OK (service.pas), line = 3242
+; optimize OK (service.pas), line = 3271
 
 	mwy B2 :bp2
 	ldy #B2.INPLAY-DATAORIGIN
 	lda (:bp2),y
-	jeq l_2BE7
+	jeq l_2B1C
 	lda B2
 	sta REMOVE_BALL.BALL
 	lda B2+1
 	sta REMOVE_BALL.BALL+1
 	jsr REMOVE_BALL
-l_2BE7
+l_2B1C
 
-; optimize OK (service.pas), line = 3243
+; optimize OK (service.pas), line = 3272
 
 	mwy B3 :bp2
 	ldy #B3.INPLAY-DATAORIGIN
 	lda (:bp2),y
-	jeq l_2BF9
+	jeq l_2B2E
 	lda B3
 	sta REMOVE_BALL.BALL
 	lda B3+1
 	sta REMOVE_BALL.BALL+1
 	jsr REMOVE_BALL
-l_2BF9
+l_2B2E
 
-; optimize OK (service.pas), line = 3244
+; optimize OK (service.pas), line = 3273
 
 	mwy B2 :bp2
 	ldy #B2.INPLAY-DATAORIGIN
 	lda #$00
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3245
+; optimize OK (service.pas), line = 3274
 
 	mwy B3 :bp2
 	ldy #B3.INPLAY-DATAORIGIN
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3246
+; optimize OK (service.pas), line = 3275
 
 	sta SCRFLUX
 
-; optimize FAIL ('REMOVE_FLUX', service.pas), line = 3247
+; optimize FAIL ('REMOVE_FLUX', service.pas), line = 3276
 
 	jsr REMOVE_FLUX
 
-; optimize OK (service.pas), line = 3249
+; optimize OK (service.pas), line = 3278
 
 	lda VAUS.LETTER
 	cmp #$06
-	jeq l_2C1E
+	jeq l_2B53
 
-; optimize OK (service.pas), line = 3251
+; optimize OK (service.pas), line = 3280
 
 	mwy B1 :bp2
 	ldy #B1.LAUNCH-DATAORIGIN
 	lda #$00
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3252
+; optimize OK (service.pas), line = 3281
 
 	mwy B2 :bp2
 	ldy #B2.LAUNCH-DATAORIGIN
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3253
+; optimize OK (service.pas), line = 3282
 
 	mwy B3 :bp2
 	ldy #B3.LAUNCH-DATAORIGIN
 	sta (:bp2),y
-l_2C1E
-l_2BD0
-l_2BBD
+l_2B53
+l_2B05
+l_2AF2
 
-; optimize OK (service.pas), line = 3257
+; optimize OK (service.pas), line = 3286
 
 	lda VAUS.LETTER
 	sta @CASETMP_000A
 	cmp #$01
-	jne l_2C3C
+	jne l_2B71
 @
 
-; optimize OK (service.pas), line = 3260
+; optimize OK (service.pas), line = 3289
 
 	lda FIRE.SHOT
-	jeq l_2C48
+	jeq l_2B7D
 	jsr REMOVE_FIRE
-l_2C48
+l_2B7D
 
-; optimize OK (service.pas), line = 3261
+; optimize OK (service.pas), line = 3290
 
 	:7 mva adr.LASERS+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3262
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3291
 
 	jsr MODIFY_VAUS
 
-; optimize OK (service.pas), line = 3263
+; optimize OK (service.pas), line = 3292
 
 	lda #$00
 	sta VAUS.LETTER
 
-; optimize OK (service.pas), line = 3264
+; optimize OK (service.pas), line = 3293
 
 	lda #$01
 	sta FIRE.AVL
 
-; optimize OK (service.pas), line = 3265
+; optimize OK (service.pas), line = 3294
 
 	lda #$00
 	sta FIRE.SHOT
 	jmp a_000A
-l_2C3C
+l_2B71
 	cmp #$02
-	jne l_2C62
+	jne l_2B97
 
-; optimize OK (service.pas), line = 3269
+; optimize OK (service.pas), line = 3298
 
 	lda FIRE.SHOT
-	jeq l_2C6E
+	jeq l_2BA3
 	jsr REMOVE_FIRE
-l_2C6E
+l_2BA3
 
-; optimize OK (service.pas), line = 3270
+; optimize OK (service.pas), line = 3299
 
 	:7 mva adr.ENLARGED+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3271
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3300
 
 	jsr MODIFY_VAUS
 
-; optimize OK (service.pas), line = 3272
+; optimize OK (service.pas), line = 3301
 
 	lda #$00
 	sta VAUS.LETTER
 
-; optimize OK (service.pas), line = 3273
+; optimize OK (service.pas), line = 3302
 
 	sta FIRE.AVL
 	jmp a_000A
-l_2C62
+l_2B97
 	cmp #$03
-	jne l_2C84
+	jne l_2BB9
 
-; optimize OK (service.pas), line = 3277
+; optimize OK (service.pas), line = 3306
 
 	lda FIRE.SHOT
-	jeq l_2C90
+	jeq l_2BC5
 	jsr REMOVE_FIRE
-l_2C90
+l_2BC5
 
-; optimize OK (service.pas), line = 3278
+; optimize OK (service.pas), line = 3307
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3279
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3308
 
 	jsr MODIFY_VAUS
 
-; optimize OK (service.pas), line = 3280
+; optimize OK (service.pas), line = 3309
 
 	lda #$00
 	sta VAUS.LETTER
 
-; optimize OK (service.pas), line = 3281
+; optimize OK (service.pas), line = 3310
 
 	sta FIRE.AVL
 
-; optimize OK (service.pas), line = 3282
+; optimize OK (service.pas), line = 3311
 
 	lda #$01
 	sta SCRFLUX
 	jmp a_000A
-l_2C84
+l_2BB9
 	cmp #$04
-	jne l_2CAA
+	jne l_2BDF
 
-; optimize OK (service.pas), line = 3286
+; optimize OK (service.pas), line = 3315
 
 	lda FIRE.SHOT
-	jeq l_2CB6
+	jeq l_2BEB
 	jsr REMOVE_FIRE
-l_2CB6
+l_2BEB
 
-; optimize OK (service.pas), line = 3287
+; optimize OK (service.pas), line = 3316
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3288
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3317
 
 	jsr MODIFY_VAUS
-; optimize OK (service.pas), line = 3289
-	jmp s_2CF3
-l_2CAA
+; optimize OK (service.pas), line = 3318
+	jmp s_2C28
+l_2BDF
 	cmp #$05
-	jne l_2CC8
+	jne l_2BFD
 
-; optimize OK (service.pas), line = 3293
+; optimize OK (service.pas), line = 3322
 
 	lda FIRE.SHOT
-	jeq l_2CD4
+	jeq l_2C09
 	jsr REMOVE_FIRE
-l_2CD4
+l_2C09
 
-; optimize OK (service.pas), line = 3294
+; optimize OK (service.pas), line = 3323
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3295
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3324
 
 	jsr MODIFY_VAUS
 
-; optimize OK (service.pas), line = 3296
+; optimize OK (service.pas), line = 3325
 
 	lda #$00
 	sta VAUS.LETTER
 
-; optimize OK (service.pas), line = 3297
+; optimize OK (service.pas), line = 3326
 
 	mwy B1 :bp2
 	ldy #B1.SPEED-DATAORIGIN
@@ -12608,7 +12422,7 @@ l_2CD4
 	lda MAX.RESULT+1
 	sta X+1
 
-; optimize OK (service.pas), line = 3298
+; optimize OK (service.pas), line = 3327
 
 	lda B1
 	sta SET_BALL_SPEED.BALL
@@ -12619,66 +12433,66 @@ l_2CD4
 	lda X+1
 	sta SET_BALL_SPEED.SPEED+1
 	jsr SET_BALL_SPEED
-s_2CF3
-; optimize OK (service.pas), line = 3299
-	jmp s_2D11
-l_2CC8
+s_2C28
+; optimize OK (service.pas), line = 3328
+	jmp s_2C46
+l_2BFD
 	cmp #$06
-	jne l_2CFA
+	jne l_2C2F
 
-; optimize OK (service.pas), line = 3303
+; optimize OK (service.pas), line = 3332
 
 	lda FIRE.SHOT
-	jeq l_2D06
+	jeq l_2C3B
 	jsr REMOVE_FIRE
-l_2D06
+l_2C3B
 
-; optimize OK (service.pas), line = 3304
+; optimize OK (service.pas), line = 3333
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3305
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3334
 
 	jsr MODIFY_VAUS
-s_2D11
-; optimize OK (service.pas), line = 3306
-	jmp s_2D41
-l_2CFA
+s_2C46
+; optimize OK (service.pas), line = 3335
+	jmp s_2C76
+l_2C2F
 	cmp #$07
-	jne l_2D18
+	jne l_2C4D
 
-; optimize OK (service.pas), line = 3310
+; optimize OK (service.pas), line = 3339
 
 	lda FIRE.SHOT
-	jeq l_2D24
+	jeq l_2C59
 	jsr REMOVE_FIRE
-l_2D24
+l_2C59
 
-; optimize OK (service.pas), line = 3311
+; optimize OK (service.pas), line = 3340
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3312
+; optimize FAIL ('MODIFY_VAUS', service.pas), line = 3341
 
 	jsr MODIFY_VAUS
 
-; optimize OK (service.pas), line = 3313
+; optimize OK (service.pas), line = 3342
 
 	lda #$00
 	sta VAUS.LETTER
 
-; optimize OK (service.pas), line = 3314
+; optimize OK (service.pas), line = 3343
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
 	add #$01
 	sta adr.SCORE.LIVES,y
 
-; optimize OK (service.pas), line = 3315
+; optimize OK (service.pas), line = 3344
 
 	jsr PLOT_LIVES
 
-; optimize OK (service.pas), line = 3316
+; optimize OK (service.pas), line = 3345
 
 	lda #$D0
 	sta BALL_BLOCK_SOUND.A
@@ -12689,13 +12503,13 @@ l_2D24
 	lda #$00
 	sta BALL_BLOCK_SOUND.B+1
 	jsr BALL_BLOCK_SOUND
-s_2D41
+s_2C76
 
-; optimize OK (service.pas), line = 3317
+; optimize OK (service.pas), line = 3346
 
 	lda #$00
 	sta FIRE.AVL
-l_2D18
+l_2C4D
 a_000A
 
 ; ------------------------------------------------------------
@@ -12772,9 +12586,9 @@ X	= DATAORIGIN+$0327
 .local	DEVIATE_BALL					; PROCEDURE
 
 ; --- RepeatUntilProlog
-l_2D4F
+l_2C84
 
-; optimize OK (service.pas), line = 3330
+; optimize OK (service.pas), line = 3359
 
 	lda BALL
 	sta GET_BALL_DIRECTION.BALL
@@ -12802,7 +12616,7 @@ l_2D4F
 	dex
 	dex
 
-; optimize OK (service.pas), line = 3331
+; optimize OK (service.pas), line = 3360
 
 	lda TEMP
 	sta MOD90.A
@@ -12839,9 +12653,9 @@ l_2D4F
 @
 	tya
 	and :STACKORIGIN+1,x
-	jeq l_2D4F
+	jeq l_2C84
 
-; optimize OK (service.pas), line = 3333
+; optimize OK (service.pas), line = 3362
 
 	lda BALL
 	sta SET_BALL_DIRECTION.BALL
@@ -12853,7 +12667,7 @@ l_2D4F
 	sta SET_BALL_DIRECTION.ANGLE+1
 	jsr SET_BALL_DIRECTION
 
-; optimize OK (service.pas), line = 3334
+; optimize OK (service.pas), line = 3363
 
 	mwy BALL :bp2
 	ldy #BALL.SPEED-DATAORIGIN
@@ -12868,7 +12682,7 @@ l_2D4F
 	sta SET_BALL_SPEED.BALL+1
 	jsr SET_BALL_SPEED
 
-; optimize OK (service.pas), line = 3336
+; optimize OK (service.pas), line = 3365
 
 	mwy BALL :bp2
 	ldy #BALL.SBD-DATAORIGIN
@@ -12915,11 +12729,11 @@ TEMP	= DATAORIGIN+$032E
 
 .local	BOUNCEBALL					; FUNCTION
 
-	jmp l_2D89
+	jmp l_2CBE
 
 .local	CHECK_BALL					; PROCEDURE
 
-; optimize OK (service.pas), line = 3369
+; optimize OK (service.pas), line = 3398
 
 	mwy BALL :bp2
 	ldy #BALL.Y-DATAORIGIN
@@ -12930,7 +12744,7 @@ TEMP	= DATAORIGIN+$032E
 	sbc #$00
 	svc
 	eor #$80
-	jmi l_2DA8
+	jmi l_2CDD
 	ldy #BALL.Y-DATAORIGIN
 	lda (:bp2),y
 	iny
@@ -12939,18 +12753,18 @@ TEMP	= DATAORIGIN+$032E
 	sbc #$00
 	svc
 	eor #$80
-	jpl l_2DA8
+	jpl l_2CDD
 
-; optimize OK (service.pas), line = 3370
+; optimize OK (service.pas), line = 3399
 
 	lda BALL
 	sta BALL_HIT_BLOCK.BALL
 	lda BALL+1
 	sta BALL_HIT_BLOCK.BALL+1
 	jsr BALL_HIT_BLOCK
-l_2DA8
+l_2CDD
 
-; optimize OK (service.pas), line = 3372
+; optimize OK (service.pas), line = 3401
 
 	lda BALL
 	sta SET_BALL.BALL
@@ -12958,7 +12772,7 @@ l_2DA8
 	sta SET_BALL.BALL+1
 	jsr SET_BALL
 
-; optimize FAIL ('BALL_SPEED', service.pas), line = 3373
+; optimize FAIL ('BALL_SPEED', service.pas), line = 3402
 
 	inx
 	mva BALL :STACKORIGIN,x
@@ -13009,7 +12823,7 @@ BALL.STM	= DATAORIGIN+$0019
 
 .local	TEST_BALL					; PROCEDURE
 
-; optimize OK (service.pas), line = 3383
+; optimize OK (service.pas), line = 3412
 
 	mwy BALL :bp2
 	ldy #BALL.FINESPEED-DATAORIGIN
@@ -13021,7 +12835,7 @@ BALL.STM	= DATAORIGIN+$0019
 	adc #$00
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3385
+; optimize OK (service.pas), line = 3414
 
 	ldy #BALL.FINESPEED-DATAORIGIN
 	lda (:bp2),y
@@ -13038,9 +12852,9 @@ BALL.STM	= DATAORIGIN+$0019
 	lda adr.LEVEL,y
 	cmp :STACKORIGIN+9
 @
-	jcs l_2DD0
+	jcs l_2D05
 
-; optimize OK (service.pas), line = 3387
+; optimize OK (service.pas), line = 3416
 
 	ldy #BALL.FINESPEED-DATAORIGIN
 	lda #$00
@@ -13048,7 +12862,7 @@ BALL.STM	= DATAORIGIN+$0019
 	iny
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3390
+; optimize OK (service.pas), line = 3419
 
 	ldy #BALL.SPEED-DATAORIGIN+$01
 	lda (:bp2),y
@@ -13058,9 +12872,9 @@ BALL.STM	= DATAORIGIN+$0019
 	lda (:bp2),y
 	cmp #$FF
 @
-	jcs l_2DE6
+	jcs l_2D1B
 
-; optimize OK (service.pas), line = 3392
+; optimize OK (service.pas), line = 3421
 
 	ldy #BALL.SPEED-DATAORIGIN
 	lda (:bp2),y
@@ -13071,7 +12885,7 @@ BALL.STM	= DATAORIGIN+$0019
 	adc #$00
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3393
+; optimize OK (service.pas), line = 3422
 
 	ldy #BALL.SPEED-DATAORIGIN
 	lda (:bp2),y
@@ -13084,10 +12898,10 @@ BALL.STM	= DATAORIGIN+$0019
 	lda BALL+1
 	sta SET_BALL_SPEED.BALL+1
 	jsr SET_BALL_SPEED
-l_2DE6
-l_2DD0
+l_2D1B
+l_2D05
 
-; optimize OK (service.pas), line = 3397
+; optimize OK (service.pas), line = 3426
 
 	mwy BALL :bp2
 	ldy #BALL.SBD-DATAORIGIN
@@ -13099,7 +12913,7 @@ l_2DD0
 	adc #$00
 	sta (:bp2),y
 
-; optimize OK (service.pas), line = 3401
+; optimize OK (service.pas), line = 3430
 
 	ldy #BALL.SBD-DATAORIGIN+$01
 	lda (:bp2),y
@@ -13109,21 +12923,21 @@ l_2DD0
 	lda (:bp2),y
 	cmp #$58
 @
-	jcc l_2E0E
+	jcc l_2D43
 @
 	ldy #$00
 	lda (:bp2),y
-	jpl l_2E0E
+	jpl l_2D43
 @
 
-; optimize OK (service.pas), line = 3402
+; optimize OK (service.pas), line = 3431
 
 	lda BALL
 	sta DEVIATE_BALL.BALL
 	lda BALL+1
 	sta DEVIATE_BALL.BALL+1
 	jsr DEVIATE_BALL
-l_2E0E
+l_2D43
 
 ; ------------------------------------------------------------
 
@@ -13159,43 +12973,43 @@ BALL.STM	= DATAORIGIN+$0019
 	rts						; ret
 	eif
 .endl
-l_2D89
+l_2CBE
 
-; optimize OK (service.pas), line = 3410
+; optimize OK (service.pas), line = 3439
 
 	lda #$00
 	sta SCRFLUXCNT
 
-; optimize OK (service.pas), line = 3411
+; optimize OK (service.pas), line = 3440
 
 	sta SCRFLUX
 
-; optimize OK (service.pas), line = 3413
+; optimize OK (service.pas), line = 3442
 
 	lda #$01
 	sta BALLS_IN_PLAY
 
-; optimize OK (service.pas), line = 3415
+; optimize OK (service.pas), line = 3444
 
 	lda #$00
 	sta FIRE.AVL
 
-; optimize OK (service.pas), line = 3416
+; optimize OK (service.pas), line = 3445
 
 	:7 mva adr.NORMAL+# adr.PLAYVAUS+#
 
-; optimize OK (service.pas), line = 3418
+; optimize OK (service.pas), line = 3447
 
 	lda #$FF
 	sta LETT.LAST
 	lda #$00
 	sta LETT.LAST+1
 
-; optimize OK (service.pas), line = 3419
+; optimize OK (service.pas), line = 3448
 
 	sta LETT.ACTIVE
 
-; optimize OK (service.pas), line = 3422
+; optimize OK (service.pas), line = 3451
 
 	lda PATTERN
 	sta FILL_PICTURE_WITH_PATTERN.PATT
@@ -13203,13 +13017,13 @@ l_2D89
 	sta FILL_PICTURE_WITH_PATTERN.PATT+1
 	jsr FILL_PICTURE_WITH_PATTERN
 
-; optimize OK (service.pas), line = 3425
+; optimize OK (service.pas), line = 3454
 
 	lda #$00
 	sta HLP
 	sta HLP+1
 
-; optimize OK (service.pas), line = 3426
+; optimize OK (service.pas), line = 3455
 
 	lda #$40
 	sta BLITBOX.W
@@ -13219,13 +13033,13 @@ l_2D89
 	sta BLITBOX.H
 	jsr BLITBOX
 
-; optimize OK (service.pas), line = 3430
+; optimize OK (service.pas), line = 3459
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
 	jsr PLOT_LIVES
 
-; optimize OK (service.pas), line = 3436
+; optimize OK (service.pas), line = 3465
 
 	lda adr.SCORE.PLAYER+$04
 	sta WRITE_SCORE.SC_
@@ -13239,7 +13053,7 @@ l_2D89
 	sta WRITE_SCORE.PY
 	jsr WRITE_SCORE
 
-; optimize OK (service.pas), line = 3437
+; optimize OK (service.pas), line = 3466
 
 	lda adr.SCORE.PLAYER+$08
 	sta WRITE_SCORE.SC_
@@ -13253,7 +13067,7 @@ l_2D89
 	sta WRITE_SCORE.PY
 	jsr WRITE_SCORE
 
-; optimize OK (service.pas), line = 3438
+; optimize OK (service.pas), line = 3467
 
 	lda #$80
 	sta WRITE_SCORE.PY
@@ -13267,64 +13081,64 @@ l_2D89
 	sta WRITE_SCORE.SC_+3
 	jsr WRITE_SCORE
 
-; optimize FAIL ('PUT_WALL', service.pas), line = 3441
+; optimize FAIL ('PUT_WALL', service.pas), line = 3470
 
 	jsr PUT_WALL
 
-; optimize OK (service.pas), line = 3448
+; optimize OK (service.pas), line = 3477
 
 	lda #$01
 	sta BALL0.INPLAY
 
-; optimize OK (service.pas), line = 3449
+; optimize OK (service.pas), line = 3478
 
 	sta BALL0.LAUNCH
 
-; optimize OK (service.pas), line = 3452
+; optimize OK (service.pas), line = 3481
 
 	lda #$6F
 	sta BALL0.X
 	lda #$00
 	sta BALL0.X+1
 
-; optimize OK (service.pas), line = 3453
+; optimize OK (service.pas), line = 3482
 
 	lda #$B5
 	sta BALL0.Y
 	lda #$00
 	sta BALL0.Y+1
 
-; optimize OK (service.pas), line = 3456
+; optimize OK (service.pas), line = 3485
 
 	lda #$FF
 	sta BALL0.OLDX
 	lda #$00
 	sta BALL0.OLDX+1
 
-; optimize OK (service.pas), line = 3457
+; optimize OK (service.pas), line = 3486
 
 	lda #$FF
 	sta BALL0.OLDY
 	lda #$00
 	sta BALL0.OLDY+1
 
-; optimize OK (service.pas), line = 3460
+; optimize OK (service.pas), line = 3489
 
 	sta BALL0.SBD
 	sta BALL0.SBD+1
 
-; optimize OK (service.pas), line = 3464
+; optimize OK (service.pas), line = 3493
 
 	lda #$10
 	sta BALL0.ONVAUS
 	lda #$00
 	sta BALL0.ONVAUS+1
 
-; optimize OK (service.pas), line = 3469
+; optimize OK (service.pas), line = 3498
 
 	sta BALL0.STM
 
-; optimize OK (service.pas), line = 3473
+; optimize OK (service.pas), line = 3502
 
 	lda #$E8
 	sta RAND.RANGE
@@ -13336,23 +13150,23 @@ l_2D89
 	lda RAND.RESULT+1
 	sta LETT.INCOMING+1
 
-; optimize FAIL ('CREATE_VAUS', service.pas), line = 3476
+; optimize FAIL ('CREATE_VAUS', service.pas), line = 3505
 
 	jsr CREATE_VAUS
 
-; optimize FAIL ('WRITE_ROUND_LEVEL', service.pas), line = 3479
+; optimize FAIL ('WRITE_ROUND_LEVEL', service.pas), line = 3508
 
 	jsr WRITE_ROUND_LEVEL
 
-; optimize FAIL ('SET_VAUS', service.pas), line = 3481
+; optimize FAIL ('SET_VAUS', service.pas), line = 3510
 
 	jsr SET_VAUS
 
-; optimize FAIL ('START_VAUS', service.pas), line = 3482
+; optimize FAIL ('START_VAUS', service.pas), line = 3511
 
 	jsr START_VAUS
 
-; optimize OK (service.pas), line = 3483
+; optimize OK (service.pas), line = 3512
 
 	lda VAUS.X
 	sta MOVE_VAUS.X
@@ -13364,19 +13178,19 @@ l_2D89
 	sta MOVE_VAUS.Y+1
 	jsr MOVE_VAUS
 
-; optimize FAIL ('START_LEVEL', service.pas), line = 3484
+; optimize FAIL ('START_LEVEL', service.pas), line = 3513
 
 	jsr START_LEVEL
 
-; optimize FAIL ('START_VAUS', service.pas), line = 3485
+; optimize FAIL ('START_VAUS', service.pas), line = 3514
 
 	jsr START_VAUS
 
-; optimize FAIL ('REMOVE_ROUND_LEVEL', service.pas), line = 3486
+; optimize FAIL ('REMOVE_ROUND_LEVEL', service.pas), line = 3515
 
 	jsr REMOVE_ROUND_LEVEL
 
-; optimize OK (service.pas), line = 3487
+; optimize OK (service.pas), line = 3516
 
 	lda BALL0
 	sta SET_BALL.BALL
@@ -13384,7 +13198,7 @@ l_2D89
 	sta SET_BALL.BALL+1
 	jsr SET_BALL
 
-; optimize OK (service.pas), line = 3494
+; optimize OK (service.pas), line = 3523
 
 	lda #$0F
 	sta RAND.RANGE
@@ -13411,7 +13225,7 @@ l_2D89
 	dex
 	jsr SET_BALL_DIRECTION
 
-; optimize OK (service.pas), line = 3496
+; optimize OK (service.pas), line = 3525
 
 	lda BALL0
 	sta SET_BALL_SPEED.BALL
@@ -13423,21 +13237,21 @@ l_2D89
 	sta SET_BALL_SPEED.SPEED+1
 	jsr SET_BALL_SPEED
 
-; optimize OK (service.pas), line = 3499
+; optimize OK (service.pas), line = 3528
 
 	lda #$00
 	sta BALL0.FINESPEED
 	sta BALL0.FINESPEED+1
 
-; optimize OK (service.pas), line = 3501
+; optimize OK (service.pas), line = 3530
 
 	sta BALL1.INPLAY
 
-; optimize OK (service.pas), line = 3502
+; optimize OK (service.pas), line = 3531
 
 	sta BALL2.INPLAY
 
-; optimize OK (service.pas), line = 3504
+; optimize OK (service.pas), line = 3533
 
 	lda VAUS.X
 	sta X
@@ -13445,8 +13259,8 @@ l_2D89
 	sta X+1
 
 ; --- WhileProlog
-	jmp l_2EA5
-l_2EA6
+	jmp l_2DDA
+l_2DDB
 
 ; -------------------  ASM Block 00000171  -------------------
 
@@ -13456,7 +13270,7 @@ l_2EA6
       bne @-
       mva #$0f $d01a       
      
-; optimize OK (service.pas), line = 3521
+; optimize OK (service.pas), line = 3550
 
 	lda <X
 	sta MOUSECOORDS.X
@@ -13464,7 +13278,7 @@ l_2EA6
 	sta MOUSECOORDS.X+1
 	jsr MOUSECOORDS
 
-; optimize OK (service.pas), line = 3527
+; optimize OK (service.pas), line = 3556
 
 	lda X
 	sta MOVE_VAUS.X
@@ -13476,26 +13290,26 @@ l_2EA6
 	sta MOVE_VAUS.Y+1
 	jsr MOVE_VAUS
 
-; optimize OK (service.pas), line = 3539
+; optimize OK (service.pas), line = 3568
 
 	lda BALL0.LAUNCH
 	cmp #$01
-	jne l_2EBE
+	jne l_2DF3
 
-; optimize FAIL (0, service.pas), line = 3541
+; optimize FAIL (0, service.pas), line = 3570
 
 	inc BALL0.STM
 
-; optimize OK (service.pas), line = 3546
+; optimize OK (service.pas), line = 3575
 
 	lda BALL0.STM
 	cmp #$FA
-	jne l_2ED5
+	jne l_2E0A
 	lda #$00
 	sta BALL0.LAUNCH
-l_2ED5
+l_2E0A
 
-; optimize OK (service.pas), line = 3549
+; optimize OK (service.pas), line = 3578
 
 	lda BALL0
 	sta START_BALL.BALL
@@ -13503,94 +13317,94 @@ l_2ED5
 	sta START_BALL.BALL+1
 	jsr START_BALL
 
-; optimize FAIL ('MOUSECLICK', service.pas), line = 3552
+; optimize FAIL ('MOUSECLICK', service.pas), line = 3581
 
 	jsr MOUSECLICK
 	lda MOUSECLICK.RESULT
 	cmp #$01
-	jne l_2EEF
+	jne l_2E24
 	lda #$00
 	sta BALL0.LAUNCH
-l_2EEF
-	jmp l_2EFF
-l_2EBE
+l_2E24
+	jmp l_2E34
+l_2DF3
 
-; optimize OK (service.pas), line = 3560
+; optimize OK (service.pas), line = 3589
 
 	lda BALL0.INPLAY
-	jeq l_2F0B
+	jeq l_2E40
 	lda BALL0
 	sta MOVE_BALL.BALL
 	lda BALL0+1
 	sta MOVE_BALL.BALL+1
 	jsr MOVE_BALL
-l_2F0B
+l_2E40
 
-; optimize OK (service.pas), line = 3561
+; optimize OK (service.pas), line = 3590
 
 	lda BALL1.INPLAY
-	jeq l_2F1D
+	jeq l_2E52
 	lda BALL1
 	sta MOVE_BALL.BALL
 	lda BALL1+1
 	sta MOVE_BALL.BALL+1
 	jsr MOVE_BALL
-l_2F1D
+l_2E52
 
-; optimize OK (service.pas), line = 3562
+; optimize OK (service.pas), line = 3591
 
 	lda BALL2.INPLAY
-	jeq l_2F2F
+	jeq l_2E64
 	lda BALL2
 	sta MOVE_BALL.BALL
 	lda BALL2+1
 	sta MOVE_BALL.BALL+1
 	jsr MOVE_BALL
-l_2F2F
-l_2EFF
+l_2E64
+l_2E34
 
-; optimize OK (service.pas), line = 3570
+; optimize OK (service.pas), line = 3599
 
 	lda BALL0.INPLAY
-	jeq l_2F41
+	jeq l_2E76
 	lda BALL0
 	sta CHECK_BALL.BALL
 	lda BALL0+1
 	sta CHECK_BALL.BALL+1
 	jsr CHECK_BALL
-l_2F41
+l_2E76
 
-; optimize OK (service.pas), line = 3571
+; optimize OK (service.pas), line = 3600
 
 	lda BALL1.INPLAY
-	jeq l_2F53
+	jeq l_2E88
 	lda BALL1
 	sta CHECK_BALL.BALL
 	lda BALL1+1
 	sta CHECK_BALL.BALL+1
 	jsr CHECK_BALL
-l_2F53
+l_2E88
 
-; optimize OK (service.pas), line = 3572
+; optimize OK (service.pas), line = 3601
 
 	lda BALL2.INPLAY
-	jeq l_2F65
+	jeq l_2E9A
 	lda BALL2
 	sta CHECK_BALL.BALL
 	lda BALL2+1
 	sta CHECK_BALL.BALL+1
 	jsr CHECK_BALL
-l_2F65
+l_2E9A
 
-; optimize FAIL ('CHECKSHINE', service.pas), line = 3587
+; optimize FAIL ('CHECKSHINE', service.pas), line = 3616
 
 	jsr CHECKSHINE
 
-; optimize FAIL ('CHECK_LETTER', service.pas), line = 3588
+; optimize FAIL ('CHECK_LETTER', service.pas), line = 3617
 
 	jsr CHECK_LETTER
 
-; optimize OK (service.pas), line = 3589
+; optimize OK (service.pas), line = 3618
 
 	lda BALL0
 	sta CHECK_BONUS_TYPE.B1
@@ -13606,15 +13420,15 @@ l_2F65
 	sta CHECK_BONUS_TYPE.B3+1
 	jsr CHECK_BONUS_TYPE
 
-; optimize FAIL ('CHECK_FIRE', service.pas), line = 3590
+; optimize FAIL ('CHECK_FIRE', service.pas), line = 3619
 
 	jsr CHECK_FIRE
 
-; optimize FAIL ('CHECK_FLUX', service.pas), line = 3591
+; optimize FAIL ('CHECK_FLUX', service.pas), line = 3620
 
 	jsr CHECK_FLUX
 
-; optimize OK (service.pas), line = 3593
+; optimize OK (service.pas), line = 3622
 
 	lda VAUS.X
 	add VAUS.WIDTH
@@ -13632,34 +13446,34 @@ l_2F65
 @
 	tya
 	and SCRFLUX
-	jeq l_2F94
+	jeq l_2EC9
 	jsr VAUS_OUT
-l_2F94
+l_2EC9
 
-; optimize OK (service.pas), line = 3595
+; optimize OK (service.pas), line = 3624
 
 	lda VAUS.LETTER
 	cmp #$04
-	jne l_2FAA
+	jne l_2EDF
 
-; optimize OK (service.pas), line = 3597
+; optimize OK (service.pas), line = 3626
 
 	lda #$03
 	sta BALLS_IN_PLAY
 
-; optimize OK (service.pas), line = 3599
+; optimize OK (service.pas), line = 3628
 
 	mwy BALL1 :bp2
 	ldy #$19
 	mva:rpl adr.BALL0,y (:bp2),y-
 
-; optimize OK (service.pas), line = 3600
+; optimize OK (service.pas), line = 3629
 
 	mwy BALL2 :bp2
 	ldy #$19
 	mva:rpl adr.BALL0,y (:bp2),y-
 
-; optimize OK (service.pas), line = 3602
+; optimize OK (service.pas), line = 3631
 
 	lda BALL0
 	sta GET_BALL_DIRECTION.BALL
@@ -13684,14 +13498,14 @@ l_2F94
 	sta T1+1
 	dex
 
-; optimize OK (service.pas), line = 3604
+; optimize OK (service.pas), line = 3633
 
 	lda BALL0.SPEED
 	sta T2
 	lda BALL0.SPEED+1
 	sta T2+1
 
-; optimize OK (service.pas), line = 3611
+; optimize OK (service.pas), line = 3640
 
 	ldy T1
 	lda adr.MUL90_16,y
@@ -13699,7 +13513,7 @@ l_2F94
 	lda adr.MUL90_16+16,y
 	sta T1+1
 
-; optimize OK (service.pas), line = 3613
+; optimize OK (service.pas), line = 3642
 
 	lda T1
 	add #$1E
@@ -13713,7 +13527,7 @@ l_2F94
 	sta SET_BALL_DIRECTION.BALL+1
 	jsr SET_BALL_DIRECTION
 
-; optimize OK (service.pas), line = 3614
+; optimize OK (service.pas), line = 3643
 
 	lda T1
 	add #$2D
@@ -13727,7 +13541,7 @@ l_2F94
 	sta SET_BALL_DIRECTION.BALL+1
 	jsr SET_BALL_DIRECTION
 
-; optimize OK (service.pas), line = 3615
+; optimize OK (service.pas), line = 3644
 
 	lda T1
 	add #$3C
@@ -13741,7 +13555,7 @@ l_2F94
 	sta SET_BALL_DIRECTION.BALL+1
 	jsr SET_BALL_DIRECTION
 
-; optimize OK (service.pas), line = 3619
+; optimize OK (service.pas), line = 3648
 
 	lda BALL0
 	sta SET_BALL_SPEED.BALL
@@ -13753,7 +13567,7 @@ l_2F94
 	sta SET_BALL_SPEED.SPEED+1
 	jsr SET_BALL_SPEED
 
-; optimize OK (service.pas), line = 3620
+; optimize OK (service.pas), line = 3649
 
 	lda BALL1
 	sta SET_BALL_SPEED.BALL
@@ -13765,7 +13579,7 @@ l_2F94
 	sta SET_BALL_SPEED.SPEED+1
 	jsr SET_BALL_SPEED
 
-; optimize OK (service.pas), line = 3621
+; optimize OK (service.pas), line = 3650
 
 	lda BALL2
 	sta SET_BALL_SPEED.BALL
@@ -13777,23 +13591,23 @@ l_2F94
 	sta SET_BALL_SPEED.SPEED+1
 	jsr SET_BALL_SPEED
 
-; optimize OK (service.pas), line = 3623
+; optimize OK (service.pas), line = 3652
 
 	lda #$00
 	sta VAUS.LETTER
-l_2FAA
+l_2EDF
 
-; optimize OK (service.pas), line = 3627
+; optimize OK (service.pas), line = 3656
 
 	lda BALLS_IN_PLAY
 	cmp #$02
-	jcc l_300B
+	jcc l_2F40
 	lda #$00
 	sta LETT.INCOMING
 	sta LETT.INCOMING+1
-l_300B
+l_2F40
 
-; optimize OK (service.pas), line = 3631
+; optimize OK (service.pas), line = 3660
 
 	lda CUR_PLAYER
 	asl @
@@ -13808,7 +13622,7 @@ l_300B
 	lda adr.SCORE.PLAYER+3,y
 	sta SCORES+3
 
-; optimize OK (service.pas), line = 3633
+; optimize OK (service.pas), line = 3662
 
 	lda OLD_SCORES+3
 	cmp SCORES+3
@@ -13822,9 +13636,9 @@ l_300B
 	lda OLD_SCORES
 	cmp SCORES
 @
-	jeq l_3029
+	jeq l_2F5E
 
-; optimize OK (service.pas), line = 3635
+; optimize OK (service.pas), line = 3664
 
 	ldy CUR_PLAYER
 	lda adr.POS_DIGIT,y
@@ -13839,7 +13653,7 @@ l_300B
 	sta WRITE_SCORE.SC_+3
 	jsr WRITE_SCORE
 
-; optimize OK (service.pas), line = 3637
+; optimize OK (service.pas), line = 3666
 
 	lda SCORES
 	sta OLD_SCORES
@@ -13849,9 +13663,9 @@ l_300B
 	sta OLD_SCORES+2
 	lda SCORES+3
 	sta OLD_SCORES+3
-l_3029
+l_2F5E
 
-; optimize OK (service.pas), line = 3643
+; optimize OK (service.pas), line = 3672
 
 	lda CUR_PLAYER
 	asl @
@@ -13873,10 +13687,10 @@ l_3029
 	lda :STACKORIGIN+9
 	cmp SCORE.HISCORE
 @
-	jcc l_304B
-	jeq l_304B
+	jcc l_2F80
+	jeq l_2F80
 
-; optimize OK (service.pas), line = 3646
+; optimize OK (service.pas), line = 3675
 
 	lda adr.SCORE.PLAYER,y
 	sta SCORE.HISCORE
@@ -13887,7 +13701,7 @@ l_3029
 	lda adr.SCORE.PLAYER+3,y
 	sta SCORE.HISCORE+3
 
-; optimize OK (service.pas), line = 3648
+; optimize OK (service.pas), line = 3677
 
 	lda #$80
 	sta WRITE_SCORE.PY
@@ -13900,120 +13714,120 @@ l_3029
 	lda SCORE.HISCORE+3
 	sta WRITE_SCORE.SC_+3
 	jsr WRITE_SCORE
-l_304B
+l_2F80
 
-; optimize OK (service.pas), line = 3655
+; optimize OK (service.pas), line = 3684
 
 	lda BALL0.INPLAY
-	jeq l_3064
+	jeq l_2F99
 	lda BALL0
 	sta TEST_BALL.BALL
 	lda BALL0+1
 	sta TEST_BALL.BALL+1
 	jsr TEST_BALL
-l_3064
+l_2F99
 
-; optimize OK (service.pas), line = 3656
+; optimize OK (service.pas), line = 3685
 
 	lda BALL1.INPLAY
-	jeq l_3076
+	jeq l_2FAB
 	lda BALL1
 	sta TEST_BALL.BALL
 	lda BALL1+1
 	sta TEST_BALL.BALL+1
 	jsr TEST_BALL
-l_3076
+l_2FAB
 
-; optimize OK (service.pas), line = 3657
+; optimize OK (service.pas), line = 3686
 
 	lda BALL2.INPLAY
-	jeq l_3088
+	jeq l_2FBD
 	lda BALL2
 	sta TEST_BALL.BALL
 	lda BALL2+1
 	sta TEST_BALL.BALL+1
 	jsr TEST_BALL
-l_3088
+l_2FBD
 
-; optimize OK (service.pas), line = 3707
+; optimize OK (service.pas), line = 3736
 
 	lda BALL0.INPLAY
-	jne l_309D
+	jne l_2FD2
 
-; optimize OK (service.pas), line = 3708
+; optimize OK (service.pas), line = 3737
 
 	lda BALL1.INPLAY
-	jeq l_30AA
+	jeq l_2FDF
 
-; optimize OK (service.pas), line = 3709
+; optimize OK (service.pas), line = 3738
 
 	mwy BALL0 :bp2
 	ldy #$19
 	mva:rpl adr.BALL1,y (:bp2),y-
 
-; optimize OK (service.pas), line = 3710
+; optimize OK (service.pas), line = 3739
 
 	lda #$00
 	sta BALL1.INPLAY
-	jmp l_30BA
-l_30AA
+	jmp l_2FEF
+l_2FDF
 
-; optimize OK (service.pas), line = 3712
+; optimize OK (service.pas), line = 3741
 
 	lda BALL2.INPLAY
-	jeq l_30C6
+	jeq l_2FFB
 
-; optimize OK (service.pas), line = 3713
+; optimize OK (service.pas), line = 3742
 
 	mwy BALL0 :bp2
 	ldy #$19
 	mva:rpl adr.BALL2,y (:bp2),y-
 
-; optimize OK (service.pas), line = 3714
+; optimize OK (service.pas), line = 3743
 
 	lda #$00
 	sta BALL2.INPLAY
-l_30BA
-l_30C6
-l_309D
+l_2FEF
+l_2FFB
+l_2FD2
 
-; optimize OK (service.pas), line = 3718
+; optimize OK (service.pas), line = 3747
 
 	lda #$00
 	sta BALLS_IN_PLAY
 
-; optimize OK (service.pas), line = 3720
+; optimize OK (service.pas), line = 3749
 
 	lda BALL0.INPLAY
-	jeq l_30E1
+	jeq l_3016
 	inc BALLS_IN_PLAY
-l_30E1
+l_3016
 
-; optimize OK (service.pas), line = 3721
+; optimize OK (service.pas), line = 3750
 
 	lda BALL1.INPLAY
-	jeq l_30F4
+	jeq l_3029
 	inc BALLS_IN_PLAY
-l_30F4
+l_3029
 
-; optimize OK (service.pas), line = 3722
+; optimize OK (service.pas), line = 3751
 
 	lda BALL2.INPLAY
-	jeq l_3107
+	jeq l_303C
 	inc BALLS_IN_PLAY
-l_3107
+l_303C
 
-; optimize OK (service.pas), line = 3725
+; optimize OK (service.pas), line = 3754
 
 	lda BALL0.INPLAY
-	jne l_311D
+	jne l_3052
 
-; optimize OK (service.pas), line = 3727
+; optimize OK (service.pas), line = 3756
 
 	lda #$01
 	sta BALL0.LAUNCH
 
-; optimize OK (service.pas), line = 3728
+; optimize OK (service.pas), line = 3757
 
 	lda BALL0
 	sta REMOVE_BALL.BALL
@@ -14021,18 +13835,18 @@ l_3107
 	sta REMOVE_BALL.BALL+1
 	jsr REMOVE_BALL
 
-; optimize FAIL ('DESTROY_VAUS', service.pas), line = 3729
+; optimize FAIL ('DESTROY_VAUS', service.pas), line = 3758
 
 	jsr DESTROY_VAUS
 
-; optimize OK (service.pas), line = 3730
+; optimize OK (service.pas), line = 3759
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
 	sub #$01
 	sta adr.SCORE.LIVES,y
 
-; optimize OK (service.pas), line = 3731
+; optimize OK (service.pas), line = 3760
 
 	lda WALL_P
 	sta @move.dst
@@ -14049,34 +13863,34 @@ l_3107
 	sta @move.cnt+1
 	jsr @move
 
-; optimize FAIL ('NOSOUND', service.pas), line = 3739
+; optimize FAIL ('NOSOUND', service.pas), line = 3768
 
 	jsr NOSOUND
-l_311D
-l_2EA5
+l_3052
+l_2DDA
 
-; optimize OK (service.pas), line = 3507
+; optimize OK (service.pas), line = 3536
 
 	lda REMAIN_BLK
-	jeq l_2EA6w
+	jeq l_2DDBw
 	lda BALL0.INPLAY
-	jeq l_2EA6w
+	jeq l_2DDBw
 	lda SCORE.ABORTPLAY
-	jeq l_2EA6
-l_2EA6w
+	jeq l_2DDB
+l_2DDBw
 
-; optimize OK (service.pas), line = 3795
+; optimize OK (service.pas), line = 3824
 
 	lda #$00
 	sta RESULT
 
-; optimize OK (service.pas), line = 3796
+; optimize OK (service.pas), line = 3825
 
 	lda REMAIN_BLK
-	jne l_316B
+	jne l_30A0
 	lda #$01
 	sta RESULT
-l_316B
+l_30A0
 @exit
 
 ; ------------------------------------------------------------
@@ -14151,14 +13965,14 @@ SCORES	= DATAORIGIN+$0389
 
 .local	CHOOSE_START_WALL				; FUNCTION
 
-; optimize OK (service.pas), line = 3819
+; optimize OK (service.pas), line = 3848
 
 	lda #$01
 	sta ST
 	lda #$00
 	sta ST+1
 
-; optimize OK (service.pas), line = 3877
+; optimize OK (service.pas), line = 3906
 
 	lda ST
 	sta RESULT
@@ -14191,7 +14005,7 @@ NEWY	= DATAORIGIN+$03A3
 
 .local	SET_START_PARAMETERS				; PROCEDURE
 
-; optimize OK (service.pas), line = 3886
+; optimize OK (service.pas), line = 3915
 
 	lda #$01
 	sta OLD_SCORES
@@ -14200,18 +14014,18 @@ NEWY	= DATAORIGIN+$03A3
 	sta OLD_SCORES+2
 	sta OLD_SCORES+3
 
-; optimize OK (service.pas), line = 3888
+; optimize OK (service.pas), line = 3917
 
 	lda #$01
 	sta X
 
-l_3190
+l_30C5
 ; --- ForToDoCondition
 	lda X
 	cmp #$03
-	jcs l_319E
+	jcs l_30D3
 
-; optimize OK (service.pas), line = 3890
+; optimize OK (service.pas), line = 3919
 
 	asl @
 	asl @
@@ -14222,18 +14036,18 @@ l_3190
 	sta adr.SCORE.PLAYER+2,y
 	sta adr.SCORE.PLAYER+3,y
 
-; optimize OK (service.pas), line = 3891
+; optimize OK (service.pas), line = 3920
 
 	ldy X
 	lda #$05
 	sta adr.SCORE.LIVES,y
 
-; optimize OK (service.pas), line = 3892
+; optimize OK (service.pas), line = 3921
 
 	lda #$01
 	sta adr.SCORE.WALL_N,y
 
-; optimize OK (service.pas), line = 3893
+; optimize OK (service.pas), line = 3922
 
 	lda WALL_P
 	sta @move.dst
@@ -14250,7 +14064,7 @@ l_3190
 	sta @move.cnt+1
 	jsr @move
 
-; optimize OK (service.pas), line = 3895
+; optimize OK (service.pas), line = 3924
 
 	ldy X
 	lda #$00
@@ -14258,10 +14072,10 @@ l_3190
 
 ; --- ForToDoEpilog
 	inc X
-	jne l_3190
-l_319E
+	jne l_30C5
+l_30D3
 
-; optimize OK (service.pas), line = 3898
+; optimize OK (service.pas), line = 3927
 
 	lda #$01
 	sta CUR_PLAYER
@@ -14287,11 +14101,11 @@ X	= DATAORIGIN+$03A5
 
 .local	MAINSCREEN					; FUNCTION
 
-; optimize FAIL ('NOSOUND', service.pas), line = 3958
+; optimize FAIL ('NOSOUND', service.pas), line = 3987
 
 	jsr NOSOUND
 
-; optimize OK (service.pas), line = 3959
+; optimize OK (service.pas), line = 3988
 
 	lda #$00
 	sta SCORE.ABORTPLAY
@@ -14300,7 +14114,7 @@ X	= DATAORIGIN+$03A5
 
       fxs FX_MEMS #$80
     
-; optimize OK (service.pas), line = 3976
+; optimize OK (service.pas), line = 4005
 
 	lda #$40
 	sta BLITTEMP.@0201810000181000.SWIDTH
@@ -14312,7 +14126,7 @@ X	= DATAORIGIN+$03A5
 	sta BLITTEMP.@0201810000181000.DWIDTH+1
 	jsr BLITTEMP.@0201810000181000
 
-; optimize OK (service.pas), line = 3977
+; optimize OK (service.pas), line = 4006
 
 	lda #$80
 	sta BLITTEMP.@040180000018100001820000182000.SRC
@@ -14339,7 +14153,7 @@ X	= DATAORIGIN+$03A5
 
       fxs FX_MEMS #$00
     
-; optimize OK (service.pas), line = 4020
+; optimize OK (service.pas), line = 4049
 
 	lda #$01
 	sta RESULT
@@ -14364,28 +14178,28 @@ IK	= DATAORIGIN+$03B0
 
 .local	START_GAME					; PROCEDURE
 
-; optimize FAIL ('SET_START_PARAMETERS', service.pas), line = 4028
+; optimize FAIL ('SET_START_PARAMETERS', service.pas), line = 4057
 
 	jsr SET_START_PARAMETERS
 
-; optimize OK (service.pas), line = 4029
+; optimize OK (service.pas), line = 4058
 
 	lda PLAYERS+1
 	bne @+
 	lda PLAYERS
 	cmp #$01
 @
-	jne l_3200
+	jne l_3135
 	lda #$00
 	sta adr.SCORE.LIVES+$02
-l_3200
+l_3135
 
-; optimize OK (service.pas), line = 4032
+; optimize OK (service.pas), line = 4061
 
 	lda #$00
 	sta TRAINER
 
-; optimize OK (service.pas), line = 4033
+; optimize OK (service.pas), line = 4062
 
 	lda WALL
 	sta @move.dst
@@ -14402,11 +14216,11 @@ l_3200
 	sta @move.cnt+1
 	jsr @move
 
-; optimize FAIL ('SET_WALL', service.pas), line = 4037
+; optimize FAIL ('SET_WALL', service.pas), line = 4066
 
 	jsr SET_WALL
 
-; optimize OK (service.pas), line = 4039
+; optimize OK (service.pas), line = 4068
 
 	lda PATTERN
 	sta FILL_PICTURE_WITH_PATTERN.PATT
@@ -14414,13 +14228,13 @@ l_3200
 	sta FILL_PICTURE_WITH_PATTERN.PATT+1
 	jsr FILL_PICTURE_WITH_PATTERN
 
-; optimize OK (service.pas), line = 4041
+; optimize OK (service.pas), line = 4070
 
 	lda #$00
 	sta HLP
 	sta HLP+1
 
-; optimize OK (service.pas), line = 4042
+; optimize OK (service.pas), line = 4071
 
 	lda #$40
 	sta BLITBOX.W
@@ -14430,7 +14244,7 @@ l_3200
 	sta BLITBOX.H
 	jsr BLITBOX
 
-; optimize OK (service.pas), line = 4049
+; optimize OK (service.pas), line = 4078
 
 	lda adr.SCORE.PLAYER+$04
 	sta WRITE_SCORE.SC_
@@ -14444,7 +14258,7 @@ l_3200
 	sta WRITE_SCORE.PY
 	jsr WRITE_SCORE
 
-; optimize OK (service.pas), line = 4050
+; optimize OK (service.pas), line = 4079
 
 	lda adr.SCORE.PLAYER+$08
 	sta WRITE_SCORE.SC_
@@ -14458,7 +14272,7 @@ l_3200
 	sta WRITE_SCORE.PY
 	jsr WRITE_SCORE
 
-; optimize OK (service.pas), line = 4051
+; optimize OK (service.pas), line = 4080
 
 	lda #$80
 	sta WRITE_SCORE.PY
@@ -14473,18 +14287,18 @@ l_3200
 	jsr WRITE_SCORE
 
 ; --- RepeatUntilProlog
-l_3230
+l_3165
 
 ; --- RepeatUntilProlog
-l_3231
+l_3166
 
-; optimize OK (service.pas), line = 4061
+; optimize OK (service.pas), line = 4090
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.ROUNDSEL,y
-	jne l_3243
+	jne l_3178
 
-; optimize FAIL (1, service.pas), line = 4063
+; optimize FAIL (1, service.pas), line = 4092
 
 	inx
 	mva CUR_PLAYER :STACKORIGIN,x
@@ -14499,7 +14313,7 @@ l_3231
 	dex
 	dex
 
-; optimize OK (service.pas), line = 4066
+; optimize OK (service.pas), line = 4095
 
 	lda #$00
 	sta :STACKORIGIN+9
@@ -14526,14 +14340,14 @@ l_3231
 	sta @move.cnt+1
 	jsr @move
 
-; optimize OK (service.pas), line = 4070
+; optimize OK (service.pas), line = 4099
 
 	ldy CUR_PLAYER
 	lda #$01
 	sta adr.SCORE.ROUNDSEL,y
-l_3243
+l_3178
 
-; optimize OK (service.pas), line = 4074
+; optimize OK (service.pas), line = 4103
 
 	lda WALL
 	sta @move.dst
@@ -14550,40 +14364,40 @@ l_3243
 	sta @move.cnt+1
 	jsr @move
 
-; optimize FAIL ('SET_WALL', service.pas), line = 4075
+; optimize FAIL ('SET_WALL', service.pas), line = 4104
 
 	jsr SET_WALL
 
-; optimize FAIL ('BOUNCEBALL', service.pas), line = 4080
+; optimize FAIL ('BOUNCEBALL', service.pas), line = 4109
 
 	jsr BOUNCEBALL
 	lda BOUNCEBALL.RESULT
 	sta NWALL
 
-; optimize OK (service.pas), line = 4083
+; optimize OK (service.pas), line = 4112
 
-	jeq l_3291
+	jeq l_31C6
 
-; optimize OK (service.pas), line = 4086
+; optimize OK (service.pas), line = 4115
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.WALL_N,y
 	add #$01
 	sta adr.SCORE.WALL_N,y
 
-; optimize OK (service.pas), line = 4089
+; optimize OK (service.pas), line = 4118
 
 	lda TOTALWALL
 	cmp adr.SCORE.WALL_N,y
-	jcs l_32AD
+	jcs l_31E2
 
-; optimize OK (service.pas), line = 4090
+; optimize OK (service.pas), line = 4119
 
 	lda #$01
 	sta adr.SCORE.WALL_N,y
-l_32AD
+l_31E2
 
-; optimize OK (service.pas), line = 4093
+; optimize OK (service.pas), line = 4122
 
 	lda #$00
 	sta :STACKORIGIN+9
@@ -14609,28 +14423,28 @@ l_32AD
 	lda >256
 	sta @move.cnt+1
 	jsr @move
-	jmp l_32DF
-l_3291
+	jmp l_3214
+l_31C6
 
-; optimize OK (service.pas), line = 4099
+; optimize OK (service.pas), line = 4128
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
-	jne l_32F4
+	jne l_3229
 	jsr GAME_OVER
-l_32DF
-l_32F4
+l_3214
+l_3229
 
-; optimize OK (service.pas), line = 4104
+; optimize OK (service.pas), line = 4133
 
 	lda NWALL
-	jne l_3231
+	jne l_3166
 
-; optimize FAIL (0, service.pas), line = 4107
+; optimize FAIL (0, service.pas), line = 4136
 
 	inc CUR_PLAYER
 
-; optimize OK (service.pas), line = 4108
+; optimize OK (service.pas), line = 4137
 
 	lda PLAYERS
 	cmp CUR_PLAYER
@@ -14638,22 +14452,22 @@ l_32F4
 	sbc #$00
 	svc
 	eor #$80
-	jpl l_331C
+	jpl l_3251
 	lda #$01
 	sta CUR_PLAYER
-l_331C
+l_3251
 
-; optimize OK (service.pas), line = 4114
+; optimize OK (service.pas), line = 4143
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
-	jne l_3338
+	jne l_326D
 	lda #$03
 	sub CUR_PLAYER
 	sta CUR_PLAYER
-l_3338
+l_326D
 
-; optimize OK (service.pas), line = 4119
+; optimize OK (service.pas), line = 4148
 
 	ldy #1
 	lda adr.SCORE.LIVES+$01
@@ -14669,7 +14483,7 @@ l_3338
 	tya
 	and :STACKORIGIN+9
 	ora SCORE.ABORTPLAY
-	jeq l_3230
+	jeq l_3165
 
 ; ------------------------------------------------------------
 
@@ -15107,7 +14921,7 @@ NWALL	= DATAORIGIN+$03B4
 	sta LV+1
 
 ; --- RepeatUntilProlog
-l_344A
+l_337F
 
 ; optimize FAIL ('MAINSCREEN', arkanoid_vbxe.pas), line = 671
 
@@ -15117,19 +14931,19 @@ l_344A
 
 ; optimize OK (arkanoid_vbxe.pas), line = 673
 
-	jeq l_3460
+	jeq l_3395
 	lda #$01
 	sta START_GAME.PLAYERS
 	lda #$00
 	sta START_GAME.PLAYERS+1
 	jsr START_GAME
-l_3460
+l_3395
 
 ; optimize OK (arkanoid_vbxe.pas), line = 676
 
 	lda SCORE.PL_NUMB
 	cmp #$01
-	jcs l_344A
+	jcs l_337F
 
 @exit
 	.ifdef @new
