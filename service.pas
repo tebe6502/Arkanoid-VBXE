@@ -2745,7 +2745,7 @@ const
    mul_6 : array [0..10] of byte = ( {$eval 11,":1*6"} );
 
 var n1 : byte;
-//    f  : boolean;
+    f  : boolean;
 
     sc: cardinal register;					// register TMP
 
@@ -2763,7 +2763,7 @@ end;
 
 
 begin
-//   f:=false; { As long as this remains false, the 0s are not printed. }
+   f:=false; { As long as this remains false, the 0s are not printed. }
              { This is to ensure that the score starts at 0 and not   }
              { 000000, which looks bad.                               }
 
@@ -2785,10 +2785,10 @@ begin
     dec(sc, 100000);
     inc(n1);
    end;
-//   n1:=mod10table[n1];
-//   if n1>0 then f:=true;        { Se la prima cifra e' >0 allora }
-   if mod10table[n1]<>0 then put_digit(n1)    { occorre stamparla }
-   else put_digit(10);            { altrimenti stampa un numero spento }
+   n1:=mod10table[n1];
+   if n1 > 0 then f:=true;    { Se la prima cifra e' >0 allora }
+   if f then put_digit(n1)    { occorre stamparla }
+   else put_digit(10);        { altrimenti stampa un numero spento }
 
    { second digital digit }
    n1:=0;
@@ -2796,9 +2796,9 @@ begin
     dec(sc, 10000);
     inc(n1);
    end;
-//   n1:=mod10table[n1];            { Ditto for the remaining blocks }
-//   if n1>0 then f:=true;
-   if mod10table[n1]<>0 then put_digit(n1)
+   n1:=mod10table[n1];            { Ditto for the remaining blocks }
+   if n1>0 then f:=true;
+   if f then put_digit(n1)
    else put_digit(10);
 
    { third digital digit }
@@ -2807,9 +2807,9 @@ begin
     dec(sc, 1000);
     inc(n1);
    end;
-//   n1:=mod10table[n1];
-//   if n1>0 then f:=true;
-   if mod10table[n1]<>0 then put_digit(n1)
+   n1:=mod10table[n1];
+   if n1>0 then f:=true;
+   if f then put_digit(n1)
    else put_digit(10);
 
    { fourth digital digit }
@@ -2818,9 +2818,9 @@ begin
     dec(sc, 100);
     inc(n1);
    end;
-//   n1:=mod10table[n1];
-//   if n1>0 then f:=true;
-   if mod10table[n1]<>0 then put_digit(n1)
+   n1:=mod10table[n1];
+   if n1>0 then f:=true;
+   if f then put_digit(n1)
    else put_digit(10);
 
    { fifth digital digit }
