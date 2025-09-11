@@ -99,6 +99,38 @@ begin
 end;
 
 
+procedure blitCLR(w : word; h: byte); register;
+begin
+
+ blt.dst_step_y:=320;
+ blt.src_step_y:=320;
+  
+ blt.src_adr.byte2:=pattern_temp shr 16;
+
+ blt.src_adr.byte1:=hlp shr 8;
+ blt.dst_adr.byte1:=hlp shr 8;
+ blt.src_adr.byte0:=hlp;
+ blt.dst_adr.byte0:=hlp;
+
+ blt.dst_adr.byte2:=playscreen_ofs shr 16;
+
+ blt.blt_height:=h-1;
+
+ blt.blt_width:=w-1;
+
+ RunBCB(blt);
+
+ while BlitterBusy do;
+
+ blt.dst_adr.byte2:=vram shr 16;
+
+ RunBCB(blt);
+
+ while BlitterBusy do;
+
+end;
+
+
 procedure blitSCR(swidth: byte; dwidth: word; w : word; h: byte); register;
 begin
 
@@ -2389,16 +2421,39 @@ begin
 
 
     blitTEMP(pattern.width, pattern.width);
+    
+    blt.blt_and_mask := $7f;
+    
     blitTEMP(pattern.ofs, $0300, pattern.width, pattern.height);
 
+    blt.blt_and_mask := $ff;
 
-    for y:=SCRTOP-2 to SCRBOT-2 do
+
+    blitTEMP(320, 320);
+
+
+    for y:=SCRTOP-2 to 15 do
         begin
 
         yb:=mody[y]*patt.width;
 
-	blitTEMP(320, SCRMAX);
 	blitTEMP(playscreen_ofs + row[y], $0200, SCRMAX, 1);
+
+        for x:=SCRMIN-1 to SCRMAX-1 do scr[x] := pat[ modx[x] + yb ];
+
+	blitTEMP($200, playscreen_ofs + row[y], SCRMAX, 1);
+
+        end;
+
+
+
+    for y:=16 to SCRBOT-2 do
+        begin
+
+        yb:=mody[y]*patt.width;
+
+	blitTEMP(playscreen_ofs + row[y], $0200, SCRMAX, 1);
+	
 
         for x:=SCRMIN-1 to SCRMAX-1 do
             begin
@@ -2406,27 +2461,28 @@ begin
 	    
 	    cl := pat[ modx[x] + yb ];
 
-            shadow:=128;              { Shadow = 128 -> shadow not present }
+            //shadow:=128;              { Shadow = 128 -> shadow not present }
 
             { It makes the shadow on the left and upper side of the screen }
             { It is the shadow cast by the metal edge on the background of }
             { play. }
-            if (y<16) or (x<18) then shadow:=0; { Shadow=0 -> shadow present }
+            if (y<16) or (x<18) then //shadow:=0; { Shadow=0 -> shadow present }
+	     scr[x] := cl
+	    else
+	     scr[x] := cl or $80;
 
             { Draw the pixel on the screen with any shadow }
             //playscreen.map[x+row[y]]:=(cl and 127) or shadow;
 
-	    scr[x] := (cl and $7f) or shadow;
+	    //scr[x] := (cl {and $7f}) or shadow;
 	    
             end;
 
-	blitTEMP(SCRMAX, 320);
 	blitTEMP($200, playscreen_ofs + row[y], SCRMAX, 1);
 
         end;
 
-   blitTEMP(320,320);
-   
+
    blt.blt_and_mask:=$7f;
    blt.blt_xor_mask:=$80;   
    
@@ -2528,14 +2584,15 @@ var x,y : smallint;
 
 { It shows in sequence the frames of the vaus being destroyed. }
 procedure destroy_vaus;
-var z,a,b  : word;
-    w,x,y  : byte;
+var a,b,w,x,y  : byte;
+    
+    z, vm: word;
 
 begin
     playvaus:=normal;
     modify_vaus;
 
-    move_vaus(vaus.x,vaus.y);
+    move_vaus(vaus.x, vaus.y);
 
     a:=vaus.x-4;     { Si calcola uno spostamento dovuto al brush  }
     b:=vaus.y-5;     { dell'animazione che e' leggermente spostato }
@@ -2547,18 +2604,21 @@ begin
 
     blitTEMP(explosion_width, explosion_width);
 
+    vm:=0;
 
     for w:=0 to 6 do  { w = frame to display, cycles through all frames from 0 to 6 }
         begin
+	
+	z:=vm;
 
         for y:=0 to 15 do
             begin
 
-	    z:=y*explosion_width+w*(explosion_width shl 4);
+	    //z:=y*explosion_width+w*(explosion_width shl 4);
 
 	    blitTEMP(explosion_ofs + z, $280, explosion_width, 1);
 
-	    hlp := a+row[y+b];
+	    hlp := a + row[y+b];
 
 	    blitTEMP(playscreen_ofs + hlp, $200, explosion_width, 1);
 
@@ -2577,10 +2637,15 @@ begin
 		   
 		   scr[x] := pom[x];
                 end;
-		
+
 	    blitTEMP($200, vram + hlp, explosion_width, 1);
+
+	    inc(z, explosion_width);
             end;
 
+	inc(vm, explosion_width shl 4);
+
+	pause;
 	pause;
         death_sound(w);   { Il cicalino di quando il vaus viene distrutto }
                           { per ogni valore di w c'e' una nota diversa    }
@@ -2606,6 +2671,7 @@ var x,y,w  : byte;
 
 begin
     nosound;
+
     a:=((SCRMAX-SCRMIN) div 2)-12;
     b:=vaus_line-5;
 
@@ -2655,8 +2721,9 @@ begin
 	    inc(z, newvaus.width);
             end;
 
-	inc(j, mw);
         pause;
+
+	inc(j, mw);
         end;
 	
     asm
@@ -2904,9 +2971,9 @@ begin
 
     hlp := row[YLIVES] + XLIVES;
 	
-    blitTEMP(320, 320);
-    blitTEMP(pattern_temp + hlp, playscreen_ofs + hlp, 8*minivaus_width, minivaus_height);    
-    blitTEMP(pattern_temp + hlp, vram + hlp, 8*minivaus_width, minivaus_height);  
+    //blitTEMP(pattern_temp + hlp, playscreen_ofs + hlp, 8*minivaus_width, minivaus_height);    
+    //blitTEMP(pattern_temp + hlp, vram + hlp, 8*minivaus_width, minivaus_height);  
+    blitCLR(8*minivaus_width, minivaus_height);
 
 
     if lives > 0 then begin
