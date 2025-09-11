@@ -37,6 +37,7 @@
 
  2025-09-11
  - 'write_score' optimization
+ - 'create_vaus' optimization
 
 *)
 
@@ -219,7 +220,7 @@ const
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 570; { Ball speed (256 = 70 pixels per second }
+   BALLSPEED  = 550; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }

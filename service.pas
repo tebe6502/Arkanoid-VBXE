@@ -322,8 +322,8 @@ begin
   for y:=0 to 255 do begin
 
     Mod10Table[y] := y mod 10;
-    Mod90Table[y] := (y*256) mod 90;
-    Mod360Table[y] := (y*256) mod 360;
+    Mod90Table[y] := word(y*256) mod 90;
+    Mod360Table[y] := word(y*256) mod 360;
 
     if y>= 200 then
      row[y] := 320*200
@@ -2602,7 +2602,7 @@ end;
 { of the vaus being built.                                      }
 procedure create_vaus;
 var x,y,w  : byte;
-    z,a,b  : word;
+    z,a,b, j,mw  : word;
 
 begin
     nosound;
@@ -2615,15 +2615,20 @@ begin
 
     blitTEMP(newvaus.width, newvaus.width);
 
+    mw:=(byte(newvaus.width)*16);
+
+    j:=0;
 
     for w:=11 downto 0 do
         begin
-        for y:=15 downto 0 do
+	
+	z:=j;
+        for y:=0 to 15 do
             begin
 	               
-	    z:=y*newvaus.width+w*(newvaus.width*16);
+	    //z:=y*newvaus.width+w*(newvaus.width*16);
 
-	    hlp := a+row[y+b];
+	    hlp := a + row[y+b];
 
 	    blitTEMP(newvaus.ofs + z, $280, newvaus.width, 1);		// pom
 
@@ -2646,8 +2651,11 @@ begin
                 end;
 
 	    blitTEMP($200, vram + hlp, newvaus.width, 1);
+
+	    inc(z, newvaus.width);
             end;
 
+	inc(j, mw);
         pause;
         end;
 	
@@ -4016,7 +4024,7 @@ var nwall : boolean;
 
                 { and is taken in new wall from the general matrix }
                 wall_p[cur_player]:=
-                      all_walls[score.wall_n[cur_player]-1];
+                      all_walls[byte(score.wall_n[cur_player]-1)];
                 end
              else
                  { if the wall has not been completed you look to see if the number }
