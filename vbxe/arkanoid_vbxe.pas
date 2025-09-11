@@ -35,6 +35,9 @@
  - 'remove_block', 'plot_lives' fully accelerated by blitter
  - 'place_block' accelerated by blitter
 
+ 2025-09-11
+ - 'write_score' optimization
+
 *)
 
 
@@ -49,8 +52,6 @@ uses crt, atari, vbxe, joystick;
 
 
 type
-
-   TText = string[31];
 
    BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
               width   : word;          { larghezza disegno       }

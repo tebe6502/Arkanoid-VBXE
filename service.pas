@@ -203,7 +203,7 @@ begin
 end;
 
 
-procedure outtextxy(x,y: smallint; s: TText);
+procedure outtextxy(x,y: smallint; s: TString);
 begin
 
 
@@ -1313,7 +1313,7 @@ begin
     blitTEMP(320, 320);
     
     if xs+17 > SCRMAX then 
-     i:=xs+17 - SCRMAX
+     i:=8//xs+17 - SCRMAX
     else
      i:=17;
     
@@ -1482,7 +1482,7 @@ begin
     blt.blt_xor_mask:=$00;
 
     if xs+8+17 > SCRMAX then 
-     i:=xs+8+17 - SCRMAX
+     i:=8//xs+8+17 - SCRMAX
     else
      i:=17;
     
@@ -2740,19 +2740,21 @@ end;
 
 
 { Print the 5 digits of the score at coordinates px,py }
-procedure write_score(py : byte; sc : cardinal);
+procedure write_score(py : byte; sc_ : cardinal);
 const
    mul_6 : array [0..10] of byte = ( {$eval 11,":1*6"} );
 
 var n1 : byte;
-    f  : boolean;
+//    f  : boolean;
+
+    sc: cardinal register;					// register TMP
 
 
 procedure put_digit(num: byte);        { Stampa la cifra digitale num }
                                        { alle coord. px,py.           }
 begin
 
- blitTEMP(VBXE_DIGIT + mul_6[num], vram + hlp, 6, 11 );
+ blitTEMP(VBXE_DIGIT + mul_6[num], vram + hlp, 6, 11 );		// register EDX, ECX, EAX
 
  inc(hlp, 7);
 
@@ -2761,7 +2763,7 @@ end;
 
 
 begin
-   f:=false; { As long as this remains false, the 0s are not printed. }
+//   f:=false; { As long as this remains false, the 0s are not printed. }
              { This is to ensure that the score starts at 0 and not   }
              { 000000, which looks bad.                               }
 
@@ -2774,15 +2776,18 @@ begin
    hlp := row[py] + 253;
 
    { first digital digit }
-   
+
+
+   sc:=sc_;
+
    n1:=0;
    while sc >= 100000 do begin
     dec(sc, 100000);
     inc(n1);
    end;
-   n1:=mod10table[n1];
-   if n1>0 then f:=true;          { Se la prima cifra e' >0 allora }
-   if f then put_digit(n1)        { occorre stamparla }
+//   n1:=mod10table[n1];
+//   if n1>0 then f:=true;        { Se la prima cifra e' >0 allora }
+   if mod10table[n1]<>0 then put_digit(n1)    { occorre stamparla }
    else put_digit(10);            { altrimenti stampa un numero spento }
 
    { second digital digit }
@@ -2791,41 +2796,41 @@ begin
     dec(sc, 10000);
     inc(n1);
    end;
-   n1:=mod10table[n1];            { Ditto for the remaining blocks }
-   if n1>0 then f:=true;
-   if f then put_digit(n1)
+//   n1:=mod10table[n1];            { Ditto for the remaining blocks }
+//   if n1>0 then f:=true;
+   if mod10table[n1]<>0 then put_digit(n1)
    else put_digit(10);
 
    { third digital digit }
    n1:=0;
-   while sc >= 1000 do begin
+   while word(sc) >= 1000 do begin
     dec(sc, 1000);
     inc(n1);
    end;
-   n1:=mod10table[n1];
-   if n1>0 then f:=true;
-   if f then put_digit(n1)
+//   n1:=mod10table[n1];
+//   if n1>0 then f:=true;
+   if mod10table[n1]<>0 then put_digit(n1)
    else put_digit(10);
 
    { fourth digital digit }
    n1:=0;
-   while sc >= 100 do begin
+   while word(sc) >= 100 do begin
     dec(sc, 100);
     inc(n1);
    end;
-   n1:=mod10table[n1];
-   if n1>0 then f:=true;
-   if f then put_digit(n1)
+//   n1:=mod10table[n1];
+//   if n1>0 then f:=true;
+   if mod10table[n1]<>0 then put_digit(n1)
    else put_digit(10);
 
    { fifth digital digit }
    n1:=0;
-   while sc >= 10 do begin
+   while byte(sc) >= 10 do begin
     dec(sc, 10);
     inc(n1);
    end;
-   n1:=mod10table[n1];
-   put_digit(n1);
+//   n1:=mod10table[n1];
+   put_digit(mod10table[n1]);
 
    { sixth and last digital digit (which of course is always 0 because }
    { the score travels in multiples of 10 points.                      }
