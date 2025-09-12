@@ -2481,7 +2481,7 @@ begin
             { It makes the shadow on the left and upper side of the screen }
             { It is the shadow cast by the metal edge on the background of }
             { play. }
-            if (y<16) or (x<18) then //shadow:=0; { Shadow=0 -> shadow present }
+            if (x<18) or (y<16) then //shadow:=0; { Shadow=0 -> shadow present }
 	     scr[x] := scr[x] and $7f;
 	    //else
 	     //scr[x] := cl or $80;
