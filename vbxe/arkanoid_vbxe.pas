@@ -48,6 +48,8 @@ uses crt, atari, vbxe, joystick;
 
 {$r arkanoid.rc}
 
+//{$f $90}
+
 
 { ------------------------------------------------------------------------- }
 
@@ -337,7 +339,7 @@ var
 
     [striped] scale360 : array [0..255] of WORD absolute $c000+$800;
  
-    sintable: array [0..450-1] of smallint absolute $c000+$a00;
+    [striped] sintable: array [0..90-1] of smallint absolute $c000+$a00;
 
 
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }
@@ -506,6 +508,26 @@ done
     lda #0
     sbc Result+1
     sta Result+1
+end;
+
+
+function SinDeg(a: smallint): SmallInt;
+begin
+
+  a := mod360(a);
+
+  if a < 0 then
+    a := a + 360;
+
+  if a <= 90 then
+    Result := sintable[a]
+  else if a <= 180 then
+    Result := sintable[180 - a]
+  else if a <= 270 then
+    Result := -sintable[a - 180]
+  else
+    Result := -sintable[360 - a];
+
 end;
 
 

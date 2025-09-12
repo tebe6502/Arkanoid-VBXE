@@ -488,8 +488,9 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 procedure shine_block;    { esegue lo scintillio di un blocco }
 var
     xb,yb: byte;          { i parametri del blocco sono contenuti nella }
-    frame : word;         { variabile globale SHINEREC }
-    xf,yf,
+    frame : byte;         { variabile globale SHINEREC }
+    xf,yf: byte;
+
     fr : word;
     
     y, i: byte;
@@ -795,11 +796,12 @@ begin
   if x > MAXSPEED then x := MAXSPEED;
   if y > MAXSPEED then y := MAXSPEED;
   
-  if sx < 0 then x:=-x;
-  if sy < 0 then y:=-y;
+  if sx < 0 then x := -x;
+  if sy < 0 then y := -y;
   
   ball.speedx := x;
   ball.speedy := y;
+
 end;
 
 
@@ -844,8 +846,8 @@ procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
 //var w : single;
 begin                  { sets the trajectory angle of the ball }
 
-  ball.speedx := sintable[angle+90];  { the velocity is assumed to be unitary }
-  ball.speedy := -sintable[angle];    { v=256 equals 70 pixels per sec. }
+  ball.speedx := SinDeg(angle+90);  { the velocity is assumed to be unitary }
+  ball.speedy := -SinDeg(angle);    { v=256 equals 70 pixels per sec. }
 
 (*
   w:=angle*pi/180.0;     { w viene espresso in gradi }
@@ -857,7 +859,7 @@ end;
 
 
 function get_ball_direction(var ball : BALLTYPE): smallint;
-var w : smallint; { Returns the direction in which the ball is moving }
+//var w : smallint; { Returns the direction in which the ball is moving }
 begin
 
 
@@ -888,10 +890,8 @@ begin
     end;
 *)
 
-  w := scale360[ Atan2(-ball.speedy, ball.speedx) ];
+  get_ball_direction := scale360[ Atan2(-ball.speedy, ball.speedx) ];
 
-
-  get_ball_direction := w;
 end;
 
 
@@ -928,15 +928,13 @@ var i: cardinal;
 begin
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
-
+      
   a:=abs(ball.speedx) and 1023;
   b:=abs(ball.speedy) and 1023;
 
   i:=sqrtable[a] + sqrtable[b];
   
-  f_hlp := FastSqrt(i);
-
-  ball_speed:=trunc(f_hlp);
+  ball_speed := trunc( FastSqrt(i) );
     
 end;
 
@@ -1172,8 +1170,19 @@ begin
   
   y := vaus.height - 4;
     
-  blitTEMP(320, 1);
-  blitTEMP(video, $200, 1, y);
+  blitTEMP(320, 320);
+  
+  blt.blt_and_mask := $00;
+  blt.blt_xor_mask := FLASH[vaus.flash];
+    
+  blitTEMP(video, video, 1, y);
+  
+  i:=vaus.width - 1;
+  
+  blitTEMP(video+i, video+i, 1, y);
+
+  blt.blt_and_mask := $ff;
+  blt.blt_xor_mask := $00;
 
 (* 
   for y:=0 to vaus.height-1 do
@@ -1199,14 +1208,6 @@ begin
      end;
 *)
 
-  for i:=y downto 0 do scr[i] := FLASH[vaus.flash];
-   
-  blitTEMP(1, 320);
-  blitTEMP($200, video, 1, y);
-  
-  i:=vaus.width-1;
-  blitTEMP($200, video + i, 1, y);
-   
   asm
    fxs FX_MEMS #$00
   end;
@@ -1687,14 +1688,14 @@ begin
 
             if (wall[byte(x+y*16)]<>0) and (wall[byte(x+y*16)]<>10) then inc(remain_blk);
 
-    wl:=(wl-1) mod PATNUMBER;
+    wl:=byte(wl-1) mod PATNUMBER;
 
     case wl of
      0: pattern := pattern0;
      1: pattern := pattern1;
      2: pattern := pattern2;
      3: pattern := pattern3;
-     4: pattern := pattern4;
+//     4: pattern := pattern4;
     end;
 
 end;
