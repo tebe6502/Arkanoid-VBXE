@@ -14,7 +14,7 @@ procedure closeprogram;
 { ------------------------------------------------------------------------- }
 
 
-procedure mousecoords(var x: smallint);
+procedure mousecoords(var x: byte);
 var a: byte;
 begin
 
@@ -22,7 +22,7 @@ begin
  
  case a of
   joy_left: if x > SCRMIN then dec(x, 4);
-  joy_right: if x < SCRMAX then inc(x, 4);
+  joy_right: if x < byte(SCRMAX - vaus.width) then inc(x, 4);
  end;
 
 end;
@@ -3351,7 +3351,7 @@ var temp : smallint;
 
 function Bounceball : boolean;
 var
-  x,y  : smallint;
+  x  : byte;//smallint;
   key  : smallint;
 //  ball : array[0..2] of BALLTYPE;
   t1,t2: smallint;
