@@ -970,7 +970,7 @@ var
      ball_block_sound(240,5);    { emette il suono dell'urto sulla la parete }
      end;
 
-  { idem per la parete di sinistra }
+  { the same for the left wall }
 
   if(byte(ball.x) < SCRMIN) then
      begin
@@ -980,7 +980,7 @@ var
      ball_block_sound(240,5);
      end;
 
-  { ... e per quella superiore }
+  { ... and for the upper one }
 
   if(byte(ball.y) < SCRTOP) then
      begin
@@ -1962,7 +1962,7 @@ var
     myx,myy  : smallint;
 
     f1,f2    : cardinal;
-    a,b      : word;
+    a,b      : byte;
 
     emergency,
     mimax,
@@ -2004,15 +2004,15 @@ begin
           mx:=ball.oldx-nx-9;  { intersection point 2 is calculated }
           my:=ball.oldy-ny-22;
 
-	  a:=abs(lx) and 1023; b:=abs(ly) and 1023;
+	  a:=abs(lx); b:=abs(ly);
 
           f1:=sqrtable[a] + sqrtable[b];         { indi chooses between the two the  }
 
-	  a:=abs(mx) and 1023; b:=abs(my) and 1023;
+	  a:=abs(mx); b:=abs(my);
 
           f2:=sqrtable[a] + sqrtable[b];         { intersection point closest to the old coord. }
 
-          if (f1 < f2) then    { f1 and f2 are the square of the modulus }
+          if ((f1 and $00FFFFFF) < (f2 and $00FFFFFF)) then    { f1 and f2 are the square of the modulus }
                                { of distance vector (see above)          }
 
              { Consider the case where the closest intersection is number 1. }
@@ -2604,6 +2604,8 @@ begin
     b:=vaus.y-5;     { dell'animazione che e' leggermente spostato }
                      { dall'origine degli assi.                    }
 
+    death_sound;
+
     asm
 	fxs FX_MEMS #$80
     end;
@@ -2653,7 +2655,7 @@ begin
 
 	pause;
 	pause;
-        death_sound(w);   { Il cicalino di quando il vaus viene distrutto }
+        //death_sound(w);   { Il cicalino di quando il vaus viene distrutto }
                           { per ogni valore di w c'e' una nota diversa    }
         end;
 
@@ -2661,8 +2663,6 @@ begin
 	fxs FX_MEMS #$00
     end;
 
-
-    death_sound(7);
     mydelay(150);         { attende qualche istante. }
     disable_letter;       { se nel frattempo stava scendendo una lettera, }
                           { la toglie.                                    }

@@ -359,13 +359,14 @@ begin
 
 end;
 
-procedure death_sound(a: word);
+
+procedure death_sound;
 begin
 
 end;
 
 
-procedure ball_block_sound(a,b: word);
+procedure ball_block_sound(a,b: byte);
 begin
 
 end;
@@ -571,7 +572,7 @@ function Atan2(y, x: smallint): byte;
 ; 	B = x, C = y	in -128,127
 ;
 ;	output
-;	A = angle		in 0-255
+;	A = angle	in 0-255
 
 ;      |
 ;  q1  |  q0
