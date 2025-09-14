@@ -18,7 +18,7 @@ procedure mousecoords(var x: byte);
 var a: byte;
 begin
 
- a:=porta and $0f;
+ a := porta and $0f;
  
  case a of
   joy_left: if x > SCRMIN then dec(x, 4);
@@ -31,7 +31,7 @@ end;
 function mouseclick: byte;
 begin
     
-    result:=trig0 xor 1;
+    result := trig0 xor 1;
     
 end;
 
@@ -92,6 +92,33 @@ begin
  blt.blt_height:=h-1;
 
  blt.blt_width:=w-1;
+
+ RunBCB(blt);
+ while BlitterBusy do;
+
+end;
+
+
+procedure blitTEMP2TEMP(w, h: byte); register;
+begin
+  
+ blt.src_adr.byte2:=playscreen_ofs shr 16;
+ blt.dst_adr.byte2:=playscreen_ofs shr 16;
+
+ blt.src_adr.byte1:=hlp shr 8;
+ blt.dst_adr.byte1:=hlp shr 8;
+ blt.src_adr.byte0:=hlp;
+ blt.dst_adr.byte0:=hlp;
+
+ blt.blt_height:=h-1;
+
+ blt.blt_width:=w-1;
+
+ RunBCB(blt);
+ while BlitterBusy do;
+
+ blt.src_adr.byte2:=vram shr 16;
+ blt.dst_adr.byte2:=vram shr 16;
 
  RunBCB(blt);
  while BlitterBusy do;
@@ -347,8 +374,16 @@ procedure initRowArray;  { inizializza l'array ROW; row[n]:=320*n }
 var y : byte;
 begin
 
-  for y:=0 to 15 do
-   mul90_16[y] := y*90;
+  hlp:=0;
+
+  for y:=0 to 15 do begin
+
+   mul90_16[y] := hlp;
+   
+   inc(hlp, 90);
+  
+  end; 
+
 
   hlp:=0;
 
@@ -358,12 +393,13 @@ begin
     Mod90Table[y] := word(y*256) mod 90;
     Mod360Table[y] := word(y*256) mod 360;
 
-    if y>= 200 then
+    if y >= 200 then
      row[y] := 320*200
-    else
+    else begin
      row[y]:=hlp;
 
-    inc(hlp, 320);
+     inc(hlp, 320);
+    end;
 
   end;
 
@@ -478,6 +514,10 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
   
   lda #$fe
   sta portb
+  
+  mwa #NMI $fffa
+ 
+  mva #$40 nmien
  end;
 
 
@@ -485,7 +525,7 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
 
 { ------------------------------------------------------------------------ }
 
-procedure shine_block;    { esegue lo scintillio di un blocco }
+procedure shine_block;    { performs block scintillation }
 var
     xb,yb: byte;          { i parametri del blocco sono contenuti nella }
     frame : byte;         { variabile globale SHINEREC }
@@ -506,7 +546,7 @@ begin
     end;
 
 
-    if wall[i]>8 then                  { se il blocco e grigio o marrone }
+    if wall[i]>8 then                  { if the block is gray or brown }
        begin
        frame:=(shinerec.frame shr 1);  { calcola il n. del frame }
        if wall[i]<>10 then inc(frame,5);
@@ -544,9 +584,9 @@ begin
 end;
 
 
-procedure unshine_block; { interrompe lo scintillio di un blocco se la }
-                         { palla urtandone un altro causa lo scintillio }
-                         { di un altro blocco }
+procedure unshine_block; { interrupts the sparkle of a block if the }
+                         { ball hitting another causes the sparkle  }
+                         { of another block }
 begin
     shinerec.frame:=9;   { cioe' setta il frame come ultimo }
     shine_block;         { ed esegue lo scintillio del blocco con l'ultimo }
@@ -554,8 +594,8 @@ begin
 end;
 
 
-procedure shine(xb,yb : byte);   { questa procedura imposta lo }
-                                 { scintillio di un blocco }
+procedure shine(xb,yb : byte);   { this procedure sets the }
+                                 { sparkle of a block }
 begin
     if shinerec.active then unshine_block;
 
@@ -567,8 +607,8 @@ begin
 end;
 
 
-procedure checkshine; { se lo scintillio e' attivato allora lo esegue }
-                      { passando al frame successivo }
+procedure checkshine; { if sparkle is enabled, then execute it }
+                      { moving on to the next frame }
 begin
     if shinerec.active=TRUE then shine_block;
 end;
@@ -579,20 +619,20 @@ var rn,sum,letter : word;
 begin
 
    repeat
-      rn:=rand(100);    { Tira a caso un numero fra 0 e 99 }
-      sum:=0;           { pone la somma a zero             }
-      letter:=0;        { e la lettera corrente a 0        }
+      rn:=rand(100);    { Randomly pick a number between 0 and 99 }
+      sum:=0;           { set the sum to zero                     }
+      letter:=0;        { and the current letter to 0             }
 
       repeat
 
 
-         inc(letter);                   { Incrementa la lettera corrente }
-         inc(sum,LETTER_DIS[letter]);   { Incrementa somma della percentuale di }
-                                        { probabilita' della lettera corrente }
+         inc(letter);                   { Increase the current letter           }
+         inc(sum,LETTER_DIS[letter]);   { Increase the sum of the percentage of }
+                                        { probability of the current letter     }
 
-      until sum>rn; { Se la somma oltrepassa il numero casuale scelto }
-                    { il programma fa cadere la lettera corrente      }
-                    { altrimenti passa alla lettera dopo.             }
+      until sum > rn; { If the sum exceeds the chosen random number }
+                      { the program drops the current letter        }
+                      { otherwise it moves on to the next letter.   }
 
    until smallint(letter-1) <> lett.last;
 
@@ -684,7 +724,10 @@ procedure check_letter;
         if (vaus.x < (lett.x+16)) and ((vaus.x+vaus.width)>lett.x) and
            (vaus.y < (lett.y+8))  and ((vaus.y+vaus.height)>lett.y) then
            begin
-           ball_block_sound(100,10);
+
+//	   ball_block_sound(100,10);
+//	   sfx.init(sfx_check_letter);
+
            vaus.letter:=lett.typ+1;
            inc(score.player[cur_player],SCORE_WALL[10]);
            disable_letter;
@@ -967,7 +1010,7 @@ var
      ball.speedx:=-ball.speedx;  { inverte il vettore x della velocita' }
      ball.x:=2*SCRMAX-ball.x;    { riflette sull'asse x=SCRMAX la palla }
      ball.finex:=255-ball.finex; { aggiusta i sottomultipli della velocita' }
-     ball_block_sound(240,5);    { emette il suono dell'urto sulla la parete }
+//     ball_block_sound(240,5);    { emette il suono dell'urto sulla la parete }
      end;
 
   { the same for the left wall }
@@ -977,7 +1020,7 @@ var
      ball.speedx:=-ball.speedx;
      ball.x:=2*SCRMIN-ball.x;
      ball.finex:=255-ball.finex;
-     ball_block_sound(240,5);
+//     ball_block_sound(240,5);
      end;
 
   { ... and for the upper one }
@@ -987,13 +1030,13 @@ var
      ball.speedy:=-ball.speedy;
      ball.y:=2*SCRTOP-ball.y;
      ball.finey:=255-ball.finey;
-     ball_block_sound(240,5);
+//     ball_block_sound(240,5);
      end;
 
 
-  { if the ball is on the y-axis of the vaus, if the velocity vy is
-    greater than 0 (i.e., the ball is moving downward), and if the
-    ball was previously above the vaus, then ...}
+  { if the ball is on the y-axis of the vaus, if the velocity vy is }
+  { greater than 0 (i.e., the ball is moving downward), and if the  }
+  { ball was previously above the vaus, then ... }
 
   b0 := byte(ball.y + BALLSPOT) > VAUS_LINE;
   b1 := ball.speedy > 0;
@@ -1018,8 +1061,10 @@ var
            ball.onvaus:=ball.x-vaus.x;
            end;
 
-        ball_block_sound(300,6);
-        { emette il suono d'urto palla-vaus }
+        //ball_block_sound(300,6);
+	sfx.init(sfx_ball_bounce);
+
+        { emits the sound of a ball hitting a bat }
 
         { se la palla urta il cilindretto rosso di sinistra del vaus }
         if (ball.x < byte(vaus.x+10)) then
@@ -1251,8 +1296,8 @@ var
 
 begin
   
-    xs:=(xa shl 4)+9;      { si calcola le coordinate sullo schermo }
-    ys:=(ya shl 3)+22;     { del mattoncino es. 0,0 ---schermo---> 9,22 }
+    xs:=(xa shl 4)+9;      { calculate the coordinates on the screen }
+    ys:=(ya shl 3)+22;     { of the brick, e.g., 0.0 ---screen---> 9.22 }
 
     hlp := row[ys] + xs;
 
@@ -1352,9 +1397,9 @@ begin
      i:=17;
     
 
-    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, i, 9);
-        
-    blitTEMP(vram + hlp, vram + hlp, i, 9);
+//    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, i, 9);
+//    blitTEMP(vram + hlp, vram + hlp, i, 9);
+     blitTEMP2TEMP(i,9);
 
 
 (*
@@ -1443,15 +1488,17 @@ begin
     blt.blt_and_mask := $80;
     blt.blt_xor_mask := $00;
 
-    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 16, 8);
-    blitTEMP(vram + hlp, vram + hlp, 16, 8);
+//    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 16, 8);
+//    blitTEMP(vram + hlp, vram + hlp, 16, 8);
+    blitTEMP2TEMP(16,8);
 
 
     blt.blt_and_mask := $80;
     blt.blt_xor_mask := (COLORBLOCK[byte(block-1) and 15] and $7f);
 
-    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 15, 7);
-    blitTEMP(vram + hlp, vram + hlp, 15, 7);
+//    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, 15, 7);
+//    blitTEMP(vram + hlp, vram + hlp, 15, 7);
+    blitTEMP2TEMP(15,7);   
 
     blt.blt_and_mask := $ff;
     blt.blt_xor_mask := $00;
@@ -1521,10 +1568,9 @@ begin
      i:=17;
     
 
-    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, i, 9);
-        
-    blitTEMP(vram + hlp, vram + hlp, i, 9);
-
+//    blitTEMP(playscreen_ofs + hlp, playscreen_ofs + hlp, i, 9);
+//    blitTEMP(vram + hlp, vram + hlp, i, 9);
+    blitTEMP2TEMP(i,9);
 
     blt.blt_and_mask:=$ff;
     blt.blt_xor_mask:=$00;
@@ -1657,34 +1703,34 @@ begin
 
 (*
 
-a = bianco    { normale cade con un colpo }
-b = arancione             ''
-c = ciano                 ''
-d = verde                 ''
-e = rosso                 ''
-f = blu                   ''
-g = porpora               ''
-h = giallo                ''
-i = grigio    { occorrono piu' colpi per abbatterlo }
-j = marrone   { indistruttibile                     }
+a = white   { normal falls with one hit }
+b = orange                ''
+c = cyan                  ''
+d = green                 ''
+e = red                   ''
+f = blue                  ''
+g = purple                ''
+h = yelow                 ''
+i = gray    { requires multiple hits to knock down }
+j = brown   { indestructible                       }
 
 *)
 
 end;
 
 
-procedure set_wall;             { set the wall }
+procedure set_wall;               { set the wall }
 var x,y,wl  : byte;
 //    name    : string;
 
 begin
-    remain_blk:=0;                { sono i blocchi da distruggere }
-    wl:=score.wall_n[cur_player]; { questo e' il muro a cui e' fermo il }
-                                  { giocatore cur_player }
+    remain_blk:=0;                { these are the blocks to be destroyed }
+    wl:=score.wall_n[cur_player]; { this is the wall where the  }
+                                  { player cur_player }
 
-    for y:=0 to 14 do             { conta i blocchi distruttibili }
-        for x:=0 to 12 do         { cioe' il blocco deve essere <>0 e <>10 }
-                                  { poiche' 0 = nessun blocco, 10 = marrone }
+    for y:=0 to 14 do             { counts the destructible blocks  }
+        for x:=0 to 12 do         { i.e., the block must be <>0 and <>10}
+                                  { since 0 = no block, 10 = brown}
 
             if (wall[byte(x+y*16)]<>0) and (wall[byte(x+y*16)]<>10) then inc(remain_blk);
 
@@ -1719,12 +1765,14 @@ var
     xp,yp : byte;
 
     collision: byte;
+    
+    tx, ty: Boolean;
 
 begin
-    inc(x1,16);          { incrementa le coordinate di tutti i punti }
-    inc(y1,24);          { per evitare che nel corso delle operazioni }
-    inc(x2,16);          { qualche coordinata diventi negativa }
-    inc(y2,24);          { prima di terminare la proc. li rimette a posto }
+    inc(x1,16);          { increases the coordinates of all points  }
+    inc(y1,24);          { to prevent any coordinates from becoming }
+    inc(x2,16);          { negative during operations  }
+    inc(y2,24);          { before ending the process, it resets them  }
 
     collision:=0;        { number of intersections between segment and grid }
 
@@ -1733,10 +1781,10 @@ begin
     xp2:=byte(x2) shr 4;
     yp2:=byte(y2) shr 3;
 
-    xk:=x1;              { copia temporaneamente le coord. dei due punti }
-    yk:=y1;              { in due vettori in modo da poter operare liberamente }
-    xj:=x2;              { le coord. iniziali vengono passate per indirizzo }
-    yj:=y2;              { e quindi non devono perdersi i valori }
+    xk:=x1;              { temporarily copy the coordinates of the two points }
+    yk:=y1;              { into two vectors so that you can operate freely }
+    xj:=x2;              { the initial coordinates are passed by address }
+    yj:=y2;              { and therefore the values must not be lost }
 
     xh:=x1;
     yh:=y1;
@@ -1751,10 +1799,24 @@ begin
 //    if (abs(x1-x2)>16) or (abs(y2-y1)>8) then
 //       fatal_error(err1);
 
+    tx := (xp1 <> xp2);   
+    ty := (yp1 <> yp2);
 
-    if (xp1<>xp2) or (yp1<>yp2) then   { if the two points do not coincide... }
+{
+    if (tx = false) and (ty = false) then begin
+
+//     tx := true;
+//     ty := true;
+     
+     collision := 4;
+     
+    end; 
+}
+
+    if {(xp1<>xp2) or (yp1<>yp2)} tx or ty then   { if the two points do not coincide... }
        begin
-       if (yp1<>yp2) then     { if the two points have different y-values }
+       
+       if {(yp1<>yp2)} ty then     { if the two points have different y-values }
           begin
           collision:=collision or 1; { the lowest bit is set to 1 }
 
@@ -1780,7 +1842,7 @@ begin
 
           end;
 
-       if (xp1<>xp2) then     { if the two points have different x-coordinates ...}
+       if {(xp1<>xp2)} tx then     { if the two points have different x-coordinates ...}
           begin
           collision:=collision or 2;  { in this case, set the second bit }
 
@@ -1831,7 +1893,7 @@ begin
 
        end
 
-    else fatal_error(err2);
+    else begin dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2);    fatal_error(err2); end;
     { otherwise something went wrong! }
 
     dec(x1,16);   { restore the old coordinates }
@@ -1851,25 +1913,26 @@ begin
     split_line:=collision;
 end;
 
+
 { Consider hit the xb,yb block: if it is a normal block it takes it down,  }
 { if it is a gray that withstands multiple hits it decreases its strength. }
 { If the block is not knocked down then it makes it shimmer.               }
 
 procedure shoot_block(xb,yb : byte; var ball : BALLTYPE);
 var i: byte;
-    begin
+begin
     { Controlla che le coordinate del blocco siano numeri validi... }
     if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
        i:=xb+yb*16;
 
-       if wall[i]<>0 then { ... che ci sia un blocco da colpire... }
+       if wall[i]<>0 then { ... that there is a block to hit ... }
           begin
-          if wall[i]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[i]<10 then { if the blockade can be broken ... }
              begin
-             remove_block(xb,yb); { ..lo toglie dallo schermo }
-             dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
+             remove_block(xb,yb); { ..removes it from the screen }
+             dec(remain_blk);     { ..decreases the number of blocks remaining }
 
              { Incrementa lo SCORE del giocatore attuale a seconda }
              { del blocco colpito (i punti sono nell'array in SCORE_WALL) }
@@ -1881,20 +1944,25 @@ var i: byte;
              lett.nexty:=((yb+1) shl 3)+22;
              lett.nexttype:=random_letter_drop;
 
-             wall[i]:=0;              { il blocco viene cancellato        }
-             ball_block_sound(440,3); { emette un LA (nota musicale)      }
-             ball.sbd:=0;             { azzera il contatore di deviazione }
-             ball.brwhit:=0;          { e il cont. di dev. di emergenza   }
+             wall[i]:=0;              { the block is canceled               }
+             //ball_block_sound(440,3); { emits an A (musical note)           }
+	     sfx.init(sfx_ball_brick);
+
+             ball.sbd:=0;             { resets the deviation counter        }
+             ball.brwhit:=0;          { and the emergency deviation counter }
              end
 
-          else    { se il blocco e marrone, o un grigio che non cade subito }
+ 
+          else    { if the block is brown, or a gray that does not fall off immediately }
              begin
-             if (wall[i] and 15)=9 then { ...se e' grigio... }
+             if (wall[i] and 15)=9 then { ...if it's gray... }
                 begin
                 ball.brwhit:=0;         { azzera il cont. di dev. di emergenza }
                 dec(wall[i],16);        { decrementa la resistenza del blocco  }
 
-                ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
+                //ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
+		sfx.init(sfx_hard_brick);
+
                 shine(xb,yb);           { e imposta il luccichio del blocco }
                 end
              else
@@ -1902,17 +1970,20 @@ var i: byte;
                 inc(ball.brwhit); { incrementa il cont. di dev. di emergenza }
                 shine(xb,yb);     { imposta il luccichio }
 
-                ball_block_sound(200,7); { ed emette una nota piuttosto bassa }
+                //ball_block_sound(200,7); { ed emette una nota piuttosto bassa }
+		sfx.init(sfx_solid_brick);
+		
                 end;
              end;
           end;
        end;
-    end;
+end;
 
-{ Simile a quella prima ma per la collisione fire_blocco }
+
+{ Similar to the first one, but for the collision fire_block }
 procedure shoot_block_with_fire(xb,yb : byte);
 var i: byte;
-    begin
+begin
     if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
@@ -1926,26 +1997,33 @@ var i: byte;
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
              inc(score.player[cur_player],SCORE_WALL[wall[i]]);
              wall[i]:=0;              { il blocco viene cancellato        }
-             ball_block_sound(440,3); { emette un LA (nota musicale)      }
+             //ball_block_sound(440,3); { emette un LA (nota musicale)      }
+	     
+	     //sfx.init(sfx_ball_brick);
              end
 
-          else    { se il blocco e marrone, o un grigio che non cade subito }
+          else    { if the block is brown, or a gray that does not fall off immediately }
              begin
-             if (wall[i] and 15)=9 then { ...se e' grigio... }
+             if (wall[i] and 15)=9 then { ...if it's gray... }
                 begin
                 dec(wall[i],16); { decrementa la resistenza del blocco  }
-                ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
+                //ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
+		
+		sfx.init(sfx_hard_brick);
+	
                 shine(xb,yb);           { e imposta il luccichio del blocco }
                 end
              else
                 begin
-                shine(xb,yb);     { imposta il luccichio }
-                ball_block_sound(200,7); { ed emette una nota piuttosto bassa }
+                shine(xb,yb);     { set the sparkle }
+                //ball_block_sound(200,7); { and emits a rather low note }
+		
+		sfx.init(sfx_solid_brick);
                 end;
              end;
           end;
        end;
-    end;
+end;
 
 
 procedure ball_hit_block(var ball : BALLTYPE);
@@ -2063,7 +2141,7 @@ begin
        ball.y:=ny + 22;   { in the variables nx,ny, retranslating the axes. }
                           { nx,ny had their axes centered in (9,22).        }
 
-       shoot_block(xb,yb,ball);  { breaks down the block in question }
+	//shoot_block(xb,yb,ball);  { breaks down the block in question }
 
        x:=(nx and 15) shr 1;     { you calculate the impact point of   }
        y:=(ny and 7);            { the ball with respect to the brick. }
@@ -2119,6 +2197,10 @@ begin
           ball.speedx:=-ball.speedx;   { Reverses the x of the vel. }
           emergency:=4;
           end;
+
+
+	if emergency < 5 then shoot_block(xb,yb,ball);  { breaks down the block in question }
+
 
        { ... if it occurs on one of the four edges instead ... }
        if (x=y) or (x=byte(7-y)) then
@@ -2206,7 +2288,7 @@ begin
 	cmp adr.ADJW+$01
 	ror around
 	end;
-
+	
 
           { Deflect contains a value that represents in hexadecimal       }
           { the changes to be made to vx (first hexadecimal digit)        }
@@ -2236,13 +2318,21 @@ begin
 
           if touch=0 then       { upper left corner }
              begin
-             if (around and 131)=0   then deflect:=$11;
-             if (around and 131)=1   then deflect:=$33;
-             if (around and 131)=2   then deflect:=$10;
-             if (around and 131)=3   then deflect:=$12;
-             if (around and 131)=128 then deflect:=$01;
-             if (around and 131)=129 then deflect:=$21;
-             if (around and 131)=130 then deflect:=$11;
+	     a := around and 131;
+	     
+             if a = 0   then deflect:=$11;
+             if a = 1   then deflect:=$33;
+             if a = 2   then deflect:=$10;
+             if a = 3   then deflect:=$12;
+             if a = 128 then deflect:=$01;
+             if a = 129 then deflect:=$21;
+             if a = 130 then deflect:=$11;
+
+	     if a = 130 then begin
+	       shoot_block(xb,yb-1,ball);
+	       shoot_block(xb-1,yb,ball);
+	     end else	     
+	       shoot_block(xb,yb,ball);
 
              emergency:=5;
              shoot_block(xb-1,yb-1,ball);
@@ -2252,13 +2342,21 @@ begin
 
           if touch=1 then       { upper right corner }
              begin
-             if (around and 14)=0    then deflect:=$21;
-             if (around and 14)=2    then deflect:=$20;
-             if (around and 14)=4    then deflect:=$33;
-             if (around and 14)=6    then deflect:=$22;
-             if (around and 14)=8    then deflect:=$01;
-             if (around and 14)=10   then deflect:=$21;
-             if (around and 14)=12   then deflect:=$11;
+	     a := around and 14;
+
+             if a = 0   then deflect:=$21;
+             if a = 2   then deflect:=$20;
+             if a = 4   then deflect:=$33;
+             if a = 6   then deflect:=$22;
+             if a = 8   then deflect:=$01;
+             if a = 10  then deflect:=$21;
+             if a = 12  then deflect:=$11;
+	     
+	     if a = 10 then begin
+	       shoot_block(xb,yb-1,ball);
+	       shoot_block(xb+1,yb,ball);
+	     end else
+	       shoot_block(xb,yb,ball);
 
              emergency:=8;
              shoot_block(xb+1,yb-1,ball);
@@ -2266,13 +2364,21 @@ begin
 
           if touch=2 then       { Bottom left corner }
              begin
-             if (around and 224)=0    then deflect:=$12;
-             if (around and 224)=32   then deflect:=$10;
-             if (around and 224)=64   then deflect:=$33;
-             if (around and 224)=96   then deflect:=$11;
-             if (around and 224)=128  then deflect:=$02;
-             if (around and 224)=160  then deflect:=$12;
-             if (around and 224)=192  then deflect:=$22;
+	     a := around and 224;
+	     
+             if a = 0   then deflect:=$12;
+             if a = 32  then deflect:=$10;
+             if a = 64  then deflect:=$33;
+             if a = 96  then deflect:=$11;
+             if a = 128 then deflect:=$02;
+             if a = 160 then deflect:=$12;
+             if a = 192 then deflect:=$22;
+     
+	     if a = 160 then begin
+ 	       shoot_block(xb-1,yb,ball); 
+	       shoot_block(xb,yb+1,ball); 
+	     end else
+	       shoot_block(xb,yb,ball);
 
              emergency:=6;
              shoot_block(xb-1,yb+1,ball);
@@ -2280,13 +2386,21 @@ begin
 
           if touch=3 then       { Bottom right corner }
              begin
-             if (around and 56)=0    then deflect:=$22;
-             if (around and 56)=8    then deflect:=$02;
-             if (around and 56)=16   then deflect:=$33;
-             if (around and 56)=24   then deflect:=$12;
-             if (around and 56)=32   then deflect:=$20;
-             if (around and 56)=40   then deflect:=$22;
-             if (around and 56)=48   then deflect:=$21;
+	     a := around and 56;
+
+             if a = 0   then deflect:=$22;
+             if a = 8   then deflect:=$02;
+             if a = 16  then deflect:=$33;
+             if a = 24  then deflect:=$12;
+             if a = 32  then deflect:=$20;
+             if a = 40  then deflect:=$22;
+             if a = 48  then deflect:=$21;
+
+	     if a = 40 then begin
+	       shoot_block(xb+1,yb,ball);
+	       shoot_block(xb,yb+1,ball);
+	     end else
+	       shoot_block(xb,yb,ball);
 
              emergency:=7;
              shoot_block(xb+1,yb+1,ball);
@@ -2350,26 +2464,39 @@ begin
 	{ Similar reasoning for "... and $f0 or $03" acting }
 	{ on the second digit instead of the first...       }
 
+
+{	  
+          around:=(adjw[0,0] and $01) or 
+	          (adjw[1,0] and $02) or
+                  (adjw[2,0] and $04) or 
+		  (adjw[2,1] and $08) or
+                  (adjw[2,2] and $10) or 
+		  (adjw[1,2] and $20) or
+                  (adjw[0,2] and $40) or 
+		  (adjw[0,1] and $80);
+}
+
+
        case emergency of
 
          5: begin
-            if adjw[1,0]=0 then mimax:=(mimax and $0f) or $00;
-            if adjw[0,1]=0 then mimax:=(mimax and $f0) or $03;
+            if {adjw[1,0]=0} around and $02 = 0 then mimax:=(mimax and $0f) or $00;
+            if {adjw[0,1]=0} around and $80 = 0 then mimax:=(mimax and $f0) or $03;
             end;
 
          6: begin
-            if adjw[0,1]=0 then mimax:=(mimax and $0f) or $10;
-            if adjw[1,2]=0 then mimax:=(mimax and $f0) or $04;
+            if {adjw[0,1]=0} around and $80 = 0 then mimax:=(mimax and $0f) or $10;
+            if {adjw[1,2]=0} around and $20 = 0 then mimax:=(mimax and $f0) or $04;
             end;
 
          7: begin
-            if adjw[1,2]=0 then mimax:=(mimax and $0f) or $20;
-            if adjw[2,1]=0 then mimax:=(mimax and $f0) or $05;
+            if {adjw[1,2]=0} around and $20 = 0 then mimax:=(mimax and $0f) or $20;
+            if {adjw[2,1]=0} around and $08 = 0 then mimax:=(mimax and $f0) or $05;
             end;
 
          8: begin
-            if adjw[2,1]=0 then mimax:=(mimax and $0f) or $30;
-            if adjw[1,0]=0 then mimax:=(mimax and $f0) or $06;
+            if {adjw[2,1]=0} around and $08 = 0 then mimax:=(mimax and $0f) or $30;
+            if {adjw[1,0]=0} around and $02 = 0 then mimax:=(mimax and $f0) or $06;
             end;
 
          end;
@@ -2392,7 +2519,7 @@ begin
        ball.brwhit:=0; { Reset emergency counter }
        end;
 
-    end;
+end;
 
 
 { Draw the backdrop on the playing field }
@@ -2604,7 +2731,7 @@ begin
     b:=vaus.y-5;     { dell'animazione che e' leggermente spostato }
                      { dall'origine degli assi.                    }
 
-    death_sound;
+    sfx.init( sfx_vaus_destroyed );
 
     asm
 	fxs FX_MEMS #$80
@@ -2632,8 +2759,8 @@ begin
 
             for x:=0 to explosion_width-1 do
                 begin
-                { Se il colore e' trasparente o il fotogramma e' il 6 }
-                { allora viene usato il colore del fondale.           }
+                { If the color is transparent or the frame is 6 }
+                { then the background color is used. }
                 if (w=6) or (pom[x] = 0) then
                    //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
                    //blitBYTE(playscreen_ofs + hlp + x, vram + hlp + x)
@@ -2831,8 +2958,8 @@ var n1 : byte;
     sc: cardinal register;					// register TMP
 
 
-procedure put_digit(num: byte);        { Stampa la cifra digitale num }
-                                       { alle coord. px,py.           }
+procedure put_digit(num: byte);        { Print the digital number num }
+                                       { at coordinates px,py.        }
 begin
 
  blitTEMP(VBXE_DIGIT + mul_6[num], vram + hlp, 6, 11 );		// register EDX, ECX, EAX
@@ -2867,9 +2994,9 @@ begin
     inc(n1);
    end;
    n1:=mod10table[n1];
-   if n1 > 0 then f:=true;    { Se la prima cifra e' >0 allora }
-   if f then put_digit(n1)    { occorre stamparla }
-   else put_digit(10);        { altrimenti stampa un numero spento }
+   if n1 > 0 then f:=true;    { If the first digit is >0 then }
+   if f then put_digit(n1)    { it must be printed }
+   else put_digit(10);        { otherwise print a zero }
 
    { second digital digit }
    n1:=0;
@@ -2877,7 +3004,7 @@ begin
     dec(sc, 10000);
     inc(n1);
    end;
-   n1:=mod10table[n1];            { Ditto for the remaining blocks }
+   n1:=mod10table[n1];        { Ditto for the remaining blocks }
    if n1>0 then f:=true;
    if f then put_digit(n1)
    else put_digit(10);
@@ -3123,7 +3250,8 @@ var x1,x2,y1,y2 : byte;
           fire.y:=vaus.y-shoots_height;
           fire.shot:=TRUE;
           fire.nw  :=FALSE;
-          ball_block_sound(700,5);
+          //ball_block_sound(700,5);
+	  sfx.init(sfx_fire);
           end;
 
        if fire.shot then
@@ -3174,11 +3302,12 @@ procedure check_flux;
 var y,fx  : byte;
 begin
 
-  
+//   scrflux:=true;
+
    if scrflux then
       begin
 
-      fx:=scrfluxcnt shl 3;
+      fx:=(scrfluxcnt shr 2) shl 3;
 
 
       asm
@@ -3186,8 +3315,10 @@ begin
       end;
 
 
-      blitTEMP(8, 320);
-      blitTEMP(flux_ofs + fx, vram + 217+row[FLUXLEVEL], 8, 20);
+      blitTEMP(24, 320);
+      //blitTEMP(flux_ofs + fx, vram + 217+row[FLUXLEVEL], 8, 20);
+      
+      blitTEMP(flux2_ofs + fx, vram + 217 + row[FLUXLEVEL], 8, 21);
 
 
       asm
@@ -3196,7 +3327,7 @@ begin
 
 
       inc(scrfluxcnt);
-      if scrfluxcnt>20 then scrfluxcnt:=0;
+      if scrfluxcnt>11 then scrfluxcnt:=0;
       end;
 end;
 
@@ -3206,6 +3337,8 @@ var x,z : byte;
 begin
 
 //    nosound;
+
+    sfx.init(sfx_vaus_teleport);
 
     inc(score.player[cur_player],10000);
     remain_blk:=0;
@@ -3274,6 +3407,9 @@ begin
            playvaus:=enlarged;
            modify_vaus;
            vaus.letter:=0;
+
+	   sfx.init(sfx_vaus_enlarged);
+
            fire.avl:=FALSE;
            end;
 
@@ -3317,7 +3453,10 @@ begin
            vaus.letter:=0;
            inc(score.lives[cur_player]);
            plot_lives(score.lives[cur_player]);
-           ball_block_sound(2000,10);
+           //ball_block_sound(2000,10);
+
+	   sfx.init(sfx_letter_p);
+
            fire.avl:=FALSE;
            end;
 
@@ -3352,7 +3491,7 @@ var temp : smallint;
 function Bounceball : boolean;
 var
   x  : byte;//smallint;
-  key  : smallint;
+  tmp  : smallint;
 //  ball : array[0..2] of BALLTYPE;
   t1,t2: smallint;
 
@@ -3393,7 +3532,7 @@ var
                { If the speed is less than the maximum speed }
                if ball.speed < MAXSPEED then
                   begin
-                  inc(ball.speed,10);              { you increase it }
+                  inc(ball.speed, 20);             { you increase it }
                   set_ball_speed(ball,ball.speed); { and you update it }
                   end;
                end;
@@ -3422,10 +3561,10 @@ var
   lett.last:=EMP;
   lett.active:=FALSE;
 
-  { Mette lo sfondo giusto a seconda del muro }
+  { Sets the right background depending on the wall }
   fill_picture_with_pattern;
 
-  { Disegna il quadro di gioco con lo sfondo pocanzi settato}
+  { Draw the game board with the background you just set }
   hlp:=0;
   blitBOX(320, 200);
 
@@ -3436,7 +3575,7 @@ var
   { adjust the colors, in theory they should already be okay. }
 //  setpalette(playscreen);
 
-  { Stampa il punteggio dei 2 giocatori e l'hi-score. }
+  { Print the scores of the two players and the high score. }
   write_score(POS_DIGIT[1],score.player[1]);
   write_score(POS_DIGIT[2],score.player[2]);
   write_score(POS_DIGIT[3],score.hiscore);
@@ -3467,13 +3606,13 @@ var
   { from the edge left of the VAUS itself.                       }
   ball0.onvaus:=16;
 
-  { Tiene il numero di vertical-blank che passano da quando appare   }
-  { il vaus con la pallina a quando essa viene lanciata.              }
-  { Se il valore supera le 2000 unita' la palla parte automaticamente }
+  { Keeps track of the number of vertical blanks that pass from }
+  { when the ball appears to when it is launched. If the value  }
+  { exceeds 2000 units, the ball is launched automatically      }
   ball0.stm:=0;
 
-  { Alla partenza la variabile lett.incoming assume un valore casuale }
-  { fra 0 e LETTER_DROP (costante definita all'inizio della unit.     }
+  { At the start, the variable lett.incoming takes on a random value between }
+  { 0 and LETTER_DROP (constant defined at the beginning of the unit).       }
   lett.incoming:=rand(LETTER_DROP);
 
   { Shows the animation of the VAUS materializing out of thin air }
@@ -3506,6 +3645,7 @@ var
   ball2.inplay:=FALSE;
   
   x:=vaus.x;
+  
 
   
   while(ball0.inplay) and (remain_blk>0) and (not score.abortplay) do
@@ -3554,6 +3694,8 @@ var
 
         { If you press the mouse button then the ball starts }
         if mouseclick=1 then ball0.launch:=FALSE;
+	
+	if ball0.launch=FALSE then sfx.init(sfx_ball_bounce);
         end
 
      else begin
@@ -3603,7 +3745,16 @@ var
         ball1:=ball0;    { ball 2 and 3 are placed equal to 1 }
         ball2:=ball0;
 
-        t1:=get_ball_direction(ball0) div 90;
+	tmp:=get_ball_direction(ball0) ;
+	
+	t1:=0;
+	while tmp >= 90 do begin
+	 dec(tmp, 90);
+	 inc(t1);
+	end;
+//        t1:=get_ball_direction(ball0) div 90;
+	
+	
         { you the quadrant in which the velocity vector is located }
         t2:=ball0.speed;  { as well as the modulus of the vector itself }
 
@@ -4067,7 +4218,7 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:=
+                wall_p[cur_player]:= //all_walls[4];
                       all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }

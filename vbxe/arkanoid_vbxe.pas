@@ -44,7 +44,7 @@
 
 program arkanoid;
 
-uses crt, atari, vbxe, joystick;
+uses crt, atari, vbxe, joystick, xSFX;
 
 {$r arkanoid.rc}
 
@@ -56,6 +56,11 @@ uses crt, atari, vbxe, joystick;
 
 type
 
+   TSoundFX = (sfx_ball_bounce = 6, sfx_ball_brick = 7, sfx_letter_p =2, sfx_vaus_destroyed = 11, sfx_check_letter = 4, sfx_solid_brick = 9, 
+               sfx_hard_brick = 8, sfx_shot_enemy = 4, sfx_fire = 5, sfx_vaus_enlarged = 3, sfx_vaus_teleport = 12);
+
+
+
    BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
               width   : word;          { larghezza disegno       }
               height  : byte;          { altezza                 }
@@ -66,8 +71,8 @@ type
               x,y: byte;               { attuali coordinate x,y }
 
               oldx,                    { vecchie coordinate del vaus }
-              oldy   : smallint;
-              oldlen : smallint;       { e vecchia lunghezza }
+              oldy   : byte;
+              oldlen : byte;           { e vecchia lunghezza }
               width,                   { larghezza }
               height : byte;           { spessore (o altezza) }
               flash  : byte;           { indica il colore attuale dei bordi }
@@ -157,11 +162,11 @@ const
 	minivaus_ofs	= VBXE_DATA + $0000369D;
 
 	shoots_ofs      = VBXE_DATA + $00005E4C;
-	flux_ofs	= VBXE_DATA + $00005EB4;
-	balldata_ofs    = VBXE_DATA + $00005FFC;
+	balldata_ofs    = VBXE_DATA + $00005EB4;
 
 	presents_ofs = VBXE_DATA + 90*320;
-
+	
+	flux2_ofs = presents_ofs + 320*200;
 	
 	minivaus_width = 20;
 	minivaus_height = 5;
@@ -222,7 +227,7 @@ const
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 550; { Ball speed (256 = 70 pixels per second }
+   BALLSPEED  = 560; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
@@ -250,7 +255,227 @@ const
    { Probability of letter drop in % }  {  L   E  B   D   S   C  P }
    LETTER_DIS : array[0..7] of byte = ( 0, 16, 20, 3, 18, 20, 20, 3 );
 
-   FLUXLEVEL  = 176;
+   FLUXLEVEL  = 177;
+
+	sfx1: array of byte =
+	[
+	$01,$00,$00,			// ball bounces at the brick two hits
+	$01,$13,$AF,
+	$01,$12,$AD,
+	$01,$12,$A7,
+	$01,$13,$A5,
+	$01,$12,$A5,
+	$01,$12,$A4,
+	$01,$12,$A3,
+	$01,$12,$A1,
+	$01,$12,$A0,
+	$01,$12,$A1,
+	$00,$FF
+	];
+	
+
+	sfx2: array of byte =		// additional life (bonus P)
+	[
+	$01,$00,$00,
+	$02,$2F,$AC,
+	$02,$33,$AC,
+	$03,$2F,$AE,
+	$03,$33,$AE,
+	$00,$FF
+	];
+	
+
+	sfx3: array of byte =		// vaus expand width
+	[
+	$01,$00,$00,
+	$03,$FF,$AC,
+	$03,$F5,$AD,
+	$02,$EB,$AE,
+	$02,$E1,$AF,
+	$00,$FF
+	];
+
+
+	sfx4: array of byte =		// enemy explode
+	[
+	$01,$00,$00,
+	$04,$1E,$8A,
+	$01,$20,$88,
+	$01,$24,$85,
+	$01,$2C,$84,
+	$00,$FF
+	];
+
+
+	sfx5: array of byte =		// shot the fire
+	[
+	$01,$00,$00,
+	$01,$01,$27,
+	$01,$02,$29,
+	$01,$04,$2A,
+	$01,$05,$28,
+	$01,$04,$25,
+	$00,$FF
+	];
+
+
+	sfx6: array [0..34] of byte =	// Arkanoid ball bounces
+	(
+	$01,$00,$00,			// 1 frame AUDF, AUDC
+	$01,$3C,$AF,
+	$01,$3B,$AD,
+	$01,$3B,$A7,
+	$01,$3C,$A5,
+	$01,$3B,$A5,
+	$01,$3C,$A4,
+	$01,$3C,$A3,
+	$01,$3C,$A1,
+	$01,$3C,$A0,
+	$01,$3C,$A1,
+	$00,$FF				// $00,$FF end
+	);
+
+
+	sfx7: array [0..34] of byte =	// Arkanoid ball bounces at the brick
+	(
+	$01,$00,$00,			// 1 frame AUDF, AUDC
+	$01,$32,$AF,
+	$01,$31,$AD,
+	$01,$31,$A7,
+	$01,$32,$A5,
+	$01,$31,$A5,
+	$01,$32,$A4,
+	$01,$32,$A3,
+	$01,$32,$A1,
+	$01,$32,$A0,
+	$01,$32,$A1,
+	$00,$FF
+	);
+
+
+	sfx8: array [0..34] of byte =	// Arkanoid ball bounces at the hard brick
+	(
+	$01,$00,$00,			// 1 frame AUDF, AUDC
+	$01,$19,$AF,
+	$01,$18,$AD,
+	$01,$18,$A7,
+	$01,$19,$A5,
+	$01,$18,$A5,
+	$01,$19,$A4,
+	$01,$19,$A3,
+	$01,$19,$A1,
+	$01,$19,$A0,
+	$01,$19,$A1,
+	$00,$FF
+	);
+
+	sfx9: array [0..34] of byte =	// Arkanoid ball bounces at the hard brick
+	(
+	$01,$00,$00,
+	$01,$13,$AF,
+	$01,$12,$AD,
+	$01,$12,$A7,
+	$01,$13,$A5,
+	$01,$12,$A5,
+	$01,$12,$A4,
+	$01,$12,$A3,
+	$01,$12,$A1,
+	$01,$12,$A0,
+	$01,$12,$A1,
+	$00,$FF
+	);
+
+
+	sfx10: array [0..160] of byte =	// Arkanoid DOH destroyed
+	(
+	$01,$00,$00,
+	$03,$03,$22,
+	$03,$05,$22,
+	$03,$04,$22,
+	$03,$03,$22,
+	$03,$03,$24,
+	$03,$05,$24,
+	$03,$04,$24,
+	$03,$03,$24,
+	$03,$03,$26,
+	$03,$05,$26,
+	$03,$04,$26,
+	$03,$03,$26,
+	$03,$03,$28,
+	$03,$05,$28,
+	$03,$04,$28,
+	$03,$03,$28,
+	$03,$03,$2A,
+	$03,$05,$2A,
+	$03,$04,$2A,
+	$03,$03,$2A,
+	$03,$03,$2C,
+	$03,$05,$2C,
+	$03,$04,$2C,
+	$03,$03,$2C,
+	$03,$03,$2E,
+	$03,$05,$2E,
+	$03,$04,$2E,
+	$03,$03,$2E,
+	$03,$03,$2C,
+	$03,$05,$2C,
+	$03,$04,$2C,
+	$03,$03,$2C,
+	$03,$03,$2A,
+	$03,$05,$2A,
+	$03,$04,$2A,
+	$03,$03,$2A,
+	$03,$03,$28,
+	$03,$05,$28,
+	$03,$04,$28,
+	$03,$03,$28,
+	$03,$03,$26,
+	$03,$05,$26,
+	$03,$04,$26,
+	$03,$03,$26,
+	$03,$03,$24,
+	$03,$05,$24,
+	$03,$04,$24,
+	$03,$03,$24,
+	$03,$03,$22,
+	$03,$05,$22,
+	$03,$04,$22,
+	$03,$03,$22,
+	$00,$FF
+	);
+
+	sfx11: array [0..46] of byte =	// Arkanoid VAUS destroyed
+	(
+	$03,$14,$29,			// 3 frame AUDF, AUDC
+	$04,$10,$2C,			// 4 frame AUDF, AUDC
+	$02,$12,$2B,
+	$03,$14,$27,
+	$04,$10,$2A,
+	$02,$12,$29,
+	$03,$14,$25,
+	$04,$10,$28,
+	$02,$12,$27,
+	$03,$14,$23,
+	$04,$10,$26,
+	$02,$12,$25,
+	$03,$14,$22,
+	$04,$10,$25,
+	$02,$12,$24,
+	$00,$FF
+	);
+
+	sfx12: array [0..25] of byte =	// Arkanoid VAUS walks through the door to next round
+	(
+	$01,$00,$00,			// 1 frame AUDF, AUDC
+	$07,$1F,$2F,			// 7 frame AUDF, AUDC
+	$07,$21,$2D,
+	$07,$23,$2B,
+	$07,$25,$29,
+	$06,$27,$27,
+	$06,$29,$25,
+	$06,$2B,$23,
+	$00,$FF
+	);
 
 
 { ------------------------------------------------------------------------- }
@@ -258,13 +483,14 @@ const
 
 var
 	
-	blt        : TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
-	blt_letter : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
-	blt_box    : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*2;
-	blt_zero   : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*3;
+    blt        : TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
+    blt_letter : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
+    blt_box    : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*2;
+    blt_zero   : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*3;
 
-	vbxe_ram: TVBXEMemoryStream;
+    vbxe_ram: TVBXEMemoryStream;
 
+    sfx: TSFX;
 
     balldata   : BTMTYPE;
     playscreen : BTMTYPE;  { area di gioco (320x200) }
@@ -281,7 +507,7 @@ var
     levelsel   : BTMTYPE;  { 5 frames dei numeri per scegliere il livello }
     letters    : BTMTYPE;  { le animazioni delle 7 lettere }
     shoots     : BTMTYPE;  { e il disegno dei laser }
-    flux       : BTMTYPE;
+//    flux       : BTMTYPE;
     vaus       : VAUSTYPE; { data relating to the VAUS (see above) }
     pattern    : BTMTYPE;  { background }
 
@@ -353,21 +579,32 @@ var
 { ------------------------------------------------------------------------- }
 
 
+procedure nmi; interrupt; assembler;
+asm
+
+ sta nmist
+
+ sta regA
+ stx regX
+ sty regY
+
+	lda SFX
+	ldy SFX+1
+	jsr XSFX.TSFX.PLAY
+ 
+ 
+ lda regA: #$00
+ ldx regX: #$00
+ ldy regY: #$00
+
+end;
+
+
+{ ------------------------------------------------------------------------- }
+
 procedure start_level;
 begin
 
-
-end;
-
-
-procedure death_sound;
-begin
-
-end;
-
-
-procedure ball_block_sound(a,b: byte);
-begin
 
 end;
 
@@ -542,6 +779,8 @@ begin
 end;
 
 
+
+(*
 function Q0(x, y: byte): byte;
 var
   lx, ly: byte;
@@ -655,7 +894,121 @@ begin
   // Q0 – główna część algorytmu
   Result := Q0(x, y);
 end;
+*)
 
+
+
+function Atan2(y,x: smallint): byte; register;
+(*
+@description:
+* Calculate the angle, in a 256-degree circle, between two points.
+* The trick is to use logarithmic division to get the y/x ratio and
+* integrate the power function into the atan table. Some branching is
+* avoided by using a table to adjust for the octants.
+* In otherwords nothing new or particularily clever but nevertheless
+* quite useful.
+*
+* by Johan Forslöf (doynax)
+
+
+@return: Result - byte
+*)
+const
+
+octant_adjust : array [0..7] of byte = (
+	%00111111,		// x+,y+,|x|>|y|
+	%00000000,		// x+,y+,|x|<|y|
+	%11000000,		// x+,y-,|x|>|y|
+	%11111111,		// x+,y-,|x|<|y|
+	%01000000,		// x-,y+,|x|>|y|
+	%01111111,		// x-,y+,|x|<|y|
+	%10111111,		// x-,y-,|x|>|y|
+	%10000000		// x-,y-,|x|<|y|
+	);
+
+var
+  sx: word register;
+  sy: word register;
+
+begin
+
+  if x < 0 then
+   sx := -x
+  else
+   sx := x;
+  
+  if y < 0 then 
+   sy := -y
+  else
+   sy := y;  
+
+  
+  while (sx > 127) or (sy > 127) do
+  begin
+    sx := sx shr 1;
+    sy := sy shr 1;
+  end;
+  
+  if x < 0 then
+   x := -sx
+  else
+   x := sx;
+
+
+  if y < 0 then
+   y := -sy
+  else
+   y := sy;
+
+
+asm
+	txa:pha
+
+octant	= :TMP			// temporary zeropage variable
+
+	lda #$00
+	sta octant
+
+atan2		clc
+		lda x
+		bpl @+
+
+		eor #$ff
+		sec
+@
+		tax
+		rol octant
+
+		clc
+		lda y
+		bpl @+
+
+		sec
+		eor #$ff
+@
+		tay
+		rol octant
+
+		lda adr.log2_tab,x
+		sbc adr.log2_tab,y
+		scc
+		eor #$ff
+		tax
+
+		lda octant
+		rol @
+		and #%111
+		tay
+
+		lda adr.atan_tab,x
+		eor adr.octant_adjust,y
+
+		sta Result
+
+	pla:tax
+end;
+
+end;
 
 
 {$i ..\service.pas}
@@ -665,8 +1018,28 @@ end;
 procedure init_game;
 begin
 
+   NoSound;
+
    randomize;
 
+   sfx.clear;
+
+   sfx.add(@sfx1);
+   sfx.add(@sfx2);
+   sfx.add(@sfx3);
+   sfx.add(@sfx4);
+   sfx.add(@sfx5);
+   sfx.add(@sfx6);
+   sfx.add(@sfx7);
+   sfx.add(@sfx8);
+   sfx.add(@sfx9);
+   sfx.add(@sfx10);
+   sfx.add(@sfx11);
+   sfx.add(@sfx12);
+
+   sfx.play;
+
+	
    initSVGA;       { Activates 320x200x256 col. graphics mode. }
    initRowArray;   { Initializes a useful array to avoid multiplications }
                    { by 320. }

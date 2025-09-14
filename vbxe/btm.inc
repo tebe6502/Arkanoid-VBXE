@@ -38,32 +38,28 @@
 	shoots.width := 13;
 	shoots.height := 8;
 
-	flux.ofs := VBXE_DATA + $00005EB4;
-	flux.width := 8;
-	flux.height := 41;
-
-	balldata.ofs := VBXE_DATA + $00005FFC;
+	balldata.ofs := VBXE_DATA + $00005EB4;
 	balldata.width := 5;
 	balldata.height := 5;
 
-	pattern0.ofs := VBXE_DATA + $00006015;
+	pattern0.ofs := VBXE_DATA + $00005ECD;
 	pattern0.width := 26;
 	pattern0.height := 24;
 
-	pattern1.ofs := VBXE_DATA + $00006285;
+	pattern1.ofs := VBXE_DATA + $0000613D;
 	pattern1.width := 14;
 	pattern1.height := 14;
 
-	pattern2.ofs := VBXE_DATA + $00006349;
+	pattern2.ofs := VBXE_DATA + $00006201;
 	pattern2.width := 38;
 	pattern2.height := 35;
 
-	pattern3.ofs := VBXE_DATA + $0000687B;
+	pattern3.ofs := VBXE_DATA + $00006733;
 	pattern3.width := 28;
 	pattern3.height := 29;
 
-	pattern4.ofs := VBXE_DATA + $00006BA7;
+	pattern4.ofs := VBXE_DATA + $00006A5F;
 	pattern4.width := 30;
 	pattern4.height := 30;
 
-	// ofset = VBXE_DATA + $00006F2B
+	// ofset = VBXE_DATA + $00006DE3
