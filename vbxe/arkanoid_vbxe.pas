@@ -39,6 +39,10 @@
  - 'write_score' optimization
  - 'create_vaus' optimization
 
+ 2025--9-15
+ - ball.brwhit additional reset
+ - additional test deflect (ball_hit_block)
+ 
 *)
 
 

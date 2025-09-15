@@ -1065,6 +1065,8 @@ var
 	sfx.init(sfx_ball_bounce);
 
         { emits the sound of a ball hitting a bat }
+	
+	ball.brwhit:=0;
 
         { se la palla urta il cilindretto rosso di sinistra del vaus }
         if (ball.x < byte(vaus.x+10)) then
@@ -3741,6 +3743,8 @@ var
      if vaus.letter=4 then   { In case a D has been collected the balls }
         begin                { become 3.                                }
         balls_in_play:=3;
+	
+	ball0.brwhit:=0;
 
         ball1:=ball0;    { ball 2 and 3 are placed equal to 1 }
         ball2:=ball0;
