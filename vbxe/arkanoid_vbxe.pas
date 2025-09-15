@@ -39,9 +39,13 @@
  - 'write_score' optimization
  - 'create_vaus' optimization
 
- 2025--9-15
+ 2025-09-15
  - ball.brwhit additional reset
  - additional test deflect (ball_hit_block)
+ 
+ 2025-09-16
+ - adjw [0..3, 0..3] (ball_hit_block) compiler bugfix
+ - more accurate collision detection
  
 *)
 
@@ -218,7 +222,7 @@ const
 
    FLASH      : array[0..10] of byte = ( 255,212,211,210,209, 208,207,206,205,204,203);
            { Colors that the extremes of the VAUS take on during flashing }
-
+ 
    SCORE_WALL : array[0..10] of word = (0, 10,20,30,40,50,100,200,250,500,1000 );
 
 
@@ -231,7 +235,7 @@ const
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
-   BALLSPEED  = 560; { Ball speed (256 = 70 pixels per second }
+   BALLSPEED  = 587; { Ball speed (256 = 70 pixels per second }
    MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }

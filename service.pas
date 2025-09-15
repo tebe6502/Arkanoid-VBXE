@@ -21,9 +21,20 @@ begin
  a := porta and $0f;
  
  case a of
-  joy_left: if x > SCRMIN then dec(x, 4);
-  joy_right: if x < byte(SCRMAX - vaus.width) then inc(x, 4);
+  joy_left: if x > SCRMIN then begin
+             dec(x, 4);
+	     
+	     if x < SCRMIN then x:=SCRMIN;	     
+	    end; 
+
+  joy_right: if x < byte(SCRMAX - vaus.width) then begin
+              inc(x, 4);
+	      
+	      if x + vaus.width > SCRMAX then x:=SCRMAX - vaus.width;
+	     end; 
  end;
+
+  
 
 end;
  
@@ -1052,8 +1063,6 @@ var
         { reverses the vy vector of the ball's velocity }
         ball.speedy:=-ball.speedy;
 	
-	ball.sbd := 0;
-
         if (vaus.letter=6) and (not ball.launch) then
            begin
            ball.stm:=0;
@@ -1067,15 +1076,16 @@ var
         { emits the sound of a ball hitting a bat }
 	
 	ball.brwhit:=0;
+	ball.sbd := 0;
 
-        { se la palla urta il cilindretto rosso di sinistra del vaus }
+        { if the ball hits the left red cylinder of the vaus }
         if (ball.x < byte(vaus.x+10)) then
            begin
-           { inverte il vettore vx, velocita' x della palla }
+           { reverses the vector vx, velocity x of the ball }
            ball.speedx:=-ball.speedx;
 
-           { mette nella variabile angle l'angolo di movimento della palla
-             piu' un valore casuale di deviasione compreso fra 0 e BALLDEV }
+           { sets the angle variable to the ball's angle of movement }
+           { plus a random deviation value between 0 and BALLDEV     }
            angle:=get_ball_direction(ball) + rand(BALLDEV);
 
            { Reset the direction of movement of the ball according to this new }
@@ -1089,7 +1099,7 @@ var
            { Reset the speed of the ball, because changing the angle of }
            { movement causes speed to be lost.                          }
 
-           set_ball_speed(ball,ball.speed);
+           set_ball_speed(ball, ball.speed);
            end;
 
         { Completely similar to the previous one, with the difference that }      
@@ -1128,10 +1138,15 @@ begin
 end;
 
 
-procedure set_vaus; { setta i parametri iniziali (di partenza) del vaus }
+procedure set_vaus; { set the initial (starting) parameters of the vaus }
 begin
   vaus.x:=((SCRMAX-SCRMIN) shr 1)-8;
   vaus.y:=VAUS_LINE;
+
+  { set the cursor in the center of the playing area }
+  { x=(x1+x2)/2 average between the maximum and minimum }
+  { even the mouse pointer (which is not visible) }
+  { is moved to the center }
 
   vaus.oldx:=EMP;                { le vecchie coordinate vengono poste a EMP }
   vaus.oldy:=EMP;                { poiche' il vaus non si e' spostato }
@@ -1152,6 +1167,7 @@ begin
 end;
 
 
+(*
 procedure start_vaus;
 begin
 //  mouse_x_limit(SCRMIN,(SCRMAX-vaus.width-1) shl 1);
@@ -1165,6 +1181,7 @@ begin
   { is moved to the center }
 
 end;
+*)
 
 
 procedure remove_vaus;
@@ -1176,6 +1193,7 @@ begin
   blitBOX(vaus.oldlen, vaus.height);
 
   vaus.oldlen:=vaus.width;
+
 end;
 
 
@@ -1185,6 +1203,7 @@ var
   video: cardinal;
 
 begin
+
   inc(vaus.iflash);               { viene incrementato ogni ciclo (1/70 sec.) }
 
   if vaus.iflash>SPEEDFLASH then  { se raggiunge il valore SPEEDFLASH... }
@@ -1263,13 +1282,12 @@ end;
 
 
 { moves the vaus to coordinates x,y }
-procedure move_vaus(x,y : smallint);
+procedure move_vaus(x,y : byte);
 begin
 
   { if oldx,oldy coordinates are valid then you have to delete it }
   { from that location }
-  if(vaus.oldx <> EMP) and (vaus.oldx <> vaus.x) or (vaus.width <> vaus.oldlen) then
-     remove_vaus;
+  if (vaus.oldx <> EMP) and (vaus.oldx <> vaus.x) or (vaus.width <> vaus.oldlen) then remove_vaus;
 
   vaus.oldx:=vaus.x; { the new coordinates become the old ones }
   vaus.oldy:=vaus.y;
@@ -1280,10 +1298,11 @@ begin
   { they are set to the maximum acceptable value }
   { similarly for the minimum                    }
 
-  vaus.x:=max(SCRMIN,min(x,(SCRMAX-vaus.width)));
-  vaus.y:=max(SCRTOP,min(y,(SCRBOT-vaus.height)));
+  vaus.x:=x;//max(SCRMIN,min(x,(SCRMAX-vaus.width)));
+  vaus.y:=y;//max(SCRTOP,min(y,(SCRBOT-vaus.height)));
 
   place_vaus;  { call the above place_vaus function }
+
 end;
 
 
@@ -1895,7 +1914,7 @@ begin
 
        end
 
-    else begin dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2);    fatal_error(err2); end;
+    else begin {dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2); }   fatal_error(err2); end;
     { otherwise something went wrong! }
 
     dec(x1,16);   { restore the old coordinates }
@@ -2050,6 +2069,8 @@ var
     around,
     collision,
     touch    : byte;
+    
+    yes: Boolean;
 
     adjw     : array[0..3,0..3] of byte;
 
@@ -2068,7 +2089,18 @@ begin
                       { (0,0) is the block in the upper right-hand corner        }
 
 
-    if wall[byte(xb)+byte(yb)*16]<>0 then  { ...if the block is not hypothetical but exists }
+{
+    yes:=false;
+
+  
+    angle := get_ball_direction(ball);
+
+    if angle < 90 then
+     if (wall[byte(xb)+byte(yb)*16] = 0) and (wall[byte(xb-1)+byte(yb)*16] <> 0) and (wall[byte(xb)+byte(yb+1)*16] <> 0) then yes:=true;
+}
+
+    
+    if (wall[byte(xb)+byte(yb)*16]<>0) {or yes} then  { ...if the block is not hypothetical but exists }
        begin
        collision:=split_line(ox,oy,nx,ny);
        { calculates the intersection of the segment connecting the old and }
@@ -2225,7 +2257,7 @@ begin
 
           { The left and right edges of the playing field are  }
           { considered as indestructible bricks in this case.  }
-
+	  
           for lx:=-1 to 1 do
               for ly:=-1 to 1 do
                   begin
@@ -2375,7 +2407,7 @@ begin
              if a = 128 then deflect:=$02;
              if a = 160 then deflect:=$12;
              if a = 192 then deflect:=$22;
-     
+
 	     if a = 160 then begin
  	       shoot_block(xb-1,yb,ball); 
 	       shoot_block(xb,yb+1,ball); 
@@ -2509,7 +2541,7 @@ begin
           lx:=mul90_16[mimax shr 4];    { the first digit of mimax is placed in }
           mx:=mul90_16[mimax and 15];   { lx and the second in mx.              }
 
-          angle:=rand(mx-lx) + lx;      { Angle is a random variable between lx and mx }
+          angle := rand(mx-lx) + lx;    { Angle is a random variable between lx and mx }
 
        until (mod90(angle) > 30) and (mod90(angle) < 60);
        { and this cycle repeats until the ball has an inclination }
@@ -2802,12 +2834,14 @@ end;
 { of the vaus being built.                                      }
 procedure create_vaus;
 var x,y,w  : byte;
-    z,a,b, j,mw  : word;
+    z, j,mw  : word;
+    
+    a, b: byte;
 
 begin
     nosound;
 
-    a:=((SCRMAX-SCRMIN) div 2)-12;
+    a:=((SCRMAX-SCRMIN) shr 1)-13;
     b:=vaus_line-5;
 
     asm
@@ -3467,19 +3501,20 @@ end;
 
 
 procedure deviate_ball(var ball : BALLTYPE);
-var temp : smallint;
+var temp, dir : smallint;
+begin
 
-   begin
+   dir := get_ball_direction(ball);
 
    repeat
-    temp:=get_ball_direction(ball) + rand(BALLDEV) - (BALLDEV shr 1);    
+    temp := dir + rand(BALLDEV) - (BALLDEV shr 1);    
    until (mod90(temp)>30) and (mod90(temp)<60);
 
    set_ball_direction(ball, temp);
    set_ball_speed(ball,ball.speed);
    
    ball.sbd:=0;
-   end;
+end;
 
 { ------------------------------------------------------------------------ }
 
@@ -3534,7 +3569,7 @@ var
                { If the speed is less than the maximum speed }
                if ball.speed < MAXSPEED then
                   begin
-                  inc(ball.speed, 20);             { you increase it }
+                  inc(ball.speed, 17);             { you increase it }
                   set_ball_speed(ball,ball.speed); { and you update it }
                   end;
                end;
@@ -3624,10 +3659,8 @@ var
   write_round_level;
 
   set_vaus;                       { Adjusts the initial VAUS parameters. }
-  start_vaus;
   move_vaus(vaus.x,VAUS_LINE);    { brings him to the center of the playing area }
   start_level;                    { If the sound is on, it plays the tune }
-  start_vaus;
   remove_round_level;             { Removes the words ROUND xx, READY}
   set_ball(ball0);
   
@@ -3647,8 +3680,14 @@ var
   ball2.inplay:=FALSE;
   
   x:=vaus.x;
-  
 
+
+{
+  set_ball_direction(ball0,50);   
+  set_ball_speed(ball0, 700);
+}
+
+  
   
   while(ball0.inplay) and (remain_blk>0) and (not score.abortplay) do
      begin
@@ -3666,19 +3705,9 @@ var
 
      mousecoords(x);  { reads mouse coordinates }
 
+     move_vaus(x,VAUS_LINE);
 
-     {  if trainer (VAUS in automatic mode) is not active }
-     { moves VAUS to mouse coord.x }
 
-     {if trainer=0 then} move_vaus(x,VAUS_LINE);
-(*
-     { if it is active, however, it dictates that the x of the VAUS is equal }
-     { to the x of the ball, with an appropriate translation coefficient    }
-     { so that the ball hits the center of the vaus and not the left edge.  }
-
-     else if trainer=1 then
-          move_vaus(min(SCRMAX-32,max(ball0.x-ball0.onvaus,SCRMIN)),VAUS_LINE);
-*)
      { ball[0].launch is worth TRUE if the ball is attached to the VAUS and }
      { is to be thrown. Otherwise, when it is in play it is worth false.    }
 
