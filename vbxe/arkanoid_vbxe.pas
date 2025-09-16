@@ -27,11 +27,11 @@
 { ----------------------------------------------------------------------- }
 
 (*
- 
- Arkanoid VBXE v1.8 by Tebe/Madteam
- 
 
- 2025-09-10 
+ Arkanoid VBXE v1.8 by Tebe/Madteam
+
+
+ 2025-09-10
  - 'remove_block', 'plot_lives' fully accelerated by blitter
  - 'place_block' accelerated by blitter
 
@@ -42,11 +42,11 @@
  2025-09-15
  - ball.brwhit additional reset
  - additional test deflect (ball_hit_block)
- 
+
  2025-09-16
  - adjw [0..3, 0..3] (ball_hit_block) compiler bugfix
  - more accurate collision detection
- 
+
 *)
 
 
@@ -64,7 +64,7 @@ uses crt, atari, vbxe, joystick, xSFX;
 
 type
 
-   TSoundFX = (sfx_ball_bounce = 6, sfx_ball_brick = 7, sfx_letter_p =2, sfx_vaus_destroyed = 11, sfx_check_letter = 4, sfx_solid_brick = 9, 
+   TSoundFX = (sfx_ball_bounce = 6, sfx_ball_brick = 7, sfx_letter_p =2, sfx_vaus_destroyed = 11, sfx_check_letter = 4, sfx_solid_brick = 9,
                sfx_hard_brick = 8, sfx_shot_enemy = 4, sfx_fire = 5, sfx_vaus_enlarged = 3, sfx_vaus_teleport = 12);
 
 
@@ -160,7 +160,7 @@ const
 	playscreen_ofs  = $020000;
 
 	vram = $030000;
-	
+
 	pattern_temp = $040000;
 
 
@@ -173,9 +173,9 @@ const
 	balldata_ofs    = VBXE_DATA + $00005EB4;
 
 	presents_ofs = VBXE_DATA + 90*320;
-	
+
 	flux2_ofs = presents_ofs + 320*200;
-	
+
 	minivaus_width = 20;
 	minivaus_height = 5;
 
@@ -222,7 +222,7 @@ const
 
    FLASH      : array[0..10] of byte = ( 255,212,211,210,209, 208,207,206,205,204,203);
            { Colors that the extremes of the VAUS take on during flashing }
- 
+
    SCORE_WALL : array[0..10] of word = (0, 10,20,30,40,50,100,200,250,500,1000 );
 
 
@@ -280,7 +280,7 @@ const
 	$01,$12,$A1,
 	$00,$FF
 	];
-	
+
 
 	sfx2: array of byte =		// additional life (bonus P)
 	[
@@ -291,7 +291,7 @@ const
 	$03,$33,$AE,
 	$00,$FF
 	];
-	
+
 
 	sfx3: array of byte =		// vaus expand width
 	[
@@ -490,7 +490,7 @@ const
 
 
 var
-	
+
     blt        : TBCB absolute VBXE_BCBADR+VBXE_WINDOW;
     blt_letter : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21;
     blt_box    : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*2;
@@ -547,9 +547,9 @@ var
     scrfluxcnt : byte;
 
     sound_on   : Boolean;
-    
+
     old_scores : cardinal;
-    
+
     hlp: word;
     f_hlp: single;
 
@@ -557,7 +557,7 @@ var
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
     pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
     pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
-    
+
     sqrtable : array [0..1023] of cardinal absolute $a000;
 
 
@@ -567,12 +567,12 @@ var
     Mod90Table: array [0..255] of byte absolute $c000+$300;
 
     [striped] Mod360Table: array [0..255] of WORD absolute $c000+$400;
-    
+
     atan_tab : array [0..255] of byte absolute $c000+$600;
     log2_tab : array [0..255] of byte absolute $c000+$700;
 
     [striped] scale360 : array [0..255] of WORD absolute $c000+$800;
- 
+
     [striped] sintable: array [0..90-1] of smallint absolute $c000+$a00;
 
 
@@ -599,8 +599,8 @@ asm
 	lda SFX
 	ldy SFX+1
 	jsr XSFX.TSFX.PLAY
- 
- 
+
+
  lda regA: #$00
  ldx regX: #$00
  ldy regY: #$00
@@ -688,7 +688,7 @@ asm
     cpw Result #90
     BCC done
     SBW Result #90
-    
+
     cpw Result #90
     BCC done
     SBW Result #90
@@ -701,7 +701,7 @@ done
 
     lda a+1
     bpl @exit
-   
+
     lda #0
     sub Result
     sta Result
@@ -734,7 +734,7 @@ asm
     cpw Result #360
     BCC done
     SBW Result #360
-    
+
     cpw Result #360
     BCC done
     SBW Result #360
@@ -747,7 +747,7 @@ done
 
     lda a+1
     bpl @exit
-   
+
     lda #0
     sub Result
     sta Result
@@ -792,15 +792,15 @@ end;
 function Q0(x, y: byte): byte;
 var
   lx, ly: byte;
-  
+
 begin
 
   lx := log2_tab[x];   // 32*log2(x)
   ly := log2_tab[y];   // 32*log2(y)
 
-  if lx >= ly then 
+  if lx >= ly then
    Result := (-atan_tab[byte(lx - ly)]) and $3f
-  else 
+  else
    Result := atan_tab[byte(ly - lx)];
 
 end;
@@ -813,7 +813,7 @@ function Atan2(y, x: smallint): byte;
 
 ; Calculate the angle, in a 256-degree circle.
 ; The trick is to use logarithmic division to get the y/x ratio and
-; integrate the power function into the atan table. 
+; integrate the power function into the atan table.
 
 ;	input
 ; 	B = x, C = y	in -128,127
@@ -829,7 +829,7 @@ function Atan2(y, x: smallint): byte;
 }
 var
   a, e: byte;
-  
+
   sx: word register;
   sy: word register;
 begin
@@ -838,19 +838,19 @@ begin
    sx := -x
   else
    sx := x;
-  
-  if y < 0 then 
+
+  if y < 0 then
    sy := -y
   else
-   sy := y;  
+   sy := y;
 
-  
+
   while (sx > 127) or (sy > 127) do
   begin
     sx := sx shr 1;
     sy := sy shr 1;
   end;
-  
+
   if x < 0 then
    x := -sx
   else
@@ -864,11 +864,11 @@ begin
 
 
   e:=0;
-  
+
   // test znaków
   if (y < 0) then e:=e or 2;
   if (x < 0) then e:=e or 1;
-  
+
 
   if e = 1 then
   begin
@@ -944,19 +944,19 @@ begin
    sx := -x
   else
    sx := x;
-  
-  if y < 0 then 
+
+  if y < 0 then
    sy := -y
   else
-   sy := y;  
+   sy := y;
 
-  
+
   while (sx > 127) or (sy > 127) do
   begin
     sx := sx shr 1;
     sy := sy shr 1;
   end;
-  
+
   if x < 0 then
    x := -sx
   else
@@ -1047,7 +1047,7 @@ begin
 
    sfx.play;
 
-	
+
    initSVGA;       { Activates 320x200x256 col. graphics mode. }
    initRowArray;   { Initializes a useful array to avoid multiplications }
                    { by 320. }

@@ -1904,7 +1904,7 @@ begin
 
        end
 
-    else begin dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2);   fatal_error(err2); end;
+    else exit(0);// begin {dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2);}   fatal_error(collision or $80); end;
     { otherwise something went wrong! }
 
     dec(x1,16);   { restore the old coordinates }
@@ -2043,7 +2043,8 @@ var
 
     xb,yb    : byte;
 
-    ox,oy, sp,
+    sp,
+    ox,oy,
     nx,ny,
     lx,ly,
     mx,my,
@@ -2059,8 +2060,6 @@ var
     around,
     collision,
     touch    : byte;
-    
-    yes: Boolean;
 
     adjw     : array[0..3,0..3] of byte;
 
@@ -2078,36 +2077,115 @@ begin
     yb:=ny shr 3;     { block on which the ball is now located. Remember that    }
                       { (0,0) is the block in the upper right-hand corner        }
 
-
     i:=xb+yb*16;
-    
-
-    yes:=false;
 
 
-{ 
-    if (i>16) and (nx and $0f > 0) and (ny and $0f > 0) and (wall[i] = 0) then begin
-    
-      if ((wall[i-1] <> 0) and (wall[i+16] <> 0)) and (ball.speedx > 0) and (ball.speedy < 0) then yes:=true;
+    if (i>16) and (xb>0) and (xb<12) then
+    if (wall[i] = 0) then begin
 
-      if ((wall[i+1] <> 0) and (wall[i+16] <> 0)) and (ball.speedx < 0) and (ball.speedy < 0) then yes:=true;
-
-//         ((wall[i+1] <> 0) and (wall[i+16] <> 0)) or
-//         ((wall[i-1] <> 0) and (wall[i-16] <> 0))
-
-      
-    end;  
-}
+      x:=byte(nx and 15) shr 1;     { you calculate the impact point of   }
+      y:=(ny and 7);                { the ball with respect to the brick. }
 
 
-    
-    if (wall[ i ] <> 0) or yes then  { ...if the block is not hypothetical but exists }
+      if (x=y) or (x=byte(7-y)) then begin
+  
+ 
+          around:=0;
+
+          deflect:=$00;
+          touch:=0;
+ 
+          { 0 1 }
+          { 2 3 }
+	  
+
+          if (x=7) then touch:=touch or 1;
+          if (y=7) then touch:=touch or 2;
+
+          {        -------------                      }
+          {        | 1 | 2 | 4 |                      }
+          {        -------------                      }
+          {        |128| U | 8 |   U = bumped brick   }
+          {        -------------                      }
+          {        | 64| 32| 16|                      }
+          {        -------------                      }
+
+
+      if (wall[byte(i-1)] <> 0) then around:=around or $80;
+      if (wall[byte(i+1)] <> 0) then around:=around or 8;
+      if (wall[byte(i-16)] <> 0) then around:=around or 2;
+      if (wall[byte(i+16)] <> 0) then around:=around or $20;
+
+      if (wall[byte(i-1-16)] <> 0) then around:=around or 1;
+      if (wall[byte(i+1-16)] <> 0) then around:=around or 4;
+      if (wall[byte(i-1+16)] <> 0) then around:=around or $40;
+      if (wall[byte(i+1+16)] <> 0) then around:=around or $10;
+
+
+          if (touch=0) and (around and 131 = 130) then       { upper left corner }
+             begin
+	       deflect:=$11;
+
+	       shoot_block(xb,yb-1,ball);
+	       shoot_block(xb-1,yb,ball);
+
+             end else
+
+          if (touch=1) and (around and 14 = 10) then       { upper right corner }
+             begin
+               deflect:=$21;
+
+	       shoot_block(xb,yb-1,ball);
+	       shoot_block(xb+1,yb,ball);
+
+             end else
+
+          if (touch=2) and (around and 224 = 160) then       { Bottom left corner }
+             begin
+               deflect:=$12;
+
+ 	       shoot_block(xb-1,yb,ball);
+	       shoot_block(xb,yb+1,ball);
+
+             end else
+
+          if (touch=3) and (around and 56 = 40) then       { Bottom right corner }
+             begin
+               deflect:=$22;
+
+	       shoot_block(xb+1,yb,ball);
+	       shoot_block(xb,yb+1,ball);
+
+             end;
+	     
+	     
+	  if deflect <> 0 then begin
+
+	    ball.speedx:=-ball.speedx;
+	    ball.speedy:=-ball.speedy;
+	     
+          end;
+	  
+
+	  exit;
+	 
+	 end;
+ 
+      end;
+
+
+
+    if (wall[i] <> 0) then  { ...if the block is not hypothetical but exists }
        begin
+       
        collision:=split_line(ox,oy,nx,ny);
        { calculates the intersection of the segment connecting the old and }
        { new coordinates. “Collision” contains a value that depends on the }
        { type of intersections found between the segment and the grid of   }
        { blocks.                                                           }
+       
+       if collision = 0 then fatal_error($FF);
+
 
        if collision=3 then     { if two collisions have occurred... }
           begin
@@ -2126,30 +2204,29 @@ begin
           f2:=sqrtable[a] + sqrtable[b];         { intersection point closest to the old coord. }
 
           if ((f1 and $00FFFFFF) < (f2 and $00FFFFFF)) then    { f1 and f2 are the square of the modulus }
-                               { of distance vector (see above)          }
+                                                               { of distance vector (see above)          }
 
              { Consider the case where the closest intersection is number 1. }
 
              begin
 	     xb:=ox shr 4;
-             //xb:=min(12,max(i,0));           { Vengono assegnate le coord. }
+             //xb:=min(12,max(i,0));           { Coordinates are assigned }
 	     if xb > 12 then xb := 12;
-             yb:=(byte(oy+24) shr 3)-3;      { del blocco relative a tale  }
-                                             { intersezione.               }
+             yb:=(byte(oy+24) shr 3)-3;      { of the block related to such }
+                                             { intersection.                }
 
-             if wall[byte(xb)+byte(yb)*16]=0 then  { If there is no blockage }
+             if wall[byte(xb+yb*16)]=0 then  { If there is no blockage }
                 begin
 		xb:=nx shr 4;
-                //xb:=min(12,max(0,i));        { Allora l'urto avviene sull' }
+                //xb:=min(12,max(0,i));        { Then the collision occurs at the }
 		if xb > 12 then xb := 12;
-                yb:=(byte(ny+24) shr 3)-3;   { altra intersezione. La n.2  }
+                yb:=(byte(ny+24) shr 3)-3;     { other intersection. No. 2  }
                 end
              else
-                begin                        { Se invece il blocco esiste  }
-                nx:=ox;                      { allora alle nuove coord. si }
-                ny:=oy;                      { assegna il punto di inter-  }
-                                             { sezione contenuto nelle vec-}
-                                             { chie.                       }
+                begin                        { If, on the other hand, the block exists }
+                nx:=ox;                      { then the new coordinates are assigned   }
+                ny:=oy;                      { the intersection point contained        }
+                                             { in the old ones. }
                 end;
              end
           else
@@ -2162,7 +2239,7 @@ begin
 	     if xb > 12 then xb := 12;
              yb:=(byte(ny+24) shr 3)-3;   { on the intersection nx,ny (the second one) }
 
-             if wall[byte(xb)+byte(yb)*16]=0 then    { If the blockade is not there... }
+             if wall[byte(xb+yb*16)]=0 then    { If the blockade is not there... }
                 begin
                 nx:=ox;                   { then the valid intersection is }
                 ny:=oy;                   { the other, and it goes on...   }
@@ -2182,8 +2259,8 @@ begin
 
 	//shoot_block(xb,yb,ball);  { breaks down the block in question }
 
-       x:=(nx and 15) shr 1;     { you calculate the impact point of   }
-       y:=(ny and 7);            { the ball with respect to the brick. }
+       x:=byte(nx and 15) shr 1;     { you calculate the impact point of   }
+       y:=(ny and 7);                { the ball with respect to the brick. }
 
        { Dividing the coord. x of the impact by 2 gives a cross section   }
        { on a square brick instead of a rectangular one, which simplifies }
@@ -2358,7 +2435,7 @@ begin
           if touch=0 then       { upper left corner }
              begin
 	     a := around and 131;
-	     
+
              if a = 0   then deflect:=$11;
              if a = 1   then deflect:=$33;
              if a = 2   then deflect:=$10;
@@ -2390,7 +2467,7 @@ begin
              if a = 8   then deflect:=$01;
              if a = 10  then deflect:=$21;
              if a = 12  then deflect:=$11;
-	     
+
 	     if a = 10 then begin
 	       shoot_block(xb,yb-1,ball);
 	       shoot_block(xb+1,yb,ball);
@@ -2514,7 +2591,6 @@ begin
                   (adjw[0,2] and $40) or 
 		  (adjw[0,1] and $80);
 }
-
 
        case emergency of
 
@@ -3688,7 +3764,7 @@ var
 
 
 {
-  set_ball_direction(ball0,50 +79);   
+  set_ball_direction(ball0,50+79);   
   set_ball_speed(ball0, 700);
 
 }
@@ -3752,6 +3828,8 @@ var
      if ball0.inplay then check_ball(ball0);
      if ball1.inplay then check_ball(ball1);
      if ball2.inplay then check_ball(ball2);
+
+
   (*
      for cn:=0 to 2 do
          begin
@@ -3845,7 +3923,7 @@ var
      { of LEVEL[lv] obviously depends on the lv, that is, the level         }
      { selected before starting the game.                                   }     
 
-     if ball0.inplay then test_ball(ball0);
+     if (ball0.inplay) and (ball0.launch = false) then test_ball(ball0);
      if ball1.inplay then test_ball(ball1);
      if ball2.inplay then test_ball(ball2);
 (*
@@ -4256,7 +4334,7 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:= //all_walls[4];
+                wall_p[cur_player]:= //all_walls[9];
                       all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
