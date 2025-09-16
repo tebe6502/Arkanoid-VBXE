@@ -1823,16 +1823,6 @@ begin
     tx := (xp1 <> xp2);   
     ty := (yp1 <> yp2);
 
-{
-    if (tx = false) and (ty = false) then begin
-
-//     tx := true;
-//     ty := true;
-     
-     collision := 4;
-     
-    end; 
-}
 
     if {(xp1<>xp2) or (yp1<>yp2)} tx or ty then   { if the two points do not coincide... }
        begin
@@ -1914,7 +1904,7 @@ begin
 
        end
 
-    else begin {dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2); }   fatal_error(err2); end;
+    else begin dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2);   fatal_error(err2); end;
     { otherwise something went wrong! }
 
     dec(x1,16);   { restore the old coordinates }
@@ -2089,18 +2079,29 @@ begin
                       { (0,0) is the block in the upper right-hand corner        }
 
 
-{
+    i:=xb+yb*16;
+    
+
     yes:=false;
 
-  
-    angle := get_ball_direction(ball);
 
-    if angle < 90 then
-     if (wall[byte(xb)+byte(yb)*16] = 0) and (wall[byte(xb-1)+byte(yb)*16] <> 0) and (wall[byte(xb)+byte(yb+1)*16] <> 0) then yes:=true;
+{ 
+    if (i>16) and (nx and $0f > 0) and (ny and $0f > 0) and (wall[i] = 0) then begin
+    
+      if ((wall[i-1] <> 0) and (wall[i+16] <> 0)) and (ball.speedx > 0) and (ball.speedy < 0) then yes:=true;
+
+      if ((wall[i+1] <> 0) and (wall[i+16] <> 0)) and (ball.speedx < 0) and (ball.speedy < 0) then yes:=true;
+
+//         ((wall[i+1] <> 0) and (wall[i+16] <> 0)) or
+//         ((wall[i-1] <> 0) and (wall[i-16] <> 0))
+
+      
+    end;  
 }
 
+
     
-    if (wall[byte(xb)+byte(yb)*16]<>0) {or yes} then  { ...if the block is not hypothetical but exists }
+    if (wall[ i ] <> 0) or yes then  { ...if the block is not hypothetical but exists }
        begin
        collision:=split_line(ox,oy,nx,ny);
        { calculates the intersection of the segment connecting the old and }
@@ -2130,15 +2131,17 @@ begin
              { Consider the case where the closest intersection is number 1. }
 
              begin
-	     i:=ox shr 4;
-             xb:=min(12,max(i,0));           { Vengono assegnate le coord. }
+	     xb:=ox shr 4;
+             //xb:=min(12,max(i,0));           { Vengono assegnate le coord. }
+	     if xb > 12 then xb := 12;
              yb:=(byte(oy+24) shr 3)-3;      { del blocco relative a tale  }
                                              { intersezione.               }
 
              if wall[byte(xb)+byte(yb)*16]=0 then  { If there is no blockage }
                 begin
-		i:=nx shr 4;
-                xb:=min(12,max(0,i));        { Allora l'urto avviene sull' }
+		xb:=nx shr 4;
+                //xb:=min(12,max(0,i));        { Allora l'urto avviene sull' }
+		if xb > 12 then xb := 12;
                 yb:=(byte(ny+24) shr 3)-3;   { altra intersezione. La n.2  }
                 end
              else
@@ -2154,8 +2157,9 @@ begin
              { If it is the second intersection closest to the }
              { old coordinates, proceed in the same way.       }
 
-	     i:=nx shr 4;
-             xb:=min(12,max(0,i));        { We calculate the coordinates of the block  }
+	     xb:=nx shr 4;
+             //xb:=min(12,max(0,i));        { We calculate the coordinates of the block  }
+	     if xb > 12 then xb := 12;
              yb:=(byte(ny+24) shr 3)-3;   { on the intersection nx,ny (the second one) }
 
              if wall[byte(xb)+byte(yb)*16]=0 then    { If the blockade is not there... }
@@ -2163,8 +2167,9 @@ begin
                 nx:=ox;                   { then the valid intersection is }
                 ny:=oy;                   { the other, and it goes on...   }
 
-		i:=nx shr 4;
-                xb:=min(12,max(0,i));         { ...reassigning to the new  }
+		xb:=nx shr 4;
+                //xb:=min(12,max(0,i));         { ...reassigning to the new  }
+		if xb > 12 then xb := 12;
                 yb:=(byte(ny+24) shr 3)-3;    { coord. the intersection #1 }
                 end;
              end;
@@ -3683,10 +3688,10 @@ var
 
 
 {
-  set_ball_direction(ball0,50);   
+  set_ball_direction(ball0,50 +79);   
   set_ball_speed(ball0, 700);
-}
 
+}
   
   
   while(ball0.inplay) and (remain_blk>0) and (not score.abortplay) do
