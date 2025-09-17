@@ -2080,6 +2080,8 @@ begin
     i:=xb+yb*16;
 
 
+{ collision test with blocks touching only at the corners }
+
     if (i>16) and (xb>0) and (xb<12) then
     if (wall[i] = 0) then begin
 
