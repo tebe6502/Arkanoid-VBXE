@@ -1913,8 +1913,13 @@ begin
     dec(y2,24);
 
 
-    x1:=min(207,max(0,x1));
-    x2:=min(207,max(0,x2));
+    //x1:=min(207,max(0,x1));
+    if x1 < 0 then x1 := 0;
+    if x1 > 207 then x1 := 207;
+    
+    //x2:=min(207,max(0,x2));
+    if x2 < 0 then x2 := 0;
+    if x2 > 207 then x2 := 207;    
 
     { For y, coordinates <0 and >120 are not cut because the matrix   }
     { containing them is virtually longer for safety reasons, and for }
@@ -2124,42 +2129,46 @@ begin
       if (wall[byte(i+1+16)] <> 0) then around:=around or $10;
 
 
-          if (touch=0) and (around and 131 = 130) then       { upper left corner }
-             begin
+	  case touch of
+	  
+	   0: if (around and 131 = 130) then       { upper left corner }
+              begin
 	       deflect:=$11;
 
 	       shoot_block(xb,yb-1,ball);
 	       shoot_block(xb-1,yb,ball);
 
-             end else
+              end;
 
-          if (touch=1) and (around and 14 = 10) then       { upper right corner }
-             begin
+           1: if (around and 14 = 10) then       { upper right corner }
+              begin
                deflect:=$21;
 
 	       shoot_block(xb,yb-1,ball);
 	       shoot_block(xb+1,yb,ball);
 
-             end else
+              end;
 
-          if (touch=2) and (around and 224 = 160) then       { Bottom left corner }
-             begin
+           2: if (around and 224 = 160) then       { Bottom left corner }
+              begin
                deflect:=$12;
 
  	       shoot_block(xb-1,yb,ball);
 	       shoot_block(xb,yb+1,ball);
 
-             end else
+              end;
 
-          if (touch=3) and (around and 56 = 40) then       { Bottom right corner }
-             begin
+           3: if (around and 56 = 40) then       { Bottom right corner }
+              begin
                deflect:=$22;
 
 	       shoot_block(xb+1,yb,ball);
 	       shoot_block(xb,yb+1,ball);
 
-             end;
-	     
+              end;
+
+	  end;  
+
 	     
 	  if deflect <> 0 then begin
 
@@ -2345,8 +2354,12 @@ begin
           for lx:=-1 to 1 do
               for ly:=-1 to 1 do
                   begin
-                  mx:=max(min(xb+lx,12),0); { When referring to x, the coordinate }
-                  my:=yb+ly;                { must be between 0 and 12.           }
+
+                  //mx:=max(min(xb+lx,12),0); { When referring to x, the coordinate }
+		  mx:=xb+lx;                  { must be between 0 and 12.           }
+		  if mx > 12 then mx := 12;
+
+                  my:=yb+ly;
 
                   if (shortint(xb+lx)<0 ) or
                      (shortint(xb+lx)>12) or
