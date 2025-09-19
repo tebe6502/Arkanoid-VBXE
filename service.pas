@@ -828,8 +828,18 @@ begin
   sx := ball.speedx;
   sy := ball.speedy;
 
-  a:=abs(sx) and 1023;
-  b:=abs(sy) and 1023;
+  if sx < 0 then
+   a := -sx
+  else
+   a := sx;
+
+  if sy < 0 then
+   b := -sy
+  else
+   b := sy;
+
+  a:=a and 1023;
+  b:=b and 1023;
   
   i:=sqrtable[a] + sqrtable[b];
   
@@ -982,14 +992,21 @@ var i: cardinal;
 begin
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
-      
-  a:=abs(ball.speedx) and 1023;
-  b:=abs(ball.speedy) and 1023;
 
-  i:=sqrtable[a] + sqrtable[b];
-  
+  if ball.speedx < 0 then
+   a := -ball.speedx
+  else
+   a := ball.speedx;
+
+  if ball.speedy < 0 then
+   b := -ball.speedy
+  else
+   b := ball.speedy;
+
+  i:=sqrtable[a and 1023] + sqrtable[b and 1023];
+
   ball_speed := trunc( FastSqrt(i) );
-    
+
 end;
 
 
@@ -2543,13 +2560,19 @@ begin
           myx := deflect shr 4;
           myy := deflect and 15;
 	  
-	  sp:=abs(ball.speedx);
+	  if ball.speedx < 0 then
+	   sp := -ball.speedx
+	  else
+	   sp := ball.speedx;
 
           if myx=1 then ball.speedx:= -sp;
           if myx=2 then ball.speedx:= sp;
           if myx=3 then ball.speedx:= -ball.speedx ;
 
-	  sp:=abs(ball.speedy);
+	  if ball.speedy < 0 then
+	   sp := -ball.speedy
+	  else
+	   sp := ball.speedy;
 
           if myy=1 then ball.speedy:= -sp;
           if myy=2 then ball.speedy:= sp;
