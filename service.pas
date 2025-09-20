@@ -2065,15 +2065,16 @@ var
 
     xb,yb    : byte;
 
-    sp,
+    sp, angle,
     ox,oy,
-    nx,ny,
-    lx,ly,
-    mx,my,
-    angle,
-    myx,myy  : smallint;
+    nx,ny    : smallint;
 
-    f1,f2    : cardinal;
+    lx,ly,
+    mx,my    : shortint;
+
+    myx,myy  : byte;
+
+    f1,f2    : word;
     a,b      : byte;
 
     emergency,
@@ -2191,12 +2192,11 @@ begin
 
 	    ball.speedx:=-ball.speedx;
 	    ball.speedy:=-ball.speedy;
+	    
+	    exit;
 	     
           end;
-	  
 
-	  exit;
-	 
 	 end;
  
       end;
@@ -2374,12 +2374,13 @@ begin
 
                   //mx:=max(min(xb+lx,12),0); { When referring to x, the coordinate }
 		  mx:=xb+lx;                  { must be between 0 and 12.           }
-		  if mx > 12 then mx := 12;
+		  //if mx < 0 then mx := 0;
+		  //if mx > 12 then mx := 12;
 
                   my:=yb+ly;
 
-                  if (shortint(xb+lx)<0 ) or
-                     (shortint(xb+lx)>12) or
+                  if (mx < 0 ) or
+                     (mx > 12) or
                      (wall[byte(mx)+byte(my)*16]<>0) then
                         adjw[byte(lx+1),byte(ly+1)]:=10   { There are bricks }
                   else
@@ -2657,10 +2658,10 @@ begin
 
        repeat
 
-          lx:=mul90_16[mimax shr 4];    { the first digit of mimax is placed in }
-          mx:=mul90_16[mimax and 15];   { lx and the second in mx.              }
+          ox:=mul90_16[mimax shr 4];    { the first digit of mimax is placed in }
+          oy:=mul90_16[mimax and 15];   { ox and the second in oy.              }
 
-          angle := rand(mx-lx) + lx;    { Angle is a random variable between lx and mx }
+          angle := rand(oy-ox) + ox;    { Angle is a random variable between ox and oy }
 
        until (mod90(angle) > 30) and (mod90(angle) < 60);
        { and this cycle repeats until the ball has an inclination }
