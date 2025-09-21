@@ -1963,7 +1963,7 @@ RESULT	= DATAORIGIN+$01E8
 
 .local	SINDEG						; FUNCTION
 
-; optimize OK (arkanoid_vbxe.pas), line = 763
+; optimize OK (arkanoid_vbxe.pas), line = 766
 
 	lda A
 	sta MOD360.A
@@ -1975,11 +1975,11 @@ RESULT	= DATAORIGIN+$01E8
 	lda MOD360.RESULT+1
 	sta A+1
 
-; optimize OK (arkanoid_vbxe.pas), line = 765
+; optimize OK (arkanoid_vbxe.pas), line = 768
 
 	jpl l_01F8
 
-; optimize OK (arkanoid_vbxe.pas), line = 766
+; optimize OK (arkanoid_vbxe.pas), line = 769
 
 	lda A
 	add #$68
@@ -1989,7 +1989,7 @@ RESULT	= DATAORIGIN+$01E8
 	sta A+1
 l_01F8
 
-; optimize OK (arkanoid_vbxe.pas), line = 768
+; optimize OK (arkanoid_vbxe.pas), line = 771
 
 	lda A
 	cmp #$5B
@@ -1999,7 +1999,7 @@ l_01F8
 	eor #$80
 	jpl l_0215
 
-; optimize OK (arkanoid_vbxe.pas), line = 769
+; optimize OK (arkanoid_vbxe.pas), line = 772
 
 	ldy A
 	lda adr.SINTABLE,y
@@ -2008,7 +2008,7 @@ l_01F8
 	jmp l_0226
 l_0215
 
-; optimize OK (arkanoid_vbxe.pas), line = 770
+; optimize OK (arkanoid_vbxe.pas), line = 773
 
 	lda A
 	cmp #$B5
@@ -2018,7 +2018,7 @@ l_0215
 	eor #$80
 	jpl l_0237
 
-; optimize OK (arkanoid_vbxe.pas), line = 771
+; optimize OK (arkanoid_vbxe.pas), line = 774
 
 	lda #$B4
 	sub A
@@ -2029,7 +2029,7 @@ l_0215
 	jmp l_024C
 l_0237
 
-; optimize OK (arkanoid_vbxe.pas), line = 772
+; optimize OK (arkanoid_vbxe.pas), line = 775
 
 	lda A
 	cmp #$0F
@@ -2039,7 +2039,7 @@ l_0237
 	eor #$80
 	jpl l_025D
 
-; optimize OK (arkanoid_vbxe.pas), line = 773
+; optimize OK (arkanoid_vbxe.pas), line = 776
 
 	ldy A
 	lda #$00
@@ -2050,7 +2050,7 @@ l_0237
 	jmp l_0275
 l_025D
 
-; optimize OK (arkanoid_vbxe.pas), line = 775
+; optimize OK (arkanoid_vbxe.pas), line = 778
 
 	lda #$68
 	sub A
@@ -2079,7 +2079,7 @@ RESULT	= DATAORIGIN+$01EC
 
 .local	FASTSQRT					; FUNCTION
 
-; optimize OK (arkanoid_vbxe.pas), line = 784
+; optimize OK (arkanoid_vbxe.pas), line = 787
 
 	lda I
 	sta :STACKORIGIN+9
@@ -2104,7 +2104,7 @@ RESULT	= DATAORIGIN+$01EC
 	lda :STACKORIGIN+STACKWIDTH+9
 	sta I+1
 
-; optimize OK (arkanoid_vbxe.pas), line = 786
+; optimize OK (arkanoid_vbxe.pas), line = 789
 
 	lda I
 	sta RESULT
@@ -2130,12 +2130,12 @@ I	= DATAORIGIN+$01EE
 
 .local	ATAN2						; FUNCTION | REGISTER
 
-; optimize OK (arkanoid_vbxe.pas), line = 943
+; optimize OK (arkanoid_vbxe.pas), line = 946
 
 	lda X+1
 	jpl l_02AC
 
-; optimize OK (arkanoid_vbxe.pas), line = 944
+; optimize OK (arkanoid_vbxe.pas), line = 947
 
 	lda #$00
 	sub X
@@ -2145,7 +2145,7 @@ I	= DATAORIGIN+$01EE
 	jmp l_02BE
 l_02AC
 
-; optimize OK (arkanoid_vbxe.pas), line = 946
+; optimize OK (arkanoid_vbxe.pas), line = 949
 
 	lda X
 	sta SX
@@ -2153,12 +2153,12 @@ l_02AC
 l_02BE
 	sta SX+1
 
-; optimize OK (arkanoid_vbxe.pas), line = 948
+; optimize OK (arkanoid_vbxe.pas), line = 951
 
 	lda Y+1
 	jpl l_02D4
 
-; optimize OK (arkanoid_vbxe.pas), line = 949
+; optimize OK (arkanoid_vbxe.pas), line = 952
 
 	lda #$00
 	sub Y
@@ -2168,7 +2168,7 @@ l_02BE
 	jmp l_02E6
 l_02D4
 
-; optimize OK (arkanoid_vbxe.pas), line = 951
+; optimize OK (arkanoid_vbxe.pas), line = 954
 
 	lda Y
 	sta SY
@@ -2180,18 +2180,18 @@ l_02E6
 	jmp l_02ED
 l_02EE
 
-; optimize OK (arkanoid_vbxe.pas), line = 956
+; optimize OK (arkanoid_vbxe.pas), line = 959
 
 	lsr SX+1
 	ror SX
 
-; optimize OK (arkanoid_vbxe.pas), line = 957
+; optimize OK (arkanoid_vbxe.pas), line = 960
 
 	lsr SY+1
 	ror SY
 l_02ED
 
-; optimize OK (arkanoid_vbxe.pas), line = 954
+; optimize OK (arkanoid_vbxe.pas), line = 957
 
 	lda SX+1
 	jne l_02EE
@@ -2205,12 +2205,12 @@ l_02ED
 @
 	jcs l_02EE
 
-; optimize OK (arkanoid_vbxe.pas), line = 960
+; optimize OK (arkanoid_vbxe.pas), line = 963
 
 	lda X+1
 	jpl l_0327
 
-; optimize OK (arkanoid_vbxe.pas), line = 961
+; optimize OK (arkanoid_vbxe.pas), line = 964
 
 	lda #$00
 	sub SX
@@ -2220,7 +2220,7 @@ l_02ED
 	jmp l_0339
 l_0327
 
-; optimize OK (arkanoid_vbxe.pas), line = 963
+; optimize OK (arkanoid_vbxe.pas), line = 966
 
 	lda SX
 	sta X
@@ -2228,12 +2228,12 @@ l_0327
 l_0339
 	sta X+1
 
-; optimize OK (arkanoid_vbxe.pas), line = 966
+; optimize OK (arkanoid_vbxe.pas), line = 969
 
 	lda Y+1
 	jpl l_034F
 
-; optimize OK (arkanoid_vbxe.pas), line = 967
+; optimize OK (arkanoid_vbxe.pas), line = 970
 
 	lda #$00
 	sub SY
@@ -2243,7 +2243,7 @@ l_0339
 	jmp l_0361
 l_034F
 
-; optimize OK (arkanoid_vbxe.pas), line = 969
+; optimize OK (arkanoid_vbxe.pas), line = 972
 
 	lda SY
 	sta Y
@@ -15171,15 +15171,24 @@ l_373A
 
 ; optimize OK (service.pas), line = 4400
 
-	lda WALL_P
-	sta @move.dst
+	lda #$00
+	sta :STACKORIGIN+9
 	lda CUR_PLAYER
-	add WALL_P+1
+	sta :STACKORIGIN+STACKWIDTH+9
+	ldy CUR_PLAYER
+	lda adr.SCORE.WALL_N,y
+	sub #$01
+	sta :eax+1
+	lda WALL_P
+	add :STACKORIGIN+9
+	sta @move.dst
+	lda WALL_P+1
+	adc :STACKORIGIN+STACKWIDTH+9
 	sta @move.dst+1
 	lda ALL_WALLS
 	sta @move.src
-	lda ALL_WALLS+1
-	add #$09
+	lda :eax+1
+	add ALL_WALLS+1
 	sta @move.src+1
 	lda <256
 	sta @move.cnt
@@ -15223,7 +15232,7 @@ l_374C
 
 ; optimize OK (service.pas), line = 4417
 
-	jeq l_378D
+	jeq l_379A
 
 ; optimize OK (service.pas), line = 4420
 
@@ -15236,13 +15245,13 @@ l_374C
 
 	lda TOTALWALL
 	cmp adr.SCORE.WALL_N,y
-	jcs l_37A9
+	jcs l_37B6
 
 ; optimize OK (service.pas), line = 4424
 
 	lda #$01
 	sta adr.SCORE.WALL_N,y
-l_37A9
+l_37B6
 
 ; optimize OK (service.pas), line = 4427
 
@@ -15270,17 +15279,17 @@ l_37A9
 	lda >256
 	sta @move.cnt+1
 	jsr @move
-	jmp l_37DB
-l_378D
+	jmp l_37E8
+l_379A
 
 ; optimize OK (service.pas), line = 4433
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
-	jne l_37F0
+	jne l_37FD
 	jsr GAME_OVER
-l_37DB
-l_37F0
+l_37E8
+l_37FD
 
 ; optimize OK (service.pas), line = 4438
 
@@ -15299,20 +15308,20 @@ l_37F0
 	sbc #$00
 	svc
 	eor #$80
-	jpl l_3818
+	jpl l_3825
 	lda #$01
 	sta CUR_PLAYER
-l_3818
+l_3825
 
 ; optimize OK (service.pas), line = 4448
 
 	ldy CUR_PLAYER
 	lda adr.SCORE.LIVES,y
-	jne l_3834
+	jne l_3841
 	lda #$03
 	sub CUR_PLAYER
 	sta CUR_PLAYER
-l_3834
+l_3841
 
 ; optimize OK (service.pas), line = 4453
 
@@ -15354,21 +15363,21 @@ NWALL	= DATAORIGIN+$03FE
 
 .local	INIT_GAME					; PROCEDURE
 
-; optimize FAIL ('NOSOUND', arkanoid_vbxe.pas), line = 1029
+; optimize FAIL ('NOSOUND', arkanoid_vbxe.pas), line = 1032
 
 	jsr NOSOUND
 
-; optimize FAIL ('SYSTEM.RANDOMIZE', arkanoid_vbxe.pas), line = 1031
+; optimize FAIL ('SYSTEM.RANDOMIZE', arkanoid_vbxe.pas), line = 1034
 
 	jsr SYSTEM.RANDOMIZE
 
-; optimize FAIL ('XSFX.TSFX.CLEAR', arkanoid_vbxe.pas), line = 1033
+; optimize FAIL ('XSFX.TSFX.CLEAR', arkanoid_vbxe.pas), line = 1036
 
 	lda SFX
 	ldy SFX+1
 	jsr XSFX.TSFX.CLEAR
 
-; optimize OK (arkanoid_vbxe.pas), line = 1035
+; optimize OK (arkanoid_vbxe.pas), line = 1038
 
 	lda #$B5
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15378,7 +15387,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1036
+; optimize OK (arkanoid_vbxe.pas), line = 1039
 
 	lda #$D8
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15388,7 +15397,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1037
+; optimize OK (arkanoid_vbxe.pas), line = 1040
 
 	lda #$E9
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15398,7 +15407,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1038
+; optimize OK (arkanoid_vbxe.pas), line = 1041
 
 	lda #$FA
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15408,7 +15417,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1039
+; optimize OK (arkanoid_vbxe.pas), line = 1042
 
 	lda #$0B
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15418,7 +15427,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1040
+; optimize OK (arkanoid_vbxe.pas), line = 1043
 
 	lda #$1F
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15428,7 +15437,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1041
+; optimize OK (arkanoid_vbxe.pas), line = 1044
 
 	lda #$42
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15438,7 +15447,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1042
+; optimize OK (arkanoid_vbxe.pas), line = 1045
 
 	lda #$65
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15448,7 +15457,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1043
+; optimize OK (arkanoid_vbxe.pas), line = 1046
 
 	lda #$88
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15458,7 +15467,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1044
+; optimize OK (arkanoid_vbxe.pas), line = 1047
 
 	lda #$AB
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15468,7 +15477,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1045
+; optimize OK (arkanoid_vbxe.pas), line = 1048
 
 	lda #$4C
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15478,7 +15487,7 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize OK (arkanoid_vbxe.pas), line = 1046
+; optimize OK (arkanoid_vbxe.pas), line = 1049
 
 	lda #$7B
 	sta XSFX.TSFX.ADD.@010188000.ASFX
@@ -15488,17 +15497,17 @@ NWALL	= DATAORIGIN+$03FE
 	ldy SFX+1
 	jsr XSFX.TSFX.ADD.@010188000
 
-; optimize FAIL ('XSFX.TSFX.PLAY', arkanoid_vbxe.pas), line = 1048
+; optimize FAIL ('XSFX.TSFX.PLAY', arkanoid_vbxe.pas), line = 1051
 
 	lda SFX
 	ldy SFX+1
 	jsr XSFX.TSFX.PLAY
 
-; optimize FAIL ('INITSVGA', arkanoid_vbxe.pas), line = 1051
+; optimize FAIL ('INITSVGA', arkanoid_vbxe.pas), line = 1054
 
 	jsr INITSVGA
 
-; optimize FAIL ('INITROWARRAY', arkanoid_vbxe.pas), line = 1052
+; optimize FAIL ('INITROWARRAY', arkanoid_vbxe.pas), line = 1055
 
 	jsr INITROWARRAY
 
@@ -15854,12 +15863,12 @@ NWALL	= DATAORIGIN+$03FE
 	lda #$1E
 	sta PATTERN4.HEIGHT
 
-; optimize OK (arkanoid_vbxe.pas), line = 1059
+; optimize OK (arkanoid_vbxe.pas), line = 1062
 
 	lda #$20
 	sta TOTALWALL
 
-; optimize OK (arkanoid_vbxe.pas), line = 1061
+; optimize OK (arkanoid_vbxe.pas), line = 1064
 
 	lda #$50
 	sta SCORE.HISCORE
@@ -15869,12 +15878,12 @@ NWALL	= DATAORIGIN+$03FE
 	sta SCORE.HISCORE+2
 	sta SCORE.HISCORE+3
 
-; optimize OK (arkanoid_vbxe.pas), line = 1064
+; optimize OK (arkanoid_vbxe.pas), line = 1067
 
 	lda #$01
 	sta SOUND_ON
 
-; optimize OK (arkanoid_vbxe.pas), line = 1065
+; optimize OK (arkanoid_vbxe.pas), line = 1068
 
 	lda #$03
 	sta LV
@@ -15882,29 +15891,29 @@ NWALL	= DATAORIGIN+$03FE
 	sta LV+1
 
 ; --- RepeatUntilProlog
-l_3955
+l_3962
 
-; optimize FAIL ('MAINSCREEN', arkanoid_vbxe.pas), line = 1072
+; optimize FAIL ('MAINSCREEN', arkanoid_vbxe.pas), line = 1075
 
 	jsr MAINSCREEN
 	lda MAINSCREEN.RESULT
 	sta SCORE.PL_NUMB
 
-; optimize OK (arkanoid_vbxe.pas), line = 1074
+; optimize OK (arkanoid_vbxe.pas), line = 1077
 
-	jeq l_396B
+	jeq l_3978
 	lda #$01
 	sta START_GAME.PLAYERS
 	lda #$00
 	sta START_GAME.PLAYERS+1
 	jsr START_GAME
-l_396B
+l_3978
 
-; optimize OK (arkanoid_vbxe.pas), line = 1077
+; optimize OK (arkanoid_vbxe.pas), line = 1080
 
 	lda SCORE.PL_NUMB
 	cmp #$01
-	jcs l_3955
+	jcs l_3962
 
 @exit
 	.ifdef @new
@@ -15919,7 +15928,7 @@ l_396B
 .endl
 l_0022
 
-; optimize FAIL ('INIT_GAME', arkanoid_vbxe.pas), line = 1085
+; optimize FAIL ('INIT_GAME', arkanoid_vbxe.pas), line = 1088
 
 	jsr INIT_GAME
 

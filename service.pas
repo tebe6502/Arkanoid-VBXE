@@ -4397,8 +4397,8 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:= all_walls[9];
-                      //all_walls[byte(score.wall_n[cur_player]-1)];
+                wall_p[cur_player]:= //all_walls[9];
+                      all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
