@@ -47,6 +47,9 @@
  - adjw [0..3, 0..3] (ball_hit_block) compiler bugfix
  - more accurate collision detection
 
+ 2025-09-21
+ - ball_hit_block optimizations
+
 *)
 
 

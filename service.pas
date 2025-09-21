@@ -1924,6 +1924,7 @@ begin
     else exit(0);// begin {dpoke($600, x1); dpoke($602, y1); poke($604, x2); dpoke($606, y2);}   fatal_error(collision or $80); end;
     { otherwise something went wrong! }
 
+
     dec(x1,16);   { restore the old coordinates }
     dec(y1,24);
     dec(x2,16);
@@ -2084,6 +2085,8 @@ var
     collision,
     touch    : byte;
 
+    yes      : Boolean;
+
     adjw     : array[0..3,0..3] of byte;
 
 begin
@@ -2136,15 +2139,17 @@ begin
           {        -------------                      }
 
 
-      if (wall[byte(i-1)] <> 0) then around:=around or $80;
-      if (wall[byte(i+1)] <> 0) then around:=around or 8;
-      if (wall[byte(i-16)] <> 0) then around:=around or 2;
-      if (wall[byte(i+16)] <> 0) then around:=around or $20;
+          if (wall[byte(i-1)] <> 0) then around:=around or $80;
+          if (wall[byte(i+1)] <> 0) then around:=around or 8;
+          if (wall[byte(i-16)] <> 0) then around:=around or 2;
+          if (wall[byte(i+16)] <> 0) then around:=around or $20;
+      
+         if around <> 0 then begin
 
-      if (wall[byte(i-1-16)] <> 0) then around:=around or 1;
-      if (wall[byte(i+1-16)] <> 0) then around:=around or 4;
-      if (wall[byte(i-1+16)] <> 0) then around:=around or $40;
-      if (wall[byte(i+1+16)] <> 0) then around:=around or $10;
+          if (wall[byte(i-1-16)] <> 0) then around:=around or 1;
+          if (wall[byte(i+1-16)] <> 0) then around:=around or 4;
+          if (wall[byte(i-1+16)] <> 0) then around:=around or $40;
+          if (wall[byte(i+1+16)] <> 0) then around:=around or $10;
 
 
 	  case touch of
@@ -2192,10 +2197,12 @@ begin
 
 	    ball.speedx:=-ball.speedx;
 	    ball.speedy:=-ball.speedy;
-	    
 	    exit;
-	     
           end;
+
+
+         end; // if around <> 0
+
 
 	 end;
  
@@ -2223,16 +2230,32 @@ begin
           mx:=ball.oldx-nx-9;  { intersection point 2 is calculated }
           my:=ball.oldy-ny-22;
 
-	  a:=abs(lx); b:=abs(ly);
+          if lx < 0 then
+	   a := -lx
+	  else
+	   a := lx;
 
-          f1:=sqrtable[a] + sqrtable[b];         { indi chooses between the two the  }
+          if ly < 0 then
+	   b := -ly
+	  else
+	   b := ly;
 
-	  a:=abs(mx); b:=abs(my);
+          f1:=sqrtable[a] + sqrtable[b];        { indi chooses between the two the  }
 
-          f2:=sqrtable[a] + sqrtable[b];         { intersection point closest to the old coord. }
+          if mx < 0 then
+	   a := -mx
+	  else
+	   a := mx;
 
-          if ((f1 and $00FFFFFF) < (f2 and $00FFFFFF)) then    { f1 and f2 are the square of the modulus }
-                                                               { of distance vector (see above)          }
+          if my < 0 then
+	   b := -my
+	  else
+	   b := my;
+
+          f2:=sqrtable[a] + sqrtable[b];        { intersection point closest to the old coord. }
+
+          if f1 < f2 then                       { f1 and f2 are the square of the modulus }
+                                                { of distance vector (see above)          }
 
              { Consider the case where the closest intersection is number 1. }
 
@@ -2343,14 +2366,19 @@ begin
           end;
 
 
-	if emergency < 5 then shoot_block(xb,yb,ball);  { breaks down the block in question }
+        yes := (x=y) or (x=byte(7-y));
+
+	if (yes = false) and (emergency < 5) then shoot_block(xb,yb,ball);  { breaks down the block in question }
 
 
        { ... if it occurs on one of the four edges instead ... }
-       if (x=y) or (x=byte(7-y)) then
+//       if (x=y) or (x=byte(7-y)) then
+       if yes then
           begin
+
           deflect:=$00;
           touch:=0;
+	  around:=0;
 
           { touch takes different values depending on the corner }
           { Follows the table (e.g., 0 = upper left corner)      }
@@ -2415,9 +2443,6 @@ begin
 }
 
         asm
-	lda #0
-	sta around
-
 	lda #10
 
 	cmp adr.ADJW
@@ -2465,27 +2490,28 @@ begin
           { For example, “and 131” means consider only the bricks 1+2+128 }
           { the others, if there are any, do not matter.                  }
 
+
           if touch=0 then       { upper left corner }
              begin
 	     a := around and 131;
 
-             if a = 0   then deflect:=$11;
-             if a = 1   then deflect:=$33;
-             if a = 2   then deflect:=$10;
-             if a = 3   then deflect:=$12;
-             if a = 128 then deflect:=$01;
-             if a = 129 then deflect:=$21;
-             if a = 130 then deflect:=$11;
+	     case a of
 
-	     if a = 130 then begin
-	       shoot_block(xb,yb-1,ball);
-	       shoot_block(xb-1,yb,ball);
-	     end else	     
-	       shoot_block(xb,yb,ball);
+                0: deflect:=$11;
+                1: begin deflect:=$33; shoot_block(xb-1,yb-1,ball); end;
+                2: begin deflect:=$10; shoot_block(xb,yb-1,ball); end;
+                3: begin deflect:=$12; shoot_block(xb-1,yb-1,ball); end;
+              128: begin deflect:=$01; shoot_block(xb-1,yb,ball); end;
+              129: begin deflect:=$21; shoot_block(xb-1,yb-1,ball); end;
+              130: begin deflect:=$11; shoot_block(xb-1,yb,ball); shoot_block(xb,yb-1,ball); end;
 
+	     end; 
+
+	     if a <> 130 then shoot_block(xb,yb,ball);
+ 
              emergency:=5;
-             shoot_block(xb-1,yb-1,ball);
              end;
+
 
           { “and 14” are the bricks 2+4+8, the others don't matter }
 
@@ -2493,66 +2519,65 @@ begin
              begin
 	     a := around and 14;
 
-             if a = 0   then deflect:=$21;
-             if a = 2   then deflect:=$20;
-             if a = 4   then deflect:=$33;
-             if a = 6   then deflect:=$22;
-             if a = 8   then deflect:=$01;
-             if a = 10  then deflect:=$21;
-             if a = 12  then deflect:=$11;
+	     case a of
 
-	     if a = 10 then begin
-	       shoot_block(xb,yb-1,ball);
-	       shoot_block(xb+1,yb,ball);
-	     end else
-	       shoot_block(xb,yb,ball);
+                0: deflect:=$21;
+                2: begin deflect:=$20; shoot_block(xb,yb-1,ball); end;
+                4: begin deflect:=$33; shoot_block(xb+1,yb-1,ball); end;
+                6: begin deflect:=$22; shoot_block(xb+1,yb-1,ball); end;
+                8: begin deflect:=$01; shoot_block(xb+1,yb,ball); end;
+               10: begin deflect:=$21; shoot_block(xb,yb-1,ball); shoot_block(xb+1,yb,ball); end;
+               12: begin deflect:=$11; shoot_block(xb+1,yb-1,ball); end;
+
+	     end;
+
+	     if a <> 10 then shoot_block(xb,yb,ball);
 
              emergency:=8;
-             shoot_block(xb+1,yb-1,ball);
              end;
+
 
           if touch=2 then       { Bottom left corner }
              begin
 	     a := around and 224;
 	     
-             if a = 0   then deflect:=$12;
-             if a = 32  then deflect:=$10;
-             if a = 64  then deflect:=$33;
-             if a = 96  then deflect:=$11;
-             if a = 128 then deflect:=$02;
-             if a = 160 then deflect:=$12;
-             if a = 192 then deflect:=$22;
+	     case a of
 
-	     if a = 160 then begin
- 	       shoot_block(xb-1,yb,ball); 
-	       shoot_block(xb,yb+1,ball); 
-	     end else
-	       shoot_block(xb,yb,ball);
+                0: deflect:=$12;
+               32: begin deflect:=$10; shoot_block(xb,yb+1,ball);    end;
+               64: begin deflect:=$33; shoot_block(xb-1,yb+1,ball);  end;
+               96: begin deflect:=$11; shoot_block(xb-1,yb+1,ball); end;
+              128: begin deflect:=$02; shoot_block(xb-1,yb,ball);  end;
+              160: begin deflect:=$12; shoot_block(xb-1,yb,ball); shoot_block(xb,yb+1,ball); end;
+              192: begin deflect:=$22; shoot_block(xb-1,yb+1,ball) end;
+	      
+	     end; 
+
+	     if a <> 160 then shoot_block(xb,yb,ball);
 
              emergency:=6;
-             shoot_block(xb-1,yb+1,ball);
              end;
+
 
           if touch=3 then       { Bottom right corner }
              begin
 	     a := around and 56;
 
-             if a = 0   then deflect:=$22;
-             if a = 8   then deflect:=$02;
-             if a = 16  then deflect:=$33;
-             if a = 24  then deflect:=$12;
-             if a = 32  then deflect:=$20;
-             if a = 40  then deflect:=$22;
-             if a = 48  then deflect:=$21;
+	     case a of
+	     
+                0: deflect:=$22;
+                8: begin deflect:=$02; shoot_block(xb+1,yb,ball); end;
+               16: begin deflect:=$33; shoot_block(xb+1,yb+1,ball); end;
+               24: begin deflect:=$12; shoot_block(xb+1,yb+1,ball); end;
+               32: begin deflect:=$20; shoot_block(xb,yb+1,ball); end;
+               40: begin deflect:=$22; shoot_block(xb+1,yb,ball); shoot_block(xb,yb+1,ball); end;
+               48: begin deflect:=$21; shoot_block(xb+1,yb+1,ball); end;
 
-	     if a = 40 then begin
-	       shoot_block(xb+1,yb,ball);
-	       shoot_block(xb,yb+1,ball);
-	     end else
-	       shoot_block(xb,yb,ball);
+	     end;
+
+	     if a <> 40 then shoot_block(xb,yb,ball);
 
              emergency:=7;
-             shoot_block(xb+1,yb+1,ball);
              end;
 
           { The first hex (hexadecimal) digit is put in myx }
@@ -3803,9 +3828,8 @@ var
 
 
 {
-  set_ball_direction(ball0,50+79);   
+  set_ball_direction(ball0,31);
   set_ball_speed(ball0, 700);
-
 }
   
   
@@ -4373,8 +4397,8 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:= //all_walls[9];
-                      all_walls[byte(score.wall_n[cur_player]-1)];
+                wall_p[cur_player]:= all_walls[9];
+                      //all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
