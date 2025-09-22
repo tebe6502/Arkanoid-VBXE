@@ -30,7 +30,7 @@ begin
   joy_right: if x < byte(SCRMAX - vaus.width) then begin
               inc(x, 4);
 	      
-	      if x + vaus.width > SCRMAX then x:=SCRMAX - vaus.width;
+	      if byte(x + vaus.width) > SCRMAX then x:=SCRMAX - vaus.width;
 	     end; 
  end;
 
@@ -197,6 +197,7 @@ begin
 end;
 
 
+{
 procedure blitPAT;
 begin
 
@@ -225,6 +226,7 @@ begin
  while BlitterBusy do;
 
 end;
+}
 
 
 procedure blitBOX(w: word; h: byte); register;
@@ -1506,7 +1508,8 @@ var
     
 //    yh: word;
 
-    cl,cl2: byte;
+//    cl,
+    cl2: byte;
 
 //    shadow: byte;
 
@@ -3271,9 +3274,10 @@ const XLIVES = 11;
 
 var x,y,xl,yl,cn : byte;
 
-    xp,yp   : word;
+    //xp,yp   : word;
 
-    shadow, cl,i : byte;
+    //shadow,
+    cl,i : byte;
 
 begin
     dec(lives); { The number of lives must be decreased by one   }
@@ -4133,19 +4137,23 @@ var
 { ------------------------------------------------------------- }
 
 function choose_start_wall : smallint;
+{
 const px = 70;
       py = 100;
       dx = 34;
       dy = 35;
       ddx= 19;
       ddy= 14;
+}
+var 
+//    x,y : smallint;
 
-var x,y : smallint;
     st    : smallint;
-    oldx,
-    oldy,
-    newx,
-    newy  : smallint;
+
+//    oldx,
+//    oldy,
+//    newx,
+//    newy  : smallint;
     //sc    : string[20];
 
     begin
@@ -4233,33 +4241,6 @@ var x : byte;
    end;
 
 
-procedure soundicon;
-
-    begin
-(*
-    { Altezza dell'icona (l'icona e' alta il doppio perche' il brush }
-    { e' composto dall'icona con la nota e l'icona con la X una sopra l'altra }
-    h:=soundfx.height div 2;
-
-    fl:=0; { se sound_on non e' false, cioe' e' TRUE allora fl:=0 }
-           { punto in cui inizia il disegno dell'icona con la nota }
-
-
-    { altrimenti fl viene spostato al punto in cui c'e' l'icona con la X }
-    if sound_on=FALSE then
-       fl:=soundfx.width*h;
-
-    { e quindi copia uno dei due disegni sullo schermo }
-    for y:=0 to h-1 do
-        begin
-        fw:=y*soundfx.width;
-        for x:=0 to soundfx.width-1 do
-            screen[320-soundfx.width+x+row[y+200-h]]:=soundfx.map[x+fw+fl];
-        end;
-*)
-    end;
-
-
 (*
 procedure level_selection;
 var x,y,fl,fw,h : word;
@@ -4283,7 +4264,8 @@ var x,y,fl,fw,h : word;
 
 
 function mainscreen : smallint;
-var x,y,z : word;
+var 
+    //x,y,z : word;
     //ps    : smallint;
 //    srow  : array[0..100] of word;
     k,ik  : smallint;

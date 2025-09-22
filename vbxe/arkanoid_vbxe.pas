@@ -249,7 +249,7 @@ const
    { Y coordinate of the three scores (player 1, player 2, hiscore) }
 
 
-   DIGITS     : array[0..10] of byte = ( 125,96,55,103,106,79, 95,97,127,111,0 );
+//   DIGITS     : array[0..10] of byte = ( 125,96,55,103,106,79, 95,97,127,111,0 );
    { Data for displaying digital digits in scores }
 
    LEVEL      : array[0..5] of word = (0, 1000,300,100,60,35);
@@ -259,7 +259,7 @@ const
 
    LETTER_PROB= 300; { range in which the random number of the letter is drawn }
    LETTER_DROP= 1000;{ Number that must reach the sum to drop the letter }
-   LETTER_NUMB= 8;   { number of letters+1 }
+//   LETTER_NUMB= 8;   { number of letters+1 }
    LETTER_FRM = 8;   { Number of frames that constitute the animation of the letter }
    LETTER_SBF = 5;   { Number of cycles it must complete before moving to the next frame }
 
@@ -554,12 +554,12 @@ var
     old_scores : cardinal;
 
     hlp: word;
-    f_hlp: single;
+    //f_hlp: single;
 
 
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
     pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
-    pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
+    //pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
 
     sqrtable : array [0..1023] of cardinal absolute $a000;
 
