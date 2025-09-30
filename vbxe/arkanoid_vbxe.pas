@@ -255,7 +255,7 @@ const
    LEVEL      : array[0..5] of word = (0, 1000,300,100,60,35);
 
    SBDIR      = 600; { Cycles it must do before the ball you have to (dev. adjust) }
-   DEFLEVEL   = 3+2;   { Default game level }
+   DEFLEVEL   = 3;   { Default game level }
 
    LETTER_PROB= 300; { range in which the random number of the letter is drawn }
    LETTER_DROP= 1000;{ Number that must reach the sum to drop the letter }

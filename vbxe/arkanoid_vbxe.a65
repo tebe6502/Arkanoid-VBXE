@@ -1,5 +1,5 @@
 ; ------------------------------------------------------------
-; Mad Pascal Compiler version 1.7.5 [2025/09/24] for MOS 6502 CPU
+; Mad Pascal Compiler version 1.7.5 [2025/09/30] for MOS 6502 CPU
 ; ------------------------------------------------------------
 
 STACKWIDTH	= 16
@@ -15828,7 +15828,7 @@ NWALL	= DATAORIGIN+$03E2
 
 ; optimize OK (arkanoid_vbxe.pas), line = 1068
 
-	lda #$05
+	lda #$03
 	sta LV
 	lda #$00
 	sta LV+1
@@ -15930,7 +15930,7 @@ adr.POS_DIGIT	= CODEORIGIN+$0092
 adr.LEVEL	= CODEORIGIN+$0096
 .var LEVEL	= adr.LEVEL .word
 SBDIR	= $0258
-DEFLEVEL	= $05
+DEFLEVEL	= $03
 LETTER_PROB	= $012C
 LETTER_DROP	= $03E8
 LETTER_FRM	= $08
