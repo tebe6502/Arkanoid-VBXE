@@ -620,8 +620,18 @@ begin
 end;
 
 
-function rand(range: word): word; assembler;
+function rand(range: smallint): smallint; assembler;	// range 0..1023
 asm
+	ldy range+1
+	bpl @+
+
+	lda #0
+	sub range
+	sta range
+	lda #0
+	sbc range+1
+	sta range+1
+@
 	lda random
 	adc seed_l: #$00
 	sta Result
@@ -636,12 +646,22 @@ asm
 	sta Result+1
 
 loop	cpw Result range
-	bcc @exit
+	bcc @+
 
 	lsr Result+1
 	ror Result
 
 	jmp loop
+@
+	tya
+	bpl @exit
+
+	lda #0
+	sub Result
+	sta Result
+	lda #0
+	sbc Result+1
+	sta Result+1
 end;
 
 

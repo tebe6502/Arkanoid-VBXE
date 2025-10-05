@@ -2502,9 +2502,9 @@ begin
 
                 0: deflect:=$11;
                 1: begin deflect:=$33; shoot_block(xb-1,yb-1,ball); end;
-                2: begin deflect:=$10; shoot_block(xb,yb-1,ball); end;
+                2: begin deflect:=$10; {shoot_block(xb,yb-1,ball);} end;
                 3: begin deflect:=$12; shoot_block(xb-1,yb-1,ball); end;
-              128: begin deflect:=$01; shoot_block(xb-1,yb,ball); end;
+              128: begin deflect:=$01; {shoot_block(xb-1,yb,ball);} end;
               129: begin deflect:=$21; shoot_block(xb-1,yb-1,ball); end;
               130: begin deflect:=$11; shoot_block(xb-1,yb,ball); shoot_block(xb,yb-1,ball); end;
 
@@ -2525,10 +2525,10 @@ begin
 	     case a of
 
                 0: deflect:=$21;
-                2: begin deflect:=$20; shoot_block(xb,yb-1,ball); end;
+                2: begin deflect:=$20; {shoot_block(xb,yb-1,ball);} end;
                 4: begin deflect:=$33; shoot_block(xb+1,yb-1,ball); end;
                 6: begin deflect:=$22; shoot_block(xb+1,yb-1,ball); end;
-                8: begin deflect:=$01; shoot_block(xb+1,yb,ball); end;
+                8: begin deflect:=$01; {shoot_block(xb+1,yb,ball);} end;
                10: begin deflect:=$21; shoot_block(xb,yb-1,ball); shoot_block(xb+1,yb,ball); end;
                12: begin deflect:=$11; shoot_block(xb+1,yb-1,ball); end;
 
@@ -2543,14 +2543,14 @@ begin
           if touch=2 then       { Bottom left corner }
              begin
 	     a := around and 224;
-	     
+
 	     case a of
 
                 0: deflect:=$12;
-               32: begin deflect:=$10; shoot_block(xb,yb+1,ball);    end;
-               64: begin deflect:=$33; shoot_block(xb-1,yb+1,ball);  end;
+               32: begin deflect:=$10; {shoot_block(xb,yb+1,ball);} end;
+               64: begin deflect:=$33; shoot_block(xb-1,yb+1,ball); end;
                96: begin deflect:=$11; shoot_block(xb-1,yb+1,ball); end;
-              128: begin deflect:=$02; shoot_block(xb-1,yb,ball);  end;
+              128: begin deflect:=$02; {shoot_block(xb-1,yb,ball);} end;
               160: begin deflect:=$12; shoot_block(xb-1,yb,ball); shoot_block(xb,yb+1,ball); end;
               192: begin deflect:=$22; shoot_block(xb-1,yb+1,ball) end;
 	      
@@ -2569,10 +2569,10 @@ begin
 	     case a of
 	     
                 0: deflect:=$22;
-                8: begin deflect:=$02; shoot_block(xb+1,yb,ball); end;
+                8: begin deflect:=$02; {shoot_block(xb+1,yb,ball);} end;
                16: begin deflect:=$33; shoot_block(xb+1,yb+1,ball); end;
                24: begin deflect:=$12; shoot_block(xb+1,yb+1,ball); end;
-               32: begin deflect:=$20; shoot_block(xb,yb+1,ball); end;
+               32: begin deflect:=$20; {shoot_block(xb,yb+1,ball);} end;
                40: begin deflect:=$22; shoot_block(xb+1,yb,ball); shoot_block(xb,yb+1,ball); end;
                48: begin deflect:=$21; shoot_block(xb+1,yb+1,ball); end;
 
@@ -3830,9 +3830,8 @@ var
   
   x:=vaus.x;
 
-
 {
-  set_ball_direction(ball0,31);
+  set_ball_direction(ball0,50);
   set_ball_speed(ball0, 700);
 }
   
@@ -4379,7 +4378,7 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:= //all_walls[9];
+                wall_p[cur_player]:= //all_walls[4];
                       all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
