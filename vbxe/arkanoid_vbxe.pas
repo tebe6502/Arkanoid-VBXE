@@ -1,11 +1,11 @@
 
 { ----------------------------------------------------------------------- }
 {                                                                         }
-{                                 ARKANOID                                }
-{                         Written by Claudio Bazzan                       }
-{                     Esame di Fondamenti di Informatica I                }
-{                         Professor Eduardo Calabrese                     }
-{                    Revisione v1.02 per il publico dominio               }
+{                                ARKANOID                                 }
+{                        Written by Claudio Bazzan                        }
+{                    Esame di Fondamenti di Informatica I                 }
+{                        Professor Eduardo Calabrese                      }
+{                   Revisione v1.02 per il publico dominio                }
 {                                                                         }
 { Note: This program is a faithful reproduction (as far as possible)      }
 { of the famous barroom Coin-Op Arkanoid. The rights to the original game }
@@ -28,7 +28,7 @@
 
 (*
 
- Arkanoid VBXE v1.8 by Tebe/Madteam
+ Arkanoid VBXE v1.9 by Tebe/Madteam
 
 
  2025-09-10
@@ -49,6 +49,9 @@
 
  2025-09-21
  - ball_hit_block optimizations
+
+ 2025-10-15
+ - mousecoords : joy_left_up, joy_left_down, joy_right_up, joy_right_down
 
 *)
 

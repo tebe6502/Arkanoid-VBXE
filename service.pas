@@ -21,17 +21,21 @@ begin
  a := porta and $0f;
  
  case a of
-  joy_left: if x > SCRMIN then begin
+  joy_left, joy_left_up, joy_left_down:
+  
+            if x > SCRMIN then begin
              dec(x, 4);
 	     
 	     if x < SCRMIN then x:=SCRMIN;	     
 	    end; 
 
-  joy_right: if x < byte(SCRMAX - vaus.width) then begin
-              inc(x, 4);
+  joy_right, joy_right_up, joy_right_down:
+
+            if x < byte(SCRMAX - vaus.width) then begin
+             inc(x, 4);
 	      
-	      if byte(x + vaus.width) > SCRMAX then x:=SCRMAX - vaus.width;
-	     end; 
+	     if byte(x + vaus.width) > SCRMAX then x:=SCRMAX - vaus.width;
+	    end; 
  end;
 
   
@@ -195,38 +199,6 @@ begin
  while BlitterBusy do;
 
 end;
-
-
-{
-procedure blitPAT;
-begin
-
- blt.dst_step_y:=320;
- blt.src_step_y:=17;
-  
- blt.src_adr.byte1:=$03;	// pat = $0300
- 
- blt.src_adr.byte2:=$00;
- blt.src_adr.byte0:=$00;
-
- blt.dst_adr.byte2:=playscreen_ofs shr 16;
- blt.dst_adr.byte1:=hlp shr 8;
- blt.dst_adr.byte0:=hlp;
-
- blt.blt_height:=9-1;
-
- blt.blt_width:=17-1;
-
- RunBCB(blt);
- while BlitterBusy do;
-
- blt.dst_adr.byte2:=vram shr 16;
-
- RunBCB(blt);
- while BlitterBusy do;
-
-end;
-}
 
 
 procedure blitBOX(w: word; h: byte); register;
