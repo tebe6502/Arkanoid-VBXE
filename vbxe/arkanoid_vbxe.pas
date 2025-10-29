@@ -56,6 +56,11 @@
 *)
 
 
+// TO DO:
+// C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
+// wieksze szanse na L, R
+
+
 program arkanoid;
 
 uses crt, atari, vbxe, joystick, xSFX;

@@ -3814,11 +3814,11 @@ var
      
      
      asm
-      mva #$00 $d01a
+      ;mva #$00 $d01a
       @: lda vcount
       cmp #110
       bne @-
-      mva #$0f $d01a       
+      ;mva #$0f $d01a       
      end;
      
 
