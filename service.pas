@@ -520,7 +520,7 @@ var
     y, i: byte;
 
 begin
-    xb   :=shinerec.xb;   { mette in xb,yb le coordinate del blocco }
+    xb   :=shinerec.xb;   { puts the coordinates of the block in xb,yb }
     yb   :=shinerec.yb;
     
     i := xb+yb*16;
@@ -532,12 +532,12 @@ begin
 
     if wall[i]>8 then                  { if the block is gray or brown }
        begin
-       frame:=(shinerec.frame shr 1);  { calcola il n. del frame }
+       frame:=(shinerec.frame shr 1);  { calculate the frame number }
        if wall[i]<>10 then inc(frame,5);
 
-       xf:= 9+(xb shl 4);  { trova le coordinate sullo shermo del blocco }
-       yf:=22+(yb shl 3);  { da far scintillare }
-       fr:=frame shl 7;    { si calcola la posizione del n-esimo frame }
+       xf:= 9+(xb shl 4);  { find the coordinates on the screen of the block }
+       yf:=22+(yb shl 3);  { to be made to flash }
+       fr:=frame shl 7;    { calculate the position of the nth frame. }
 
 
        blitTEMP(16,320);
@@ -572,9 +572,9 @@ procedure unshine_block; { interrupts the sparkle of a block if the }
                          { ball hitting another causes the sparkle  }
                          { of another block }
 begin
-    shinerec.frame:=9;   { cioe' setta il frame come ultimo }
-    shine_block;         { ed esegue lo scintillio del blocco con l'ultimo }
-                         { frame, cioe' il blocco torna normale }
+    shinerec.frame:=9;   { i.e., set the frame as the last one }
+    shine_block;         { and perform the block flicker with the last }
+                         { frame, i.e., the block returns to normal }
 end;
 
 
@@ -583,11 +583,11 @@ procedure shine(xb,yb : byte);   { this procedure sets the }
 begin
     if shinerec.active then unshine_block;
 
-    shinerec.xb    :=xb;  { coordinate del blocco }
-    shinerec.yb    :=yb;  { x,y }
-    shinerec.frame :=0;   { frame di partenza }
-    shinerec.active:=TRUE;                 { scintillio attivo }
-    shinerec.block :=wall[byte(xb+yb*16)]; { tipo di blocco (marrone o grigio) }
+    shinerec.xb     := xb;  { block coordinates }
+    shinerec.yb     := yb;  { x,y }
+    shinerec.frame  := 0;   { starting frame }
+    shinerec.active := TRUE;                 { active sparkle }
+    shinerec.block  := wall[byte(xb+yb*16)]; { block type (brown or gray) }
 end;
 
 
@@ -625,10 +625,16 @@ end;
 
 
 procedure put_letter;
+const
+	mul1024: array [0..8] of word = (0, 1024, 1024*2, 1024*3, 1024*4, 1024*5, 1024*6, 1024*7, 1024*8);
+	mul16: array [0..8] of word = (0, 16, 16*2, 16*3, 16*4, 16*5, 16*6, 16*7, 16*8);
+
 var src : cardinal;
 begin
 
-     src := letters_ofs + (lett.typ shl 10) + (lett.frame shl 4);
+//     src := letters_ofs + (lett.typ shl 10) + (lett.frame shl 4);
+
+     src := letters_ofs + mul1024[lett.typ] + mul16[lett.frame];
 
      asm
        fxs FX_MEMS #$80
@@ -677,12 +683,12 @@ procedure start_letter(xl,yl: byte; letter : byte);
    begin
    if lett.active then disable_letter;
 
-   lett.x       :=xl;
-   lett.y       :=yl;
-   lett.typ     :=letter;
-   lett.frame   :=0;
-   lett.subframe:=0;
-   lett.active  :=TRUE;
+   lett.x        := xl;
+   lett.y        := yl;
+   lett.typ      := letter;
+   lett.frame    := 0;
+   lett.subframe := 0;
+   lett.active   := TRUE;
    end;
 
 
@@ -731,10 +737,35 @@ procedure check_letter;
 procedure place_ball(var ball : BALLTYPE);
 begin
 
-  hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];
+ hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];
   
-  blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
+ blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
 
+{
+ asm
+   fxs FX_MEMS #$80
+ end;
+
+ blt_zero.src_adr.byte2:=balldata_ofs shr 16;
+ blt_zero.src_adr.byte1:=balldata_ofs shr 8;
+ blt_zero.src_adr.byte0:=balldata_ofs;
+
+ blt_zero.dst_adr.byte1:=hlp shr 8;
+ blt_zero.dst_adr.byte0:=hlp;
+
+ blt_zero.src_step_y:=BALLDIM;
+ 
+ blt_zero.blt_height:=BALLDIM-1;
+
+ blt_zero.blt_width:=BALLDIM-1;
+
+ asm
+   fxs FX_MEMS #$00
+ end;
+
+ RunBCB(blt_zero);
+ while BlitterBusy do;
+}
 end;
 
 
@@ -743,10 +774,31 @@ end;
 procedure remove_ball(var ball: BALLTYPE);
 begin
 
-  hlp := ball.oldx-BALLSPOT+row[ball.oldy-BALLSPOT];
+ hlp := ball.oldx-BALLSPOT+row[ball.oldy-BALLSPOT];
   
-  blitBOX(BALLDIM, BALLDIM);
-  
+ blitBOX(BALLDIM, BALLDIM);
+
+{
+ asm
+   fxs FX_MEMS #$80
+ end;
+
+ blt_box.src_adr.byte1:=hlp shr 8;
+ blt_box.dst_adr.byte1:=hlp shr 8;
+
+ blt_box.src_adr.byte0:=hlp;
+ blt_box.dst_adr.byte0:=hlp;
+
+ blt_box.blt_width:=BALLDIM-1;
+ blt_box.blt_height:=BALLDIM-1;
+
+ asm
+   fxs FX_MEMS #$00
+ end;
+	
+ RunBCB(blt_box);
+ while BlitterBusy do; 
+}
 end;
 
 
@@ -777,13 +829,19 @@ procedure set_ball(var ball : BALLTYPE);
 var b0, b1: Boolean;
   begin
   
-  b0 := (byte(ball.oldx) <> EMP) and (byte(ball.oldy) <> EMP);
-  b1 := (byte(ball.oldx) <> byte(ball.x)) or (byte(ball.oldy) <> byte(ball.y));
+//  b0 := (byte(ball.oldx) <> EMP) and (byte(ball.oldy) <> EMP);
+//  b1 := (byte(ball.oldx) <> byte(ball.x)) or (byte(ball.oldy) <> byte(ball.y));
   
-  if (b0 and b1) then
-      remove_ball(ball); { as soon as VB starts the ball is moved to the }
+//  if (b0 and b1) then
 
-  place_ball(ball);  { new coordinates }
+//      remove_ball(ball); { as soon as VB starts the ball is moved to the }
+  hlp := ball.oldx-BALLSPOT+row[ball.oldy-BALLSPOT];
+  blitBOX(BALLDIM, BALLDIM);
+
+//  place_ball(ball);  { new coordinates }
+  hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];  
+  blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
+  
 
   ball.oldx := ball.x; { si settano le vecchie coordinate uguali a quelle }
   ball.oldy := ball.y; { correnti, le correnti verrano modificate poi }
@@ -3554,8 +3612,8 @@ begin
            playvaus:=lasers;
            modify_vaus;
            vaus.letter:=0;
-           fire.avl:=TRUE;
            fire.shot:=FALSE;
+           fire.avl:=TRUE;
            end;
 
         2: begin                              { Letter E }
@@ -3574,8 +3632,8 @@ begin
            playvaus:=normal;
            modify_vaus;
            vaus.letter:=0;
-           fire.avl:=FALSE;
            scrflux:=TRUE;
+           fire.avl:=FALSE;
            end;
 
         4: begin                              { Letter D }

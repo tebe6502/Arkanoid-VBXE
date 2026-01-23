@@ -28,7 +28,11 @@
 
 (*
 
- Arkanoid VBXE v1.9 by Tebe/Madteam
+ Arkanoid VBXE v2.0 by Tebe/Madteam
+ 
+ 
+ 2026-01-23
+ - letter (typ, nexttype, last) smallint -> byte
 
  2025-10-15
  - mousecoords : joy_left_up, joy_left_down, joy_right_up, joy_right_down
@@ -54,7 +58,7 @@
 
 *)
 
-// 203012
+// 202862
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -64,25 +68,30 @@
 
 {
 
+; optimize FAIL (1, service.pas), line = 3682
 
-; optimize OK (service.pas), line = 1045
-
-	ldy #BALL.OLDY-DATAORIGIN
-	lda (:bp2),y
-	sta :STACKORIGIN+9
-
-	lda #$B8
-	cmp :STACKORIGIN+9
+	inx
+	mva DIR :STACKORIGIN,x
+	mva DIR+1 :STACKORIGIN+STACKWIDTH,x
+	lda #$1E
+	sta RAND.RANGE
 	lda #$00
-	rol @
-	sta B2
+	sta RAND.RANGE+1
+	jsr RAND
+	inx
+	mva RAND.RESULT :STACKORIGIN,x
+	mva RAND.RESULT+1 :STACKORIGIN+STACKWIDTH,x
+	jsr addAX_CX
+	dex
+	lda :STACKORIGIN,x
+	sub #$0F
+	sta TEMP
+	lda :STACKORIGIN+STACKWIDTH,x
+	sbc #$00
+	sta TEMP+1
+	dex
+
 }
-
-
-
-
-
-
 
 
 
