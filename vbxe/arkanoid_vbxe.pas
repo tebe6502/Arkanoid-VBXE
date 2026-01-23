@@ -30,35 +30,60 @@
 
  Arkanoid VBXE v1.9 by Tebe/Madteam
 
+ 2025-10-15
+ - mousecoords : joy_left_up, joy_left_down, joy_right_up, joy_right_down
 
- 2025-09-10
- - 'remove_block', 'plot_lives' fully accelerated by blitter
- - 'place_block' accelerated by blitter
-
- 2025-09-11
- - 'write_score' optimization
- - 'create_vaus' optimization
-
- 2025-09-15
- - ball.brwhit additional reset
- - additional test deflect (ball_hit_block)
+ 2025-09-21
+ - ball_hit_block optimizations
 
  2025-09-16
  - adjw [0..3, 0..3] (ball_hit_block) compiler bugfix
  - more accurate collision detection
 
- 2025-09-21
- - ball_hit_block optimizations
+ 2025-09-15
+ - ball.brwhit additional reset
+ - additional test deflect (ball_hit_block)
 
- 2025-10-15
- - mousecoords : joy_left_up, joy_left_down, joy_right_up, joy_right_down
+ 2025-09-11
+ - 'write_score' optimization
+ - 'create_vaus' optimization
+
+ 2025-09-10
+ - 'remove_block', 'plot_lives' fully accelerated by blitter
+ - 'place_block' accelerated by blitter
 
 *)
 
+// 203012
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
 // wieksze szanse na L, R
+
+
+
+{
+
+
+; optimize OK (service.pas), line = 1045
+
+	ldy #BALL.OLDY-DATAORIGIN
+	lda (:bp2),y
+	sta :STACKORIGIN+9
+
+	lda #$B8
+	cmp :STACKORIGIN+9
+	lda #$00
+	rol @
+	sta B2
+}
+
+
+
+
+
+
+
 
 
 program arkanoid;
@@ -75,7 +100,7 @@ uses crt, atari, vbxe, joystick, xSFX;
 
 type
 
-   TSoundFX = (sfx_ball_bounce = 6, sfx_ball_brick = 7, sfx_letter_p =2, sfx_vaus_destroyed = 11, sfx_check_letter = 4, sfx_solid_brick = 9,
+   TSoundFX = (sfx_ball_bounce = 6, sfx_ball_brick = 7, sfx_letter_p = 2, sfx_vaus_destroyed = 11, sfx_check_letter = 4, sfx_solid_brick = 9,
                sfx_hard_brick = 8, sfx_shot_enemy = 4, sfx_fire = 5, sfx_vaus_enlarged = 3, sfx_vaus_teleport = 12);
 
 
@@ -141,15 +166,15 @@ type
 
    LETTERREC  = RECORD                 { data related to the letter }
                 x,y      : byte;       { coord. }
-                typ      : word;       { Type, B,C,E,L,P,D,S }
+                typ      : byte;       { Type, B,C,E,L,P,D,S }
                 frame    : byte;       { frame number }
                 subframe : byte;       { number of cycles per frame }
                 active   : boolean;    { the letter can be active }
-                incoming : smallint;   { holds the sum, >1000 the letter falls out }
+                incoming : word;       { holds the sum, >1000 the letter falls out }
                 nextx,                 { Coordination of where it should fall if activated }
-                nexty    : byte;
-                nexttype : smallint;   { type of letter that will have to fall }
-                last     : smallint;   { last letter dropped }
+                nexty,
+                nexttype,	       { type of letter that will have to fall }
+                last     : byte;       { last letter dropped }
                 end;
 
    FIRETYPE   = RECORD                 { for lasers }
@@ -232,7 +257,7 @@ const
                     { the color of the VAUS borders                       }
 
    FLASH      : array[0..10] of byte = ( 255,212,211,210,209, 208,207,206,205,204,203);
-           { Colors that the extremes of the VAUS take on during flashing }
+		    { Colors that the extremes of the VAUS take on during flashing }
 
    SCORE_WALL : array[0..10] of word = (0, 10,20,30,40,50,100,200,250,500,1000 );
 
@@ -271,8 +296,8 @@ const
    LETTER_FRM = 8;   { Number of frames that constitute the animation of the letter }
    LETTER_SBF = 5;   { Number of cycles it must complete before moving to the next frame }
 
-   { Probability of letter drop in % }  {  L   E  B   D   S   C  P }
-   LETTER_DIS : array[0..7] of byte = ( 0, 16, 20, 3, 18, 20, 20, 3 );
+   { Probability of letter drop in % }   {  L   E   B   D   S   C  P }
+   LETTER_DIS : array[0..7] of byte = (  0, 16, 20, 3, 18, 20, 20, 5 );
 
    FLUXLEVEL  = 177;
 

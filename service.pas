@@ -1,6 +1,5 @@
 
 { ------------------------------------------------------------------------- }
-
 { These are the functions that must be seen by the main program.            }
 {
 function  mainscreen : smallint;
@@ -599,8 +598,8 @@ begin
 end;
 
 
-function random_letter_drop : smallint;
-var rn,sum,letter : word;
+function random_letter_drop : byte;
+var rn,sum,letter : byte;
 begin
 
    repeat
@@ -619,7 +618,7 @@ begin
                       { the program drops the current letter        }
                       { otherwise it moves on to the next letter.   }
 
-   until smallint(letter-1) <> lett.last;
+   until byte(letter-1) <> lett.last;
 
    random_letter_drop:=(letter-1);
 end;
@@ -674,7 +673,7 @@ procedure disable_letter;
    end;
 
 
-procedure start_letter(xl,yl: byte; letter : word);
+procedure start_letter(xl,yl: byte; letter : byte);
    begin
    if lett.active then disable_letter;
 
@@ -721,7 +720,7 @@ procedure check_letter;
 
       lett.incoming:=0;
       end
-   else if (lett.incoming>LETTER_DROP) then
+   else if (lett.incoming > LETTER_DROP) then
           start_letter(lett.nextx, lett.nexty, lett.nexttype);
    end;
 
@@ -1044,7 +1043,7 @@ var
   b1 := ball.speedy > 0;
   b2 := byte(ball.oldy) <= VAUS_LINE;
 
-//  if(ball.y+BALLSPOT>VAUS_LINE) and (ball.speedy>0) and (ball.oldy<=VAUS_LINE) then
+//  if(ball.y+BALLSPOT>VAUS_LINE) and (ball.speedy > 0) and (ball.oldy<=VAUS_LINE) then
   if b0 and b1 and b2 then
      begin
      { if any point on the ball is on the vaus ... }
@@ -1112,7 +1111,7 @@ var
     the vaus runs and the speed y of the ball is greater than 0, i.e.
     the ball is moving downwards, then the ball is lost and the vaus is detonated.  }
 
-  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy>0) then
+  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy > 0) then
      begin
      ball.inplay:=FALSE; { For now, only the flag is set, the ball is no longer in play. }
      remove_ball(ball);  { and the ball is removed from the screen }
@@ -1745,7 +1744,7 @@ begin
         for x:=0 to 12 do         { i.e., the block must be <>0 and <>10}
                                   { since 0 = no block, 10 = brown}
 
-            if (wall[byte(x+y*16)]<>0) and (wall[byte(x+y*16)]<>10) then inc(remain_blk);
+            if (wall[byte(x+y*16)] <> 0) and (wall[byte(x+y*16)] <> 10) then inc(remain_blk);
 
     wl:=byte(wl-1) mod PATNUMBER;
 
@@ -1823,7 +1822,7 @@ begin
           begin
           collision:=collision or 1; { the lowest bit is set to 1 }
 
-          while ((yn and 7)<>0) and ((yn and 7)<>7) do
+          while ((yn and 7) <> 0) and ((yn and 7)<>7) do
             begin
             x:=(xh+xn) shr 1; { after which it continues to divide the segment }
             y:=(yh+yn) shr 1; { (x1,y1)-(x2,y2) until it finds an intersection }
@@ -1849,7 +1848,7 @@ begin
           begin
           collision:=collision or 2;  { in this case, set the second bit }
 
-          while ((xj and 15)<>0) and ((xj and 15)<>15) do
+          while ((xj and 15) <> 0) and ((xj and 15) <> 15) do
             begin
             x:=(xk+xj) shr 1;         { and the steps are similar for x }
             y:=(yk+yj) shr 1;
@@ -1936,9 +1935,9 @@ begin
        
        i:=xb+yb*16;
 
-       if wall[i]<>0 then { ... that there is a block to hit ... }
+       if wall[i] <> 0 then    { ... that there is a block to hit ... }
           begin
-          if wall[i]<10 then { if the blockade can be broken ... }
+          if wall[i] < 10 then { if the blockade can be broken ... }
              begin
              remove_block(xb,yb); { ..removes it from the screen }
              dec(remain_blk);     { ..decreases the number of blocks remaining }
@@ -1998,9 +1997,9 @@ begin
        
        i:=xb+yb*16;
        
-       if wall[i]<>0 then    { ... che ci sia un blocco da colpire... }
+       if wall[i] <> 0 then    { ... che ci sia un blocco da colpire... }
           begin
-          if wall[i]<10 then { se il blocco puo' essere abbattuto... }
+          if wall[i] < 10 then { se il blocco puo' essere abbattuto... }
              begin
              remove_block(xb,yb); { ..lo toglie dallo schermo }
              dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
@@ -2083,7 +2082,7 @@ begin
 
 { collision test with blocks touching only at the corners }
 
-    if (i>16) and (xb>0) and (xb<12) then
+    if (i > 16) and (xb > 0) and (xb < 12) then
     if (wall[i] = 0) then begin
 
       x:=byte(nx and 15) shr 1;     { you calculate the impact point of   }
@@ -2384,10 +2383,10 @@ begin
 
                   if (mx < 0 ) or
                      (mx > 12) or
-                     (wall[byte(mx)+byte(my)*16]<>0) then
-                        adjw[byte(lx+1),byte(ly+1)]:=10   { There are bricks }
+                     (wall[byte(mx)+byte(my)*16] <> 0) then
+                        adjw[byte(lx+1),byte(ly+1)] := 10  { There are bricks }
                   else
-                     adjw[byte(lx+1),byte(ly+1)]:=20      { There are no bricks }
+                     adjw[byte(lx+1),byte(ly+1)] := 20     { There are no bricks }
 
                   end;
 
@@ -3161,7 +3160,7 @@ begin
     inc(n1);
    end;
    n1:=mod10table[n1];        { Ditto for the remaining blocks }
-   if n1>0 then f:=true;
+   if n1 > 0 then f:=true;
    if f then put_digit(n1)
    else put_digit(10);
 
@@ -3172,7 +3171,7 @@ begin
     inc(n1);
    end;
    n1:=mod10table[n1];
-   if n1>0 then f:=true;
+   if n1 > 0 then f:=true;
    if f then put_digit(n1)
    else put_digit(10);
 
@@ -3183,7 +3182,7 @@ begin
     inc(n1);
    end;
    n1:=mod10table[n1];
-   if n1>0 then f:=true;
+   if n1 > 0 then f:=true;
    if f then put_digit(n1)
    else put_digit(10);
 
@@ -3430,7 +3429,7 @@ var x1,x2,y1,y2 : byte;
                  x2:=byte(fire.x+shoots_width-9) shr 4;
                  y2:=y1;
 
-                 if (wall[byte(x1+y1*16)]<>0) or (wall[byte(x2+y2*16)]<>0) then
+                 if (wall[byte(x1+y1*16)] <> 0) or (wall[byte(x2+y2*16)] <> 0) then
                     begin
                     remove_fire;
                     fire.shot:=FALSE;
@@ -3808,7 +3807,7 @@ var
 }
   
   
-  while(ball0.inplay) and (remain_blk>0) and (not score.abortplay) do
+  while(ball0.inplay) and (remain_blk > 0) and (not score.abortplay) do
      begin
      //Wait_VBL; { Waits for the vertical blank }
      
@@ -4050,7 +4049,7 @@ var
 
 
      { If the current note lasts until snd_delay becomes 0 }
-//     if snd_delay>0 then dec(snd_delay)
+//     if snd_delay > 0 then dec(snd_delay)
 //     else nosound;
 
      { ---------------------- Trainer Options -------------------- }
@@ -4069,7 +4068,7 @@ var
             { another destructible brick, the total number       }
             { of bricks to be knocked down to complete           }
 	          { the picture must decrease by 1                     }
-            if (wall[cn+14*16]>0) and (wall[cn+14*16]<>10) then
+            if (wall[cn+14*16] > 0) and (wall[cn+14*16]<>10) then
                dec(remain_blk);
 
             wall[cn+14*16]:=10;  { and the brick in question becomes indestructible }
