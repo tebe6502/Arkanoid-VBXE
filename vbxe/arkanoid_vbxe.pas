@@ -58,41 +58,11 @@
 
 *)
 
-// 202862
+// 202789
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
 // wieksze szanse na L, R
-
-
-
-{
-
-; optimize FAIL (1, service.pas), line = 3682
-
-	inx
-	mva DIR :STACKORIGIN,x
-	mva DIR+1 :STACKORIGIN+STACKWIDTH,x
-	lda #$1E
-	sta RAND.RANGE
-	lda #$00
-	sta RAND.RANGE+1
-	jsr RAND
-	inx
-	mva RAND.RESULT :STACKORIGIN,x
-	mva RAND.RESULT+1 :STACKORIGIN+STACKWIDTH,x
-	jsr addAX_CX
-	dex
-	lda :STACKORIGIN,x
-	sub #$0F
-	sta TEMP
-	lda :STACKORIGIN+STACKWIDTH,x
-	sbc #$00
-	sta TEMP+1
-	dex
-
-}
-
 
 
 program arkanoid;
@@ -102,6 +72,75 @@ uses crt, atari, vbxe, joystick, xSFX;
 {$r arkanoid.rc}
 
 //{$f $90}
+
+
+
+{
+
+; optimize OK (service.pas), line = 1773
+
+	adc I
+	tay
+	lda adr.WALL,y
+	jeq l_143E
+	lda X
+	add I
+	tay
+	lda adr.WALL,y
+	sta PLACE_BLOCK.BLOCK
+	lda X
+	sta PLACE_BLOCK.XA
+	lda Y
+	sta PLACE_BLOCK.YA
+	jsr PLACE_BLOCK
+	
+	
+
+; optimize OK (service.pas), line = 452
+
+	lda #$40
+	sta BLT_BOX.DST_STEP_Y
+	lda #$01
+	sta BLT_BOX.DST_STEP_Y+1
+
+; optimize OK (service.pas), line = 453
+
+	lda #$40
+	sta BLT_BOX.SRC_STEP_Y
+	lda #$01
+	sta BLT_BOX.SRC_STEP_Y+1
+
+
+; optimize OK (service.pas), line = 3852
+
+	lda #$0F
+	sta RAND.RANGE
+	lda #$00
+	sta RAND.RANGE+1
+	jsr RAND
+	inx
+	inx
+	lda RAND.RESULT
+	add #$3C
+	sta :STACKORIGIN-1,x
+	lda RAND.RESULT+1
+	adc #$00
+	sta :STACKORIGIN-1+STACKWIDTH,x
+	lda BALL0
+	sta SET_BALL_DIRECTION.BALL
+	lda BALL0+1
+	sta SET_BALL_DIRECTION.BALL+1
+	dex
+	lda :STACKORIGIN,x
+	sta SET_BALL_DIRECTION.ANGLE
+	lda :STACKORIGIN+STACKWIDTH,x
+	sta SET_BALL_DIRECTION.ANGLE+1
+	dex
+	jsr SET_BALL_DIRECTION
+
+}
+
+
 
 
 { ------------------------------------------------------------------------- }
@@ -644,7 +683,6 @@ asm
 	lda SFX
 	ldy SFX+1
 	jsr XSFX.TSFX.PLAY
-
 
  lda regA: #$00
  ldx regX: #$00

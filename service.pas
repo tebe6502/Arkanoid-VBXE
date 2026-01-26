@@ -307,8 +307,7 @@ function min(a,b : smallint) : smallint;
 
 { clear, isn't it? }
 procedure fatal_error(err_type: byte);
-
-   begin
+begin
 
     status := err_type;
     
@@ -321,21 +320,11 @@ procedure fatal_error(err_type: byte);
     
     end;
 
-{
-   nosound;
-   //closegraph;
-   //write;
-   //writeln('Arkanoid can run no long');
-   //writeln('Fatal Error: ',err_type);
-     Application.MessageBox(PWideChar(err_type),'Error' ,MB_ICONEXCLAMATION);
-
-   halt;
-}
-   end;
+end;
 
 
-function inkey : word;   { restituisce il codice del tasto premuto }
-//var ch,ch2: char;        { 0 = nessun tasto premuto }
+function inkey : word;   { returns the code of the key pressed }
+//var ch,ch2: char;        { 0 = no key pressed }
 begin
 {
     ch:=#0;
@@ -354,7 +343,7 @@ begin
 end;
 
 
-procedure initRowArray;  { inizializza l'array ROW; row[n]:=320*n }
+procedure initRowArray;  { initialize the ROW array; row[n]:=320*n }
 var y : byte;
 begin
 
@@ -390,7 +379,7 @@ begin
 end;
 
 
-procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
+procedure InitSVGA; { Initialize the SuperVGA driver as shown in the example. }
 //var
 //   AutoDetect : pointer;
 //   GraphMode, GraphDriver, ErrCode: smallint;
@@ -505,23 +494,23 @@ procedure InitSVGA; { Inizializza il driver della SuperVGA come da esempio }
  end;
 
 
-   end; { Fine della procedura InitSVGA }
+   end; { End of the InitSVGA procedure }
 
 { ------------------------------------------------------------------------ }
 
 procedure shine_block;    { performs block scintillation }
 var
-    xb,yb: byte;          { i parametri del blocco sono contenuti nella }
-    frame : byte;         { variabile globale SHINEREC }
+    xb,yb: byte;          { The block parameters are contained }
+    frame : byte;         { in the global variable SHINEREC }
     xf,yf: byte;
 
     fr : word;
     
-    y, i: byte;
+    i: byte;
 
 begin
-    xb   :=shinerec.xb;   { puts the coordinates of the block in xb,yb }
-    yb   :=shinerec.yb;
+    xb:= shinerec.xb;     { puts the coordinates of the block in xb,yb }
+    yb:= shinerec.yb;
     
     i := xb+yb*16;
 
@@ -542,7 +531,7 @@ begin
 
        blitTEMP(16,320);
 
-       blitTEMP(shinewall_ofs + fr, vram + xf+row[yf+y], 16, 8);
+       blitTEMP(shinewall_ofs + fr, vram + xf + row[yf], 16, 8);
 
 (*
        for y:=0 to 7 do    { e copia il frame n-esimo sullo schermo }
@@ -556,10 +545,10 @@ begin
 
        end;
 
+
        asm
 	  fxs FX_MEMS #$00
        end;
-
 
     inc(shinerec.frame);  { increase the frame counter }
     if shinerec.frame=10 then shinerec.active:=FALSE;
@@ -711,8 +700,8 @@ procedure check_letter;
 
         if lett.frame=LETTER_FRM then lett.frame:=0;
 
-        if (vaus.x < (lett.x+16)) and ((vaus.x+vaus.width)>lett.x) and
-           (vaus.y < (lett.y+8))  and ((vaus.y+vaus.height)>lett.y) then
+        if (vaus.x < byte(lett.x+16)) and (byte(vaus.x+vaus.width) > lett.x) and
+           (vaus.y < byte(lett.y+8))  and (byte(vaus.y+vaus.height) > lett.y) then
            begin
 
 //	   ball_block_sound(100,10);
@@ -826,8 +815,8 @@ end;
 
 
 procedure set_ball(var ball : BALLTYPE);
-var b0, b1: Boolean;
-  begin
+//var b0, b1: Boolean;
+begin
   
 //  b0 := (byte(ball.oldx) <> EMP) and (byte(ball.oldy) <> EMP);
 //  b1 := (byte(ball.oldx) <> byte(ball.x)) or (byte(ball.oldy) <> byte(ball.y));
@@ -835,24 +824,23 @@ var b0, b1: Boolean;
 //  if (b0 and b1) then
 
 //      remove_ball(ball); { as soon as VB starts the ball is moved to the }
-  hlp := ball.oldx-BALLSPOT+row[ball.oldy-BALLSPOT];
+  hlp := ball.oldx-BALLSPOT + row[ball.oldy-BALLSPOT];
   blitBOX(BALLDIM, BALLDIM);
 
 //  place_ball(ball);  { new coordinates }
-  hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];  
+  hlp:=ball.x-BALLSPOT + row[ball.y - BALLSPOT];  
   blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
   
 
-  ball.oldx := ball.x; { si settano le vecchie coordinate uguali a quelle }
-  ball.oldy := ball.y; { correnti, le correnti verrano modificate poi }
-  end;
-
+  ball.oldx := ball.x; { set the old coordinates equal to the current ones, }
+  ball.oldy := ball.y; { the current ones will then be modified}
+end;
 
 
 procedure set_ball_speed(var ball : BALLTYPE; speed : word);
 var
-  sx, sy, x,y: smallInt;
-  a, b, len: word;
+  sx, sy: smallInt;
+  a, b, x, y, len: word;
   i: cardinal;
 begin
 
@@ -869,15 +857,17 @@ begin
   else
    b := sy;
 
-  a:=a and 1023;
-  b:=b and 1023;
-  
+  if a > MAXSPEED then a := MAXSPEED;
+  if b > MAXSPEED then b := MAXSPEED;
+
   i:=sqrtable[a] + sqrtable[b];
   
   len := trunc( FastSqrt(i) );
   
   if len = 0 then
     Exit;
+    
+  if len > MAXSPEED then len := MAXSPEED;  
 
   // skalowanie w integerach (zaokrąglamy najbliżej)
   x := (a * speed) div len;
@@ -891,11 +881,18 @@ begin
   if x > MAXSPEED then x := MAXSPEED;
   if y > MAXSPEED then y := MAXSPEED;
   
-  if sx < 0 then x := -x;
-  if sy < 0 then y := -y;
+  if sx < 0 then 
+   sx := -x
+  else
+   sx := x;
+ 
+  if sy < 0 then 
+   sy := -y
+  else
+   sy := y;  
   
-  ball.speedx := x;
-  ball.speedy := y;
+  ball.speedx := sx;
+  ball.speedy := sy;
 
 end;
 
@@ -1017,7 +1014,7 @@ begin
 end;
 
 
-function ball_speed(ball : BALLTYPE): smallint;
+function ball_speed(ball : BALLTYPE): word;
 var i: cardinal;
     a, b: word;
 begin
@@ -1033,10 +1030,15 @@ begin
    b := -ball.speedy
   else
    b := ball.speedy;
+   
+  if a > MAXSPEED then a := MAXSPEED;
+  if b > MAXSPEED then b := MAXSPEED;
 
-  i:=sqrtable[a and 1023] + sqrtable[b and 1023];
+  i:=sqrtable[a] + sqrtable[b];
 
-  ball_speed := trunc( FastSqrt(i) );
+  Result := trunc( FastSqrt(i) );
+  
+  if Result > MAXSPEED then Result := MAXSPEED;
 
 end;
 
@@ -1460,7 +1462,7 @@ begin
 
     blitTEMP(320, 320);
     
-    if xs+17 > SCRMAX then 
+    if byte(xs+17) > SCRMAX then 
      i:=8//xs+17 - SCRMAX
     else
      i:=17;
@@ -1632,7 +1634,7 @@ begin
     blt.blt_and_mask:=$7f;
     blt.blt_xor_mask:=$00;
 
-    if xs+8+17 > SCRMAX then 
+    if byte(xs+8+17) > SCRMAX then 
      i:=8//xs+8+17 - SCRMAX
     else
      i:=17;
@@ -1768,7 +1770,7 @@ begin
 	i:=y*16;
     
         for x:=0 to 12 do
-            if wall[x + i] <> 0 then place_block(x,y,wall[x + i]);
+            if wall[x + i] <> 0 then place_block(x,y, wall[x + i]);
     end;
 
 (*
@@ -3945,7 +3947,7 @@ var
      check_fire;     { whether a laser shot was fired }
      check_flux;
 
-     if ((vaus.x+vaus.width) = byte(SCRMAX-1)) and (scrflux) then vaus_out;
+     if (byte(vaus.x+vaus.width) = byte(SCRMAX-1)) and (scrflux = true) then vaus_out;
 
      if vaus.letter=4 then   { In case a D has been collected the balls }
         begin                { become 3.                                }
@@ -4164,7 +4166,7 @@ var
 
 { ------------------------------------------------------------- }
 
-function choose_start_wall : smallint;
+function choose_start_wall : byte;
 {
 const px = 70;
       py = 100;
@@ -4176,7 +4178,7 @@ const px = 70;
 var 
 //    x,y : smallint;
 
-    st    : smallint;
+    st    : byte;
 
 //    oldx,
 //    oldy,
@@ -4186,7 +4188,7 @@ var
 
     begin
 
-    st:=1;  { Si comincia a scegliere partendo dal muro n.1 }
+    st:=1;  { Start choosing from wall no. 1. }
 (*
     //settextstyle(DefaultFont,HorizDir,1);
     setcolor(0);
@@ -4244,7 +4246,7 @@ var
 
        end;
   *)
-    choose_start_wall:=st;  { e ritorna il numero selezionato }
+    choose_start_wall:=st;  { and returns the selected number }
     end;
 
 
@@ -4407,8 +4409,8 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:= //all_walls[4];
-                      all_walls[byte(score.wall_n[cur_player]-1)];
+                wall_p[cur_player]:= all_walls[4];
+                      //all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
