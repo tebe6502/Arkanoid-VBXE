@@ -839,9 +839,21 @@ end;
 
 procedure set_ball_speed(var ball : BALLTYPE; speed : word);
 var
-  sx, sy: smallInt;
-  a, b, x, y, len: word;
-  i: cardinal;
+//  sx, sy: smallInt;
+//  a, b, x, y, len: word;
+//  i: cardinal;
+
+  sx: smallint absolute $00;
+  sy: smallint absolute $02;
+
+  a: word absolute $04;
+  b: word absolute $06;
+  x: word absolute $08;
+  y: word absolute $0a;
+  len: word absolute $0c;
+
+  i: cardinal absolute $0e;
+  
 begin
 
   sx := ball.speedx;
@@ -1015,8 +1027,15 @@ end;
 
 
 function ball_speed(ball : BALLTYPE): word;
-var i: cardinal;
-    a, b: word;
+var 
+//    i: cardinal;
+//    a, b: word;
+
+    i: cardinal absolute $00;
+
+    a: word absolute $04;
+    b: word absolute $06;
+
 begin
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
@@ -1825,22 +1844,45 @@ end;
 
 { the points of intersection can be 1 or 2 }
 
-function split_line(var x1,y1,x2,y2 : smallint) : byte;
+function split_line(var _x1,_y1,_x2,_y2 : smallint) : byte;
 var
-    x,y,
+
+//    x1,y1,x2,y2: smallint;
+
+    x1: smallint absolute $00;
+    y1: smallint absolute $02;
+    x2: smallint absolute $04;
+    y2: smallint absolute $06;
+ 
+//    x,y,
     xk,yk,
-    xj,yj,
-    xh,yh,
-    xn,yn,
+//    xj,yj,
+//    xh,yh,
+//    xn,yn,
     xp1,yp1,
     xp2,yp2,
     xp,yp : byte;
 
+    x: byte absolute $08;
+    y: byte absolute $09;
+    xj: byte absolute $0a;
+    yj: byte absolute $0b;
+    xh: byte absolute $0c;
+    yh: byte absolute $0d;
+    xn: byte absolute $0e;
+    yn: byte absolute $0f;
+
     collision: byte;
-    
+
     tx, ty: Boolean;
 
 begin
+
+    x1 := _x1;  { access to local variables is the fastest }
+    y1 := _y1;
+    x2 := _x2;
+    y2 := _y2;
+
     inc(x1,16);          { increases the coordinates of all points  }
     inc(y1,24);          { to prevent any coordinates from becoming }
     inc(x2,16);          { negative during operations  }
@@ -1973,6 +2015,11 @@ begin
     if x2 < 0 then x2 := 0;
     if x2 > 207 then x2 := 207;    
 
+    _x1 := x1;
+    _y1 := y1;
+    _x2 := x2;
+    _y2 := y2;
+
     { For y, coordinates <0 and >120 are not cut because the matrix   }
     { containing them is virtually longer for safety reasons, and for }
     { invalid coordinates, no brick to collide with is found.         }
@@ -2096,16 +2143,34 @@ end;
 
 procedure ball_hit_block(var ball : BALLTYPE);
 var 
-    x,y, i: byte;
 
-    xb,yb    : byte;
+//    x,y, i: byte;
+//    xb,yb    : byte;
+    
+    x: byte absolute $10;
+    y: byte absolute $11;
+    i: byte absolute $12;
+    xb: byte absolute $13;
+    yb: byte absolute $14;  
 
-    sp, angle,
-    ox,oy,
-    nx,ny    : smallint;
+//    lx,ly,
+//    mx,my    : shortint;
 
-    lx,ly,
-    mx,my    : shortint;
+    lx: shortint absolute $15;
+    ly: shortint absolute $16;
+    mx: shortint absolute $17;
+    my: shortint absolute $18;
+
+//    sp, angle,
+//    ox,oy,
+//    nx,ny    : smallint;
+
+    sp: smallint absolute $20;
+    angle: smallint absolute $22;
+    ox: smallint absolute $24;
+    oy: smallint absolute $26;
+    nx: smallint absolute $28;
+    ny: smallint absolute $2a;
 
     myx,myy  : byte;
 
@@ -2121,7 +2186,7 @@ var
 
     yes      : Boolean;
 
-    adjw     : array[0..3,0..3] of byte;
+    adjw     : array[0..3,0..3] of byte absolute $0000;
 
 begin
     emergency:=EMP;   { the emergency rebound indicator }
@@ -2153,8 +2218,7 @@ begin
   
  
           around:=0;
-
-          deflect:=$00;
+          deflect:=0;
           touch:=0;
  
           { 0 1 }
@@ -2189,6 +2253,7 @@ begin
 	  case touch of
 	  
 	   0: if (around and 131 = 130) then       { upper left corner }
+	      if (nx < ox) and (ny < oy) then
               begin
 	       deflect:=$11;
 
@@ -2198,7 +2263,8 @@ begin
               end;
 
            1: if (around and 14 = 10) then       { upper right corner }
-              begin
+              if (nx > ox) and (ny < oy) then
+	      begin
                deflect:=$21;
 
 	       shoot_block(xb,yb-1,ball);
@@ -2207,6 +2273,7 @@ begin
               end;
 
            2: if (around and 224 = 160) then       { Bottom left corner }
+	      if (nx < ox) and (ny > oy) then
               begin
                deflect:=$12;
 
@@ -2216,6 +2283,7 @@ begin
               end;
 
            3: if (around and 56 = 40) then       { Bottom right corner }
+	      if (nx > ox) and (ny > oy) then
               begin
                deflect:=$22;
 
@@ -2228,9 +2296,9 @@ begin
 
 	     
 	  if deflect <> 0 then begin
-
 	    ball.speedx:=-ball.speedx;
 	    ball.speedy:=-ball.speedy;
+
 	    exit;
           end;
 
@@ -2248,6 +2316,7 @@ begin
        begin
        
        collision:=split_line(ox,oy,nx,ny);
+
        { calculates the intersection of the segment connecting the old and }
        { new coordinates. “Collision” contains a value that depends on the }
        { type of intersections found between the segment and the grid of   }
@@ -2378,21 +2447,21 @@ begin
           emergency:=1;                { and marks the eventual point of contact }
           end;
 
-       { ...il bordo inferiore... }
+       { ...the bottom edge... }
        if (byte(7-y) < x) and (x<y) then
           begin
           ball.speedy:=-ball.speedy;   { Reverses the y of the vel. }
-          emergency:=3;
+          emergency:=3;  
           end;
 
-       { ...il bordo sinistro... }
+       { ...the left edge... }
        if (x<y) and (y<byte(7-x)) then
           begin
           ball.speedx:=-ball.speedx;   { Reverses the x of the vel.}
           emergency:=2;
           end;
 
-       { ... e quello destro ... }
+       { ...and the right one... }
        if (byte(7-x)<y) and (y<x) then
           begin
           ball.speedx:=-ball.speedx;   { Reverses the x of the vel. }
@@ -2523,7 +2592,6 @@ begin
 
           { For example, “and 131” means consider only the bricks 1+2+128 }
           { the others, if there are any, do not matter.                  }
-
 
           if touch=0 then       { upper left corner }
              begin
@@ -3457,7 +3525,8 @@ end;
 
 procedure check_fire;
 var x1,x2,y1,y2 : byte;
-    begin
+begin
+
     if (fire.avl) then
        begin
        if (mouseclick=1) and (fire.avl) and (not fire.shot) then
@@ -3501,7 +3570,7 @@ var x1,x2,y1,y2 : byte;
               end;
           end;
        end;
-    end;
+end;
 
 
 procedure remove_flux;
@@ -3858,6 +3927,8 @@ var
 
   ball1.inplay:=FALSE;
   ball2.inplay:=FALSE;
+  
+  inc(vaus.x, 28);
   
   x:=vaus.x;
 

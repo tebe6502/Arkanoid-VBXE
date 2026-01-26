@@ -29,8 +29,11 @@
 (*
 
  Arkanoid VBXE v2.0 by Tebe/Madteam
- 
- 
+
+ 2026-01-26
+ - ball_hit_block optimizations ( nx < ox ; ny < oy)
+ - moving variables to zero page
+
  2026-01-23
  - letter (typ, nexttype, last) smallint -> byte
 
@@ -58,7 +61,7 @@
 
 *)
 
-// 202789
+// 202246
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -77,25 +80,6 @@ uses crt, atari, vbxe, joystick, xSFX;
 
 {
 
-; optimize OK (service.pas), line = 1773
-
-	adc I
-	tay
-	lda adr.WALL,y
-	jeq l_143E
-	lda X
-	add I
-	tay
-	lda adr.WALL,y
-	sta PLACE_BLOCK.BLOCK
-	lda X
-	sta PLACE_BLOCK.XA
-	lda Y
-	sta PLACE_BLOCK.YA
-	jsr PLACE_BLOCK
-	
-	
-
 ; optimize OK (service.pas), line = 452
 
 	lda #$40
@@ -109,35 +93,6 @@ uses crt, atari, vbxe, joystick, xSFX;
 	sta BLT_BOX.SRC_STEP_Y
 	lda #$01
 	sta BLT_BOX.SRC_STEP_Y+1
-
-
-; optimize OK (service.pas), line = 3852
-
-	lda #$0F
-	sta RAND.RANGE
-	lda #$00
-	sta RAND.RANGE+1
-	jsr RAND
-	inx
-	inx
-	lda RAND.RESULT
-	add #$3C
-	sta :STACKORIGIN-1,x
-	lda RAND.RESULT+1
-	adc #$00
-	sta :STACKORIGIN-1+STACKWIDTH,x
-	lda BALL0
-	sta SET_BALL_DIRECTION.BALL
-	lda BALL0+1
-	sta SET_BALL_DIRECTION.BALL+1
-	dex
-	lda :STACKORIGIN,x
-	sta SET_BALL_DIRECTION.ANGLE
-	lda :STACKORIGIN+STACKWIDTH,x
-	sta SET_BALL_DIRECTION.ANGLE+1
-	dex
-	jsr SET_BALL_DIRECTION
-
 }
 
 
