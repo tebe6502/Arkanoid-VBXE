@@ -28,6 +28,9 @@
 
 (*
 
+ !!! kod programu nie może przekroczyć $A000 !!!
+ 
+
  Arkanoid VBXE v2.0 by Tebe/Madteam
 
  2026-01-26
@@ -61,7 +64,8 @@
 
 *)
 
-// 202246
+
+// 201984
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -75,26 +79,6 @@ uses crt, atari, vbxe, joystick, xSFX;
 {$r arkanoid.rc}
 
 //{$f $90}
-
-
-
-{
-
-; optimize OK (service.pas), line = 452
-
-	lda #$40
-	sta BLT_BOX.DST_STEP_Y
-	lda #$01
-	sta BLT_BOX.DST_STEP_Y+1
-
-; optimize OK (service.pas), line = 453
-
-	lda #$40
-	sta BLT_BOX.SRC_STEP_Y
-	lda #$01
-	sta BLT_BOX.SRC_STEP_Y+1
-}
-
 
 
 
@@ -792,7 +776,7 @@ done
 end;
 
 
-function SinDeg(a: smallint): SmallInt;
+function SinDeg(a: smallint): SmallInt; register;
 begin
 
   a := mod360(a);

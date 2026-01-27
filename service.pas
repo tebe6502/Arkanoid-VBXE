@@ -1,16 +1,40 @@
 
-{ ------------------------------------------------------------------------- }
-{ These are the functions that must be seen by the main program.            }
 {
-function  mainscreen : smallint;
-procedure fatal_error(err_type : string);
-procedure InitSVGA;
-procedure initRowArray;
-function  random_letter_drop : smallint;
-procedure start_game(players : smallint);
-procedure closeprogram;
 
-{ ------------------------------------------------------------------------- }
+---------------------------------------------------------------
+procedure set_ball_speed(var ball : BALLTYPE; speed : word);
+---------------------------------------------------------------
+$00..$11
+
+---------------------------------------------------------------
+function ball_speed(ball : BALLTYPE): word;
+---------------------------------------------------------------
+$00..$07
+
+---------------------------------------------------------------
+function split_line(var _x1,_y1,_x2,_y2 : smallint) : byte;
+---------------------------------------------------------------
+$00..$0f
+
+---------------------------------------------------------------
+procedure ball_hit_block(var ball : BALLTYPE);
+---------------------------------------------------------------  
+$00..$2f
+
+---------------------------------------------------------------  
+procedure deviate_ball(var ball : BALLTYPE);
+---------------------------------------------------------------  
+$00.$03
+
+---------------------------------------------------------------
+function Bounceball : boolean;
+---------------------------------------------------------------
+$30..$3a
+$40..$5f
+$60..$7f
+$e0..$ff
+
+}
 
 
 procedure mousecoords(var x: byte);
@@ -36,7 +60,6 @@ begin
 	     if byte(x + vaus.width) > SCRMAX then x:=SCRMAX - vaus.width;
 	    end; 
  end;
-
   
 
 end;
@@ -1022,42 +1045,6 @@ begin
 
   ball.sbd:=0;
   ball.brwhit:=0;
-
-end;
-
-
-function ball_speed(ball : BALLTYPE): word;
-var 
-//    i: cardinal;
-//    a, b: word;
-
-    i: cardinal absolute $00;
-
-    a: word absolute $04;
-    b: word absolute $06;
-
-begin
-  { returns the ball velocity formula, uses the Pythagorean theorem }
-  { (v=sqrt(x^2+y^2)) }
-
-  if ball.speedx < 0 then
-   a := -ball.speedx
-  else
-   a := ball.speedx;
-
-  if ball.speedy < 0 then
-   b := -ball.speedy
-  else
-   b := ball.speedy;
-   
-  if a > MAXSPEED then a := MAXSPEED;
-  if b > MAXSPEED then b := MAXSPEED;
-
-  i:=sqrtable[a] + sqrtable[b];
-
-  Result := trunc( FastSqrt(i) );
-  
-  if Result > MAXSPEED then Result := MAXSPEED;
 
 end;
 
@@ -2161,6 +2148,24 @@ var
     mx: shortint absolute $17;
     my: shortint absolute $18;
 
+//    emergency,
+//    mimax,
+//    deflect,
+//    around,
+//    collision,
+//    touch    : byte;
+
+    emergency: byte absolute $19;
+    mimax: byte absolute $1a;
+    deflect: byte absolute $1b;
+    around: byte absolute $1c;
+    collision: byte absolute $1d;
+    touch: byte absolute $1e;
+
+//    yes      : Boolean;
+
+    yes: Boolean absolute $1f;
+
 //    sp, angle,
 //    ox,oy,
 //    nx,ny    : smallint;
@@ -2172,19 +2177,14 @@ var
     nx: smallint absolute $28;
     ny: smallint absolute $2a;
 
+//    f1,f2    : word;
+
+    f1: word absolute $2c;
+    f2: word absolute $2e;
+
     myx,myy  : byte;
 
-    f1,f2    : word;
     a,b      : byte;
-
-    emergency,
-    mimax,
-    deflect,
-    around,
-    collision,
-    touch    : byte;
-
-    yes      : Boolean;
 
     adjw     : array[0..3,0..3] of byte absolute $0000;
 
@@ -3340,18 +3340,18 @@ var x,y,z : byte;
 
 begin
 
-    nosound;                    { disattiva qualunque suono del cicalino }
-    setcolor(0);                { Stampa la scritta in nero spostandola  }
-    for x:=0 to 2 do            { in tutte le direzioni.                 }
+    nosound;                    { Turn off any buzzer sounds.  }
+    setcolor(0);                { Print the text in black,     }
+    for x:=0 to 2 do            { moving it in all directions. }
         for y:=0 to 2 do
             outtextxy(66+x,129+y,'Game Paused');
 
-    setcolor(1);                      { Indi stampa quella in bianco }
+    setcolor(1);                      { Then print the blank one }
     outtextxy(67,130,'Game Paused');
 
     repeat
-    z:=inkey;                        { e aspetta finche' non viene premuto }
-    until (z=ord('p')) or (z=32);    { o la "p" o lo spazio (z=32)         }
+    z:=inkey;                        { and wait until either }
+    until (z=ord('p')) or (z=32);    { “p” or space (z=32) is pressed. }
 
 
     { Erase the writing by copying the background over it }
@@ -3750,7 +3750,12 @@ end;
 
 
 procedure deviate_ball(var ball : BALLTYPE);
-var temp, dir : smallint;
+var 
+//  temp, dir : smallint;
+
+  temp: smallint absolute $00;
+  dir: smallint absolute $02;
+
 begin
 
    dir := get_ball_direction(ball);
@@ -3776,39 +3781,103 @@ end;
 
 function Bounceball : boolean;
 var
-  x  : byte;//smallint;
-  tmp  : smallint;
-//  ball : array[0..2] of BALLTYPE;
-  t1,t2: smallint;
+  scores: cardinal absolute $30;
 
-//  cn: byte;
+//  tmp  : smallint;
+//  t1,t2: smallint;
+ 
+  tmp: smallint absolute $34;
+  t1: smallint absolute $36;
+  t2: smallint absolute $38;
 
-  ball0: BALLTYPE;
-  ball1: BALLTYPE;
-  ball2: BALLTYPE;
+  x  : byte absolute $3a;
+
+  ball0: BALLTYPE absolute $40;
+  ball1: BALLTYPE absolute $60;
+
+  ball2: BALLTYPE absolute $e0;
+
+
+  ball_speed_result: word absolute $34;
   
-  scores: cardinal;
-  
 
+  procedure ball_speed(speedx, speedy: smallint); register;
+  var 
+  //    i: cardinal;
+  //    a, b: word;
+
+    i: cardinal absolute $00;
+
+    a: word absolute $04;
+    b: word absolute $06;
+
+  begin
+  { returns the ball velocity formula, uses the Pythagorean theorem }
+  { (v=sqrt(x^2+y^2)) }
+
+    if speedx < 0 then
+      a := -speedx
+    else
+      a := speedx;
+
+    if speedy < 0 then
+      b := -speedy
+    else
+      b := speedy;
+   
+    if a > MAXSPEED then a := MAXSPEED;
+    if b > MAXSPEED then b := MAXSPEED;
+
+    i:=sqrtable[a] + sqrtable[b];
+
+    ball_speed_result := trunc( FastSqrt(i) );
+  
+    if ball_speed_result > MAXSPEED then ball_speed_result := MAXSPEED;
+
+  end;
+
+
+{
   procedure check_ball(var ball: BALLTYPE);
   begin
-
-//         if ball.inplay then  { all considerations apply if the ball is in play. }
-//            begin
-            if (ball.y>=22) and (ball.y<142) then
-               ball_hit_block(ball);
+            if (ball.y>=22) and (ball.y<142) then ball_hit_block(ball);
 
             set_ball(ball);
-            ball.speed:=ball_speed(ball);
-//            end;
+            ball.speed := ball_speed(ball);
   end;
+}
+
+  procedure check_ball0;
+  begin
+            if (byte(ball0.y)>=22) and (byte(ball0.y)<142) then ball_hit_block(ball0);
+
+            set_ball(ball0);
+            ball_speed(ball0.speedx, ball0.speedy);
+	    ball0.speed := ball_speed_result;
+  end;
+
+  procedure check_ball1;
+  begin
+            if (byte(ball1.y)>=22) and (byte(ball1.y)<142) then ball_hit_block(ball1);
+
+            set_ball(ball1);
+            ball_speed(ball1.speedx, ball1.speedy);
+	    ball1.speed := ball_speed_result;
+  end;
+
+  procedure check_ball2;
+  begin
+            if (byte(ball2.y)>=22) and (byte(ball2.y)<142) then ball_hit_block(ball2);
+
+            set_ball(ball2);
+            ball_speed(ball2.speedx, ball2.speedy);
+	    ball2.speed := ball_speed_result;
+  end;
+
 
 
   procedure test_ball(var ball: BALLTYPE);
   begin
-
-//         if ball.inplay then
-//            begin
             inc(ball.finespeed);
 
             if ball.finespeed > LEVEL[lv] then
@@ -3829,9 +3898,8 @@ var
             { random by an angle between -BALLDEV/2 and +BALLDEV/2 }
             if (ball.sbd >= SBDIR) and (ball.speedy < 0) then
                deviate_ball(ball);
-//            end;
-
   end;
+
 
 
   begin
@@ -3928,14 +3996,14 @@ var
   ball1.inplay:=FALSE;
   ball2.inplay:=FALSE;
   
-  inc(vaus.x, 28);
+//  inc(vaus.x, 45);
   
   x:=vaus.x;
 
-{
-  set_ball_direction(ball0,50);
-  set_ball_speed(ball0, 700);
-}
+
+//  set_ball_direction(ball0,20);
+//  set_ball_speed(ball0, 700);
+
   
   
   while(ball0.inplay) and (remain_blk > 0) and (not score.abortplay) do
@@ -3993,9 +4061,9 @@ var
      { maximum and minimum coordinates at which a brick can be bumped) then   }
      { you need to check whether the ball actually bumped a brick or not.     }
 
-     if ball0.inplay then check_ball(ball0);
-     if ball1.inplay then check_ball(ball1);
-     if ball2.inplay then check_ball(ball2);
+     if ball0.inplay then check_ball0;
+     if ball1.inplay then check_ball1;
+     if ball2.inplay then check_ball2;
 
 
   (*
@@ -4480,8 +4548,8 @@ var nwall : boolean;
                 score.wall_n[cur_player]:=choose_start_wall; 
 
                 { the chosen wall is assigned to the player }
-                wall_p[cur_player]:= all_walls[4];
-                      //all_walls[byte(score.wall_n[cur_player]-1)];
+                wall_p[cur_player] := //all_walls[4];
+                      all_walls[byte(score.wall_n[cur_player]-1)];
 
                 { at this point the wall was chosen }
                 score.roundsel[cur_player]:=TRUE;
