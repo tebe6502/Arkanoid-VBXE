@@ -3801,7 +3801,7 @@ var
   ball_speed_result: word absolute $34;
   
 
-  procedure ball_speed(speedx, speedy: smallint); register;
+  procedure ball_speed(var ball: BALLTYPE); //register;
   var 
   //    i: cardinal;
   //    a, b: word;
@@ -3815,15 +3815,15 @@ var
   { returns the ball velocity formula, uses the Pythagorean theorem }
   { (v=sqrt(x^2+y^2)) }
 
-    if speedx < 0 then
-      a := -speedx
+    if ball.speedx < 0 then
+      a := -ball.speedx
     else
-      a := speedx;
+      a := ball.speedx;
 
-    if speedy < 0 then
-      b := -speedy
+    if ball.speedy < 0 then
+      b := -ball.speedy
     else
-      b := speedy;
+      b := ball.speedy;
    
     if a > MAXSPEED then a := MAXSPEED;
     if b > MAXSPEED then b := MAXSPEED;
@@ -3837,16 +3837,17 @@ var
   end;
 
 
-{
+
   procedure check_ball(var ball: BALLTYPE);
   begin
-            if (ball.y>=22) and (ball.y<142) then ball_hit_block(ball);
+            if (byte(ball.y) >= 22) and (byte(ball.y) < 142) then ball_hit_block(ball);
 
             set_ball(ball);
-            ball.speed := ball_speed(ball);
+	    ball_speed(ball);
+            ball.speed := ball_speed_result;
   end;
-}
 
+{
   procedure check_ball0;
   begin
             if (byte(ball0.y)>=22) and (byte(ball0.y)<142) then ball_hit_block(ball0);
@@ -3873,7 +3874,7 @@ var
             ball_speed(ball2.speedx, ball2.speedy);
 	    ball2.speed := ball_speed_result;
   end;
-
+}
 
 
   procedure test_ball(var ball: BALLTYPE);
@@ -4061,9 +4062,9 @@ var
      { maximum and minimum coordinates at which a brick can be bumped) then   }
      { you need to check whether the ball actually bumped a brick or not.     }
 
-     if ball0.inplay then check_ball0;
-     if ball1.inplay then check_ball1;
-     if ball2.inplay then check_ball2;
+     if ball0.inplay then check_ball(ball0);
+     if ball1.inplay then check_ball(ball1);
+     if ball2.inplay then check_ball(ball2);
 
 
   (*

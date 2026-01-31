@@ -65,7 +65,7 @@
 *)
 
 
-// 201976
+// 201692
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -152,7 +152,7 @@ type
               end;
 
 
-   BALLTYPE = RECORD                   { contiene i dati della pallina }
+   BALLTYPE = RECORD PAGE $00          { contiene i dati della pallina }
               x,y: smallint;           { coordinate x,y attuali }
               finex,finey: byte;       { submultiples of the coordinates }
               oldx,oldy: smallint;     { vecchie coordinate }
