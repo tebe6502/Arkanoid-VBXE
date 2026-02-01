@@ -65,7 +65,7 @@
 *)
 
 
-// 201692
+// 201400
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -80,46 +80,6 @@ uses crt, atari, vbxe, joystick, xSFX;
 
 //{$f $90}
 
-
-{
-
-; optimize OK (service.pas), line = 4551
-
-	lda #$00
-	sta :STACKORIGIN+9
-	lda CUR_PLAYER
-	sta :STACKORIGIN+STACKWIDTH+9
-
-	ldy CUR_PLAYER
-	lda adr.SCORE.WALL_N,y
-	sub #$01
-	sta :eax+1
-	lda WALL_P
-	add :STACKORIGIN+9
-	sta @move.dst
-	lda WALL_P+1
-	adc :STACKORIGIN+STACKWIDTH+9
-	sta @move.dst+1
-
-
-; optimize OK (service.pas), line = 4578
-
-	lda #$00
-	sta :STACKORIGIN+9
-	lda CUR_PLAYER
-	sta :STACKORIGIN+STACKWIDTH+9
-	ldy CUR_PLAYER
-	lda adr.SCORE.WALL_N,y
-	sub #$01
-	sta :eax+1
-	lda WALL_P
-	add :STACKORIGIN+9
-	sta @move.dst
-	lda WALL_P+1
-	adc :STACKORIGIN+STACKWIDTH+9
-	sta @move.dst+1
-
-}
 
 { ------------------------------------------------------------------------- }
 

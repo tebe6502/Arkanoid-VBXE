@@ -1,0 +1,79 @@
+
+
+; optimize OK (service.pas), line = 1063
+
+	ldy BALL
+	lda $0000+BALL.X-DATAORIGIN,y
+	sta :STACKORIGIN+STACKWIDTH+9
+	lda $0000+BALL.FINEX-DATAORIGIN,y
+	add $0000+BALL.SPEEDX-DATAORIGIN,y
+	sta X
+	lda :STACKORIGIN+STACKWIDTH+9
+	adc $0000+BALL.SPEEDX-DATAORIGIN+1,y
+	sta X+1
+
+	
+
+
+; optimize OK (service.pas), line = 1117
+
+	ldy BALL
+	lda $0000+BALL.X-DATAORIGIN,y
+	sta :STACKORIGIN+9
+	lda VAUS.X
+	sub #$03
+	cmp :STACKORIGIN+9
+	jcs l_0CE7
+	lda $0000+BALL.X-DATAORIGIN,y
+	sta :STACKORIGIN+10
+	lda VAUS.X
+	add VAUS.WIDTH
+	add #$03
+	sta :STACKORIGIN+11
+	lda :STACKORIGIN+10
+	cmp :STACKORIGIN+11
+	jcs l_0CE7
+
+
+
+
+; optimize OK (service.pas), line = 1180
+
+	ldy BALL
+	lda $0000+BALL.OLDY-DATAORIGIN,y
+	ldy #1
+	cmp #$B9
+	bcs @+
+	dey
+@
+	sty :STACKORIGIN+9
+	ldy BALL
+	lda $0000+BALL.Y-DATAORIGIN,y
+	sta :STACKORIGIN+10
+	lda $0000+BALL.Y-DATAORIGIN+1,y
+	sta :STACKORIGIN+STACKWIDTH+10
+
+	lda :STACKORIGIN+10
+	cmp #$C9
+	lda #$00
+	rol @
+	and :STACKORIGIN+9
+	sta :STACKORIGIN+9
+	ldy BALL
+	lda $0000+BALL.SPEEDY-DATAORIGIN,y
+	sta :STACKORIGIN+10
+	lda $0000+BALL.SPEEDY-DATAORIGIN+1,y
+	sta :STACKORIGIN+STACKWIDTH+10
+	ldy #1
+	lda :STACKORIGIN+STACKWIDTH+10
+	bmi @+
+	ora :STACKORIGIN+10
+	sne
+@
+	dey
+@
+	tya
+	and :STACKORIGIN+9
+	jeq l_0DB3
+	
+	
