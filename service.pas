@@ -1177,7 +1177,7 @@ var
     the vaus runs and the speed y of the ball is greater than 0, i.e.
     the ball is moving downwards, then the ball is lost and the vaus is detonated.  }
 
-  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy > 0) then
+  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy >= 0) then	// '>=0' is faster then '>0'
      begin
      ball.inplay:=FALSE; { For now, only the flag is set, the ball is no longer in play. }
      remove_ball(ball);  { and the ball is removed from the screen }
@@ -3801,7 +3801,7 @@ var
   ball_speed_result: word absolute $34;
   
 
-  procedure ball_speed(var ball: BALLTYPE); //register;
+  procedure ball_speed(var ball: BALLTYPE);
   var 
   //    i: cardinal;
   //    a, b: word;
