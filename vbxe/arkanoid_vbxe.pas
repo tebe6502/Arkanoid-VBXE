@@ -65,7 +65,7 @@
 *)
 
 
-// 201400
+// 201392
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo

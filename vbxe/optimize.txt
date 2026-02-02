@@ -1,20 +1,5 @@
 
 
-; optimize OK (service.pas), line = 1063
-
-	ldy BALL
-	lda $0000+BALL.X-DATAORIGIN,y
-	sta :STACKORIGIN+STACKWIDTH+9
-	lda $0000+BALL.FINEX-DATAORIGIN,y
-	add $0000+BALL.SPEEDX-DATAORIGIN,y
-	sta X
-	lda :STACKORIGIN+STACKWIDTH+9
-	adc $0000+BALL.SPEEDX-DATAORIGIN+1,y
-	sta X+1
-
-	
-
-
 ; optimize OK (service.pas), line = 1117
 
 	ldy BALL
@@ -33,7 +18,6 @@
 	lda :STACKORIGIN+10
 	cmp :STACKORIGIN+11
 	jcs l_0CE7
-
 
 
 
