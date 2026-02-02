@@ -3,9 +3,9 @@
 {                                                                         }
 {                                ARKANOID                                 }
 {                        Written by Claudio Bazzan                        }
-{                    Esame di Fondamenti di Informatica I                 }
+{                  Fundamentals of Computer Science I Exam                }
 {                        Professor Eduardo Calabrese                      }
-{                   Revisione v1.02 per il publico dominio                }
+{                   Revision v1.02 for the public domain                  }
 {                                                                         }
 { Note: This program is a faithful reproduction (as far as possible)      }
 { of the famous barroom Coin-Op Arkanoid. The rights to the original game }
@@ -33,6 +33,10 @@
 
  Arkanoid VBXE v2.0 by Tebe/Madteam
 
+ 2026-02-02
+ - ball.speedx, ball.speedy always <> 0 (procedure set_ball_speed)
+ - 'ball.speedy > 0' -> 'ball.speedy >= 0' shorter code
+ 
  2026-01-26
  - ball_hit_block optimizations ( nx < ox ; ny < oy)
  - moving variables to zero page
@@ -65,7 +69,7 @@
 *)
 
 
-// 201337
+// 201284
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo

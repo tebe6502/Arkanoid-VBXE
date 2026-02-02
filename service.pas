@@ -1106,7 +1106,7 @@ var
   { ball was previously above the vaus, then ... }
 
   b0 := byte(ball.y + BALLSPOT) > VAUS_LINE;
-  b1 := ball.speedy > 0;
+  b1 := ball.speedy >= 0;
   b2 := byte(ball.oldy) <= VAUS_LINE;
 
 //  if(ball.y+BALLSPOT>VAUS_LINE) and (ball.speedy > 0) and (ball.oldy<=VAUS_LINE) then
@@ -1177,7 +1177,7 @@ var
     the vaus runs and the speed y of the ball is greater than 0, i.e.
     the ball is moving downwards, then the ball is lost and the vaus is detonated.  }
 
-  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy >= 0) then	// '>=0' is faster then '>0'
+  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy >= 0) then	// '>=0' is shorter then '>0'
      begin
      ball.inplay:=FALSE; { For now, only the flag is set, the ball is no longer in play. }
      remove_ball(ball);  { and the ball is removed from the screen }
@@ -3761,7 +3761,7 @@ begin
    dir := get_ball_direction(ball);
 
    repeat
-    temp := dir + rand(BALLDEV) - (BALLDEV shr 1);    
+    temp := rand(BALLDEV) + dir - (BALLDEV shr 1);    
    until (mod90(temp)>30) and (mod90(temp)<60);
 
    set_ball_direction(ball, temp);
