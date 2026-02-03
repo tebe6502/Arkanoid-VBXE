@@ -36,7 +36,7 @@
  2026-02-02
  - ball.speedx, ball.speedy always <> 0 (procedure set_ball_speed)
  - 'ball.speedy > 0' -> 'ball.speedy >= 0' shorter code
- 
+
  2026-01-26
  - ball_hit_block optimizations ( nx < ox ; ny < oy)
  - moving variables to zero page
@@ -69,7 +69,7 @@
 *)
 
 
-// 201284
+// 201269
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -95,35 +95,35 @@ type
 
 
 
-   BTMTYPE  = RECORD                   { per un disegno in fomrato BTM }
-              width   : word;          { larghezza disegno       }
-              height  : byte;          { altezza                 }
+   BTMTYPE  = RECORD                   { for a drawing in BTM format  }
+              width   : word;          { drawing width }
+              height  : byte;          { height }
               ofs : cardinal;
               end;
 
-   VAUSTYPE = RECORD                   { per i dati del vaus }
-              x,y: byte;               { attuali coordinate x,y }
+   VAUSTYPE = RECORD                   { for vaus data }
+              x,y: byte;               { current x,y coordinates }
 
-              oldx,                    { vecchie coordinate del vaus }
+              oldx,                    { old vaus coordinates }
               oldy   : byte;
-              oldlen : byte;           { e vecchia lunghezza }
-              width,                   { larghezza }
-              height : byte;           { spessore (o altezza) }
-              flash  : byte;           { indica il colore attuale dei bordi }
-              iflash : byte;           { contatore di ritardo per il }
-                                       { il lampeggio dei bordi }
+              oldlen : byte;           { and old length }
+              width,                   { width }
+              height : byte;           { thickness (or height) }
+              flash  : byte;           { indicates the current color of the edges }
+              iflash : byte;           { delay counter for}
+                                       { the blinking of edges }
               letter : byte;
               end;
 
 
-   BALLTYPE = RECORD PAGE $00          { contiene i dati della pallina }
-              x,y: smallint;           { coordinate x,y attuali }
+   BALLTYPE = RECORD PAGE $00          { contains the data of the ball }
+              x,y: smallint;           { current x,y coordinates }
               finex,finey: byte;       { submultiples of the coordinates }
-              oldx,oldy: smallint;     { vecchie coordinate }
-              speed  : word;           { velocita' (256 = 70 pixel al sec. }
+              oldx,oldy: smallint;     { old coordinates }
+              speed  : word;           { speed 256 = 70 pixels per sec. }
               finespeed : word;        { speed (submultiple) }
-              speedx,                  { velocita' sull'asse x }
-              speedy : smallint;       { velocita' sull'asse y }
+              speedx,                  { x-axis velocity }
+              speedy : smallint;       { y-axis velocity }
               sbd    : word;           { to avoid ball loops }
               brwhit : byte;           { number of brown blocks affected in succession }
               inplay : boolean;        { flag, TRUE if the ball is in play }
