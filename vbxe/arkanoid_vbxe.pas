@@ -69,7 +69,7 @@
 *)
 
 
-// 201269
+// 201256
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -95,7 +95,7 @@ type
 
 
 
-   BTMTYPE  = RECORD                   { for a drawing in BTM format  }
+   BTMTYPE  = RECORD                   { for a drawing in BTM format }
               width   : word;          { drawing width }
               height  : byte;          { height }
               ofs : cardinal;
