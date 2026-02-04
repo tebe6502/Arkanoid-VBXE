@@ -116,7 +116,7 @@ type
               end;
 
 
-   BALLTYPE = RECORD PAGE $00          { contains the data of the ball }
+   BALLTYPE = RECORD of $00            { contains the data of the ball }
               x,y: smallint;           { current x,y coordinates }
               finex,finey: byte;       { submultiples of the coordinates }
               oldx,oldy: smallint;     { old coordinates }
