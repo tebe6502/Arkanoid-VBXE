@@ -1074,10 +1074,10 @@ var
 
   if(byte(ball.x) > SCRMAX) then
      begin
-     ball.speedx:=-ball.speedx;  { inverte il vettore x della velocita' }
-     ball.x:=2*SCRMAX-ball.x;    { riflette sull'asse x=SCRMAX la palla }
-     ball.finex:=255-ball.finex; { aggiusta i sottomultipli della velocita' }
-//     ball_block_sound(240,5);    { emette il suono dell'urto sulla la parete }
+     ball.speedx:=-ball.speedx;  { reverses the velocity vector x }
+     ball.x:=2*SCRMAX-ball.x;    { reflects the ball on the axis x=SCRMAX }
+     ball.finex:=255-ball.finex; { adjust the speed submultiples }
+//     ball_block_sound(240,5);    { emits the sound of impact on the wall }
      end;
 
   { the same for the left wall }
@@ -1189,8 +1189,8 @@ end;
 procedure modify_vaus;
 begin
   vaus.oldlen:=vaus.width;
-  vaus.width :=playvaus.width;   { larghezza del vaus }
-  vaus.height:=playvaus.height;  { altezza del vaus   }
+  vaus.width :=playvaus.width;   { width of the vaus }
+  vaus.height:=playvaus.height;  { height of the vaus   }
 end;
 
 
@@ -1204,21 +1204,21 @@ begin
   { even the mouse pointer (which is not visible) }
   { is moved to the center }
 
-  vaus.oldx:=EMP;                { le vecchie coordinate vengono poste a EMP }
-  vaus.oldy:=EMP;                { poiche' il vaus non si e' spostato }
-  vaus.iflash:=0;                { Questo viene incrementato ogni 1/70 sec. }
-                                 { e quando arriva ad un certo valore viene }
-                                 { azzerato e viene incrementato vaus.flash }
+  vaus.oldx:=EMP;                { the old coordinates are set to EMP }
+  vaus.oldy:=EMP;                { since vaus has not moved }
+  vaus.iflash:=0;                { This is incremented every 1/70 sec. }
+                                 { and when it reaches a certain value it is }
+                                 { reset to zero and vaus.flash is incremented }
 
-  vaus.flash:=0;                 { Da questa var. dipende il colore dei }
-                                 { dei bordini del vaus. }
-                                 { (che cambia in continuazione) }
+  vaus.flash:=0;                 { This variable determines the color of }
+                                 { the edges of the vaus. }
+                                 { (which changes continuously) }
 
-  vaus.width :=playvaus.width;   { larghezza del vaus }
-  vaus.height:=playvaus.height;  { altezza del vaus   }
+  vaus.width :=playvaus.width;   { width of the vaus }
+  vaus.height:=playvaus.height;  { height of the vaus  }
   vaus.oldlen:=vaus.width;
   vaus.letter:=EMP;
-                                 { entrambi sono contenuti nel file .BTM }
+                                 { both are contained in the .BTM file }
 
 end;
 
@@ -1260,12 +1260,12 @@ var
 
 begin
 
-  inc(vaus.iflash);               { viene incrementato ogni ciclo (1/70 sec.) }
+  inc(vaus.iflash);               { is increased every cycle (1/70 sec.) }
 
-  if vaus.iflash>SPEEDFLASH then  { se raggiunge il valore SPEEDFLASH... }
+  if vaus.iflash>SPEEDFLASH then  { if it reaches the SPEEDFLASH value... }
      begin
-     inc(vaus.flash);             { viene incrementato vaus.flash  }
-     vaus.iflash:=0;              { e viene riazzerato vaus.iflash }
+     inc(vaus.flash);             { vaus.flash is increased }
+     vaus.iflash:=0;              { and vaus.iflash is reset }
      end;
 
   if vaus.flash>10 then vaus.flash:=0;
@@ -1397,9 +1397,9 @@ begin
                                       { mattonella di sfondo che deve rim-  }
                                       { piazzare il mattoncino che non c'e' }
                                       { piu' }
-        { il mattoncino viene rimpiazzato col fondale, tuttavia il fondale }
-        { potrebbe essere inscurito da un ombra proiettata da un altro }
-        { mattoncino }
+        { the brick is replaced with the backdrop, however the backdrop }
+        { could be darkened by a shadow cast by another }
+        { brick }
 
 	//hlp := row[y+ys] + xs;
 	
@@ -1408,23 +1408,23 @@ begin
         for x:=15 downto 0 do
             if (x+xs) < SCRMAX then
                begin
-               { calocla l'eventuale ombra proiettata da un altro mattoncino }
-               { shadow:=128 nessuna ombra, shadow:=0 c'e' l'ombra }
+               { calculates any shadow cast by another brick }
+               { shadow:=128 no shadow, shadow:=0 there is a shadow }
 
                //shadow:=playscreen.map[x+xs+row[y+ys]] and 128;
 	       shadow:=scr[x+i] and $80;
 
-               { prende il pixel di sfondo e ci aggiunge l'ombra se necessario }
+               { takes the background pixel and adds a shadow if necessary }
                //cl:=(pattern.map[modx[x+xs]+yh] and 127) or shadow;
 	       cl:=(pat[modx[x+xs]+yh] and $7f) or shadow;
 
 	       scr[x+i]:=cl;
 
-               { dopodiche' mette il colore sia sullo schermo della VGA sia }
+               { then it puts the color on both the VGA screen and }
                //screen[x+xs+row[y+ys]]:=cl;
 
-               { sullo schermo ausiliario dove sono presenti solo gli oggetti }
-               { statici e non quelli in movimento tipo pallina o vaus.}
+               { on the auxiliary screen where only static objects are present }
+               { and not moving objects such as balls or vaus. }
                //playscreen.map[x+xs+row[y+ys]]:=cl;
                end;
 
@@ -1494,13 +1494,13 @@ begin
             { partial shadow that is not reflected on the side wall }
             { Therefore, there is no shadow to remove on the side wall }
 
-            { Lo stesso discorso non viene fatto per il minimo, poiche' }
-            { l'ombra e' sempre piu' a destra e piu' in basso del mattone }
-            { che la proietta, quindi nessun mattoncino puo' proiettare un }
-            { ombra sulla parete di sinistra. Nondimeno nessun mattoncino }
-            { e' talmente basso da proiettare un ombra sul vaus. }
+            { The same argument does not apply to the minimum, since }
+            { the shadow is always further to the right and lower than the brick }
+            { that casts it, so no brick can cast a }
+            { shadow on the left wall. Nevertheless, no brick }
+            { is low enough to cast a shadow on the wall. }
 
-            { Dunque il caso da tenere in considerazione e' solo x<SCRMAX }
+            { Therefore, the only case to consider is x<SCRMAX. }
 
             if x+xs{+8} < SCRMAX then
                begin
@@ -1552,8 +1552,8 @@ var
 
 begin
 
-    xs:=(xa shl 4)+9;   { calcola le coordinate sullo schermo relativa }  // xa = [0..12]
-    ys:=(ya shl 3)+22;  { al mattoncino xa,ya }				  // ya = [0..14]
+    xs:=(xa shl 4)+9;   { calculate the coordinates on the screen relative }  // xa = [0..12]
+    ys:=(ya shl 3)+22;  { to the brick xa,ya }				      // ya = [0..14]
 
     hlp := row[ys] + xs;
 
@@ -1724,10 +1724,10 @@ begin
 
            cl2:=(cl2 and $7f) or (scr[i] and $80);
 
-           { ... e lo rimette sullo schermo fisico }
+           { ... and puts it back on the physical screen }
            //screen[xs+row[ys+y]]:=cl2;
 
-           { ... e su quello virtuale }
+           { ... and on the virtual one }
            //playscreen.map[xs+row[ys+y]]:=cl2;
 	   scr[i] := cl2;
 	   
@@ -2023,7 +2023,7 @@ end;
 procedure shoot_block(xb,yb : byte; var ball : BALLTYPE);
 var i: byte;
 begin
-    { Controlla che le coordinate del blocco siano numeri validi... }
+    { Check that the block coordinates are valid numbers... }
     if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
@@ -2036,8 +2036,8 @@ begin
              remove_block(xb,yb); { ..removes it from the screen }
              dec(remain_blk);     { ..decreases the number of blocks remaining }
 
-             { Incrementa lo SCORE del giocatore attuale a seconda }
-             { del blocco colpito (i punti sono nell'array in SCORE_WALL) }
+             { Increase the current player's SCORE depending on }
+             { the block hit (the points are in the array in SCORE_WALL). }
              inc(score.player[cur_player],SCORE_WALL[wall[i]]);
 
              inc(lett.incoming,rand(LETTER_PROB));
@@ -2059,20 +2059,20 @@ begin
              begin
              if (wall[i] and 15)=9 then { ...if it's gray... }
                 begin
-                ball.brwhit:=0;         { azzera il cont. di dev. di emergenza }
-                dec(wall[i],16);        { decrementa la resistenza del blocco  }
+                ball.brwhit:=0;         { reset the emergency deviation counter }
+                dec(wall[i],16);        { decreases the resistance of the block }
 
-                //ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
+                //ball_block_sound(370,4);{ It emits an F# (musical note). }
 		sfx.init(sfx_hard_brick);
 
-                shine(xb,yb);           { e imposta il luccichio del blocco }
+                shine(xb,yb);           { and set the block's sparkle }
                 end
              else
                 begin
-                inc(ball.brwhit); { incrementa il cont. di dev. di emergenza }
-                shine(xb,yb);     { imposta il luccichio }
+                inc(ball.brwhit); { increase the emergency development fund }
+                shine(xb,yb);     { set the sparkle }
 
-                //ball_block_sound(200,7); { ed emette una nota piuttosto bassa }
+                //ball_block_sound(200,7); { and emits a rather low note }
 		sfx.init(sfx_solid_brick);
 		
                 end;
@@ -2091,15 +2091,15 @@ begin
        
        i:=xb+yb*16;
        
-       if wall[i] <> 0 then    { ... che ci sia un blocco da colpire... }
+       if wall[i] <> 0 then    { ... that there is a block to hit... }
           begin
-          if wall[i] < 10 then { se il blocco puo' essere abbattuto... }
+          if wall[i] < 10 then { if the blockade can be broken... }
              begin
-             remove_block(xb,yb); { ..lo toglie dallo schermo }
-             dec(remain_blk);     { ..decrementa il numero di blocchi che restano }
+             remove_block(xb,yb); { ..removes it from the screen }
+             dec(remain_blk);     { ..decreases the number of blocks remaining }
              inc(score.player[cur_player],SCORE_WALL[wall[i]]);
-             wall[i]:=0;              { il blocco viene cancellato        }
-             //ball_block_sound(440,3); { emette un LA (nota musicale)      }
+             wall[i]:=0;              { the block is deleted }
+             //ball_block_sound(440,3); { emits an A (musical note) }
 	     
 	     //sfx.init(sfx_ball_brick);
              end
@@ -2108,12 +2108,12 @@ begin
              begin
              if (wall[i] and 15)=9 then { ...if it's gray... }
                 begin
-                dec(wall[i],16); { decrementa la resistenza del blocco  }
-                //ball_block_sound(370,4);{ Emette un Fa# (nota musicale)    }
+                dec(wall[i],16); { decreases the resistance of the block }
+                //ball_block_sound(370,4);{ It emits an F# (musical note). }
 		
 		sfx.init(sfx_hard_brick);
 	
-                shine(xb,yb);           { e imposta il luccichio del blocco }
+                shine(xb,yb);           { and set the block's sparkle }
                 end
              else
                 begin
@@ -2819,7 +2819,7 @@ begin
     end;
 
 
-// kopiujemy pattern wykorzystując VBXE pattern_feature, zastępuje to potrzebę użycia tablicy MODX
+    { we copy the pattern using VBXE pattern_feature, which replaces the need to use the MODX array }
 
     blitTEMP(pattern.width, 320);
 
@@ -2916,9 +2916,9 @@ end;
 
 
 procedure write_round_level;
-var x,y : smallint;            { Stampa la scritta ROUND xx, READY.        }
-//    s,r,                      { eventualmente anche il nome del giocatore }
-//    sc  : string[20];         { cioe' PLAYER ONE o PLAYER TWO.            }
+var x,y : smallint;            { Print the text ROUND xx, READY. }
+//    s,r,                      { possibly also the player's name }
+//    sc  : string[20];         { cioe' PLAYER ONE o PLAYER TWO.  }
 
     begin
 (*
@@ -2951,8 +2951,8 @@ var x,y : smallint;            { Stampa la scritta ROUND xx, READY.        }
     end;
 
 
-procedure remove_round_level;  { Togli la scritta ROUND xx, READY }
-//var y : byte;                  { copiandoci sopra il fondale.     }
+procedure remove_round_level;  { Remove the ROUND xx, READY label. }
+//var y : byte;                { by copying the background onto it. }
 begin
 
     hlp:=row[129] + 72;
