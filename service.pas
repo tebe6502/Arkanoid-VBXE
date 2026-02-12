@@ -1831,24 +1831,20 @@ end;
 
 { the points of intersection can be 1 or 2 }
 
-function split_line(var _x1,_y1,_x2,_y2 : smallint) : byte;
+function split_line(var _x1,_y1,_x2,_y2 : byte) : byte;
 var
 
 //    x1,y1,x2,y2: smallint;
 
-    x1: smallint absolute $00;
-    y1: smallint absolute $02;
-    x2: smallint absolute $04;
-    y2: smallint absolute $06;
- 
-//    x,y,
-    xk,yk,
-//    xj,yj,
-//    xh,yh,
-//    xn,yn,
-    xp1,yp1,
-    xp2,yp2,
-    xp,yp : byte;
+    x1: byte absolute $00;
+    y1: byte absolute $01;
+    x2: byte absolute $02;
+    y2: byte absolute $03;
+
+    xp1: byte absolute $04;
+    yp1: byte absolute $05;
+    xp2: byte absolute $06;
+    yp2: byte absolute $07;
 
     x: byte absolute $08;
     y: byte absolute $09;
@@ -1858,6 +1854,9 @@ var
     yh: byte absolute $0d;
     xn: byte absolute $0e;
     yn: byte absolute $0f;
+
+    xk,yk,
+    xp,yp : byte;
 
     collision: byte;
 
@@ -1988,24 +1987,23 @@ begin
     { otherwise something went wrong! }
 
 
-    dec(x1,16);   { restore the old coordinates }
-    dec(y1,24);
-    dec(x2,16);
-    dec(y2,24);
-
-
     //x1:=min(207,max(0,x1));
-    if x1 < 0 then x1 := 0;
-    if x1 > 207 then x1 := 207;
+    if x1 < 0+16 then x1 := 0+16;
+    if x1 > 207+16 then x1 := 207+16;
     
     //x2:=min(207,max(0,x2));
-    if x2 < 0 then x2 := 0;
-    if x2 > 207 then x2 := 207;    
+    if x2 < 0+16 then x2 := 0+16;
+    if x2 > 207+16 then x2 := 207+16;    
 
-    _x1 := x1;
-    _y1 := y1;
-    _x2 := x2;
-    _y2 := y2;
+//    dec(x1,16);   { restore the old coordinates }
+//    dec(y1,24);
+//    dec(x2,16);
+//    dec(y2,24);
+
+    _x1 := x1-16;
+    _y1 := y1-24;
+    _x2 := x2-16;
+    _y2 := y2-24;
 
     { For y, coordinates <0 and >120 are not cut because the matrix   }
     { containing them is virtually longer for safety reasons, and for }
@@ -2172,19 +2170,24 @@ var
 
     sp: smallint absolute $20;
     angle: smallint absolute $22;
-    ox: smallint absolute $24;
-    oy: smallint absolute $26;
-    nx: smallint absolute $28;
-    ny: smallint absolute $2a;
+
+    ox: byte absolute $24;
+    oy: byte absolute $25;
+    nx: byte absolute $26;
+    ny: byte absolute $27;
+
+//    myx,myy  : byte;
+//    a,b      : byte;
+
+    myx: byte absolute $28;
+    myy: byte absolute $29;
+    a: byte absolute $2a;
+    b: byte absolute $2b;
 
 //    f1,f2    : word;
 
     f1: word absolute $2c;
     f2: word absolute $2e;
-
-    myx,myy  : byte;
-
-    a,b      : byte;
 
     adjw     : array[0..3,0..3] of byte absolute $0000;
 

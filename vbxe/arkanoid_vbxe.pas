@@ -32,6 +32,10 @@
 
 
  Arkanoid VBXE v2.0 by Tebe/Madteam
+ 
+ 
+ 2026-02-26
+ - optymalizacje smallint -> byte absolute zpage (split_line)
 
  2026-02-02
  - ball.speedx, ball.speedy always <> 0 (procedure set_ball_speed)
@@ -69,7 +73,7 @@
 *)
 
 
-// 201256
+// 200888
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
