@@ -63,14 +63,6 @@ begin
   
 
 end;
- 
- 
-function mouseclick: byte;
-begin
-    
-    result := trig0 xor 1;
-    
-end;
 
 
 procedure blitZERO(src: cardinal; w : word; h: byte); register;
@@ -3532,7 +3524,7 @@ begin
 
     if (fire.avl) then
        begin
-       if (mouseclick=1) and (fire.avl) and (not fire.shot) then
+       if (trig0 = 0) and (fire.avl) and (not fire.shot) then
           begin
           fire.x:=vaus.x+byte(vaus.width-shoots_width) shr 1;
           fire.y:=vaus.y-shoots_height;
@@ -4045,7 +4037,7 @@ var
         start_ball(ball0);
 
         { If you press the mouse button then the ball starts }
-        if mouseclick=1 then ball0.launch:=FALSE;
+        if (trig0 = 0) then ball0.launch:=FALSE;
 	
 	if ball0.launch=FALSE then sfx.init(sfx_ball_bounce);
         end

@@ -36,6 +36,7 @@
  
  2026-02-26
  - optymalizacje smallint -> byte absolute zpage (split_line)
+ - mouseclick -> (trig0 = 0)
 
  2026-02-02
  - ball.speedx, ball.speedy always <> 0 (procedure set_ball_speed)
@@ -73,7 +74,7 @@
 *)
 
 
-// 200888
+// 200855
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
