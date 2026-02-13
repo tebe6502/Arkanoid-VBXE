@@ -32,8 +32,8 @@
 
 
  Arkanoid VBXE v2.0 by Tebe/Madteam
- 
- 
+
+
  2026-02-26
  - optymalizacje smallint -> byte absolute zpage (split_line)
  - mouseclick -> (trig0 = 0)
@@ -74,7 +74,7 @@
 *)
 
 
-// 200855
+// 200718
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo

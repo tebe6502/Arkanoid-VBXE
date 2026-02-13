@@ -514,6 +514,9 @@ procedure InitSVGA; { Initialize the SuperVGA driver as shown in the example. }
 { ------------------------------------------------------------------------ }
 
 procedure shine_block;    { performs block scintillation }
+const
+   mul_128 : array [0..10] of word = ( {$eval 11,":1*128"} );
+
 var
     xb,yb: byte;          { The block parameters are contained }
     frame : byte;         { in the global variable SHINEREC }
@@ -541,7 +544,8 @@ begin
 
        xf:= 9+(xb shl 4);  { find the coordinates on the screen of the block }
        yf:=22+(yb shl 3);  { to be made to flash }
-       fr:=frame shl 7;    { calculate the position of the nth frame. }
+
+       fr:=mul_128[frame]; { calculate the position of the nth frame. }
 
 
        blitTEMP(16,320);
