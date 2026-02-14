@@ -74,7 +74,7 @@
 *)
 
 
-// 200718
+// 200568
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -122,9 +122,9 @@ type
 
 
    BALLTYPE = RECORD of $00            { contains the data of the ball }
-              x,y: smallint;           { current x,y coordinates }
+              x,y: byte;               { current x,y coordinates }
               finex,finey: byte;       { submultiples of the coordinates }
-              oldx,oldy: smallint;     { old coordinates }
+              oldx,oldy: byte;         { old coordinates }
               speed  : word;           { speed 256 = 70 pixels per sec. }
               finespeed : word;        { speed (submultiple) }
               speedx,                  { x-axis velocity }
@@ -134,7 +134,7 @@ type
               inplay : boolean;        { flag, TRUE if the ball is in play }
               launch : boolean;        { flag, TRUE if the ball must be }
                                        { thrown again }
-              onvaus : smallint;       { width in pixels of the vaus }
+              onvaus : byte;           { width in pixels of the vaus }
               stm    : byte;           { magnet counter }
               end;
 

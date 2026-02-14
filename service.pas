@@ -739,13 +739,14 @@ procedure check_letter;
    end;
 
 
+(*
 { Draw the ball on the screen, the coordinates are specified in }
 { BALL.x and BALL.y, BALLSPOT.x = BALLSPOT.y is the radius of the ball }
 { in pixels }
 procedure place_ball(var ball : BALLTYPE);
 begin
 
- hlp:=ball.x-BALLSPOT+row[ball.y - BALLSPOT];
+ hlp:=ball.x-BALLSPOT + row[ball.y - BALLSPOT];
   
  blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
 
@@ -775,6 +776,7 @@ begin
  while BlitterBusy do;
 }
 end;
+*)
 
 
 { Delete the ball from the screen, called one moment before }
@@ -782,7 +784,7 @@ end;
 procedure remove_ball(var ball: BALLTYPE);
 begin
 
- hlp := ball.oldx-BALLSPOT+row[ball.oldy-BALLSPOT];
+ hlp := byte(ball.oldx-BALLSPOT) + row[ball.oldy-BALLSPOT];
   
  blitBOX(BALLDIM, BALLDIM);
 
@@ -808,6 +810,7 @@ begin
  while BlitterBusy do; 
 }
 end;
+
 
 
 procedure Wait_VBL;
@@ -843,11 +846,11 @@ begin
 //  if (b0 and b1) then
 
 //      remove_ball(ball); { as soon as VB starts the ball is moved to the }
-  hlp := ball.oldx-BALLSPOT + row[ball.oldy-BALLSPOT];
+  hlp := byte(ball.oldx-BALLSPOT) + row[ball.oldy-BALLSPOT];
   blitBOX(BALLDIM, BALLDIM);
 
 //  place_ball(ball);  { new coordinates }
-  hlp:=ball.x-BALLSPOT + row[ball.y - BALLSPOT];  
+  hlp := byte(ball.x-BALLSPOT) + row[ball.y - BALLSPOT];  
   blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
   
 
@@ -1056,8 +1059,8 @@ var
   { before performing this addition, everything is multiplied by 256 in order to }
   { have a higher number of positions. }
 
-  x := (byte(ball.x) shl 8) + ball.finex + ball.speedx;
-  y := (byte(ball.y) shl 8) + ball.finey + ball.speedy;
+  x := (ball.x shl 8) + ball.finex + ball.speedx;
+  y := (ball.y shl 8) + ball.finey + ball.speedy;
 
   ball.x:=x shr 8;
   ball.y:=y shr 8;
@@ -1068,7 +1071,7 @@ var
   { check if the ball hits the right wall }
   { if it hits, reverse the sign }
 
-  if(byte(ball.x) > SCRMAX) then
+  if(ball.x > SCRMAX) then
      begin
      ball.speedx:=-ball.speedx;  { reverses the velocity vector x }
      ball.x:=2*SCRMAX-ball.x;    { reflects the ball on the axis x=SCRMAX }
@@ -1078,7 +1081,7 @@ var
 
   { the same for the left wall }
 
-  if(byte(ball.x) < SCRMIN) then
+  if(ball.x < SCRMIN) then
      begin
      ball.speedx:=-ball.speedx;
      ball.x:=2*SCRMIN-ball.x;
@@ -1088,7 +1091,7 @@ var
 
   { ... and for the upper one }
 
-  if(byte(ball.y) < SCRTOP) then
+  if(ball.y < SCRTOP) then
      begin
      ball.speedy:=-ball.speedy;
      ball.y:=2*SCRTOP-ball.y;
@@ -1110,7 +1113,7 @@ var
      begin
      { if any point on the ball is on the vaus ... }
 
-     if(byte(ball.x) > byte(vaus.x-BALLSPOT)) and (byte(ball.x) < byte(vaus.x+vaus.width+BALLSPOT)) then
+     if(ball.x > byte(vaus.x-BALLSPOT)) and (ball.x < byte(vaus.x+vaus.width+BALLSPOT)) then
         begin
         { reverses the vy vector of the ball's velocity }
         ball.speedy:=-ball.speedy;
@@ -1157,7 +1160,7 @@ var
         { Completely similar to the previous one, with the difference that }      
 	{ the description refers to the small red cylinder on the right.   }
 
-        if (byte(ball.x) > byte(vaus.x + vaus.width - 10)) then
+        if (ball.x > byte(vaus.x + vaus.width - 10)) then
            begin
            ball.speedx:=-ball.speedx;
            angle:=get_ball_direction(ball)-rand(BALLDEV);
@@ -1173,7 +1176,7 @@ var
     the vaus runs and the speed y of the ball is greater than 0, i.e.
     the ball is moving downwards, then the ball is lost and the vaus is detonated.  }
 
-  if (byte(ball.oldy) > VAUS_LINE) and (byte(ball.y) > SCRBOT) and (ball.speedy >= 0) then	// '>=0' is shorter then '>0'
+  if (byte(ball.oldy) > VAUS_LINE) and (ball.y > SCRBOT) and (ball.speedy >= 0) then	// '>=0' is shorter then '>0'
      begin
      ball.inplay:=FALSE; { For now, only the flag is set, the ball is no longer in play. }
      remove_ball(ball);  { and the ball is removed from the screen }
@@ -1240,7 +1243,7 @@ procedure remove_vaus;
 begin
   { Remove the vaus and draw the background in its place. }
   
-  hlp:=vaus.oldx+row[vaus.oldy];
+  hlp:=vaus.oldx + row[vaus.oldy];
   
   blitBOX(vaus.oldlen, vaus.height);
 
@@ -3839,7 +3842,7 @@ var
 
   procedure check_ball(var ball: BALLTYPE);
   begin
-            if (byte(ball.y) >= 22) and (byte(ball.y) < 142) then ball_hit_block(ball);
+            if (ball.y >= 22) and (ball.y < 142) then ball_hit_block(ball);
 
             set_ball(ball);
 	    ball_speed(ball);
