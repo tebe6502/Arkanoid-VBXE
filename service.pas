@@ -249,11 +249,6 @@ end;
 { ------------------------------------------------------------------------- }
 
 
-procedure setcolor(c: byte);
-begin
-
-end;
-
 function textwidth(a: string): word;
 begin
 
@@ -262,47 +257,16 @@ begin
 end;
 
 
-procedure outtextxy(x,y: smallint; s: TString);
-begin
-
-
-end;
-
-procedure nosound;
-begin
-
-
-end;
-
-
 procedure mydelay(a: word);
 begin
 
-
+ a:=a shr 1;
+ 
+ if a > 255 then a:=255;
+ 
+ pause(a);
 
 end;
-
-
-procedure closeprogram;
-  begin
-{
-  clrscr;
-  textcolor(7);
-  writeln('Important!');
-  writeln;
-  writeln('This game is only a demostration of how is possible to build');
-  writeln('sophisticated programs, even in Turbo Pascal, using a powerful');
-  writeln('shareware utility whose name is Power Design 386 (or PD386 for short).');
-  writeln('PD386 offers all the features you need to create multicolored sprites');
-  writeln('and pictoresque background screens for your games, your aplications');
-  writeln('and your programs in general. It also supports the .GIF graphic format!');
-  writeln('If you are interested in programming graphics you cannot miss PD386.');
-  writeln('Please take a look.');
-  writeln;
-  writeln('End of message.');
-}
-  halt;
-  end;
 
 
 { return the maximum between a and b }
@@ -338,23 +302,16 @@ begin
 end;
 
 
-function inkey : word;   { returns the code of the key pressed }
+function inkey : byte;   { returns the code of the key pressed }
 //var ch,ch2: char;        { 0 = no key pressed }
 begin
-{
-    ch:=#0;
-    ch2:=#0;
 
     if keypressed then
        begin
-       ch:=readkey;
-       if ch=#0 then ch2:=readkey;
+       Result := ord(UpCase(readkey));
        end;
 
-    inkey:=(ord(ch2)*256)+ord(ch);
-}
-
- result:=ord('r');
+// result:=ord('r');
 end;
 
 
@@ -394,7 +351,7 @@ begin
 end;
 
 
-procedure InitSVGA; { Initialize the SuperVGA driver as shown in the example. }
+procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
 //var
 //   AutoDetect : pointer;
 //   GraphMode, GraphDriver, ErrCode: smallint;
@@ -509,7 +466,7 @@ procedure InitSVGA; { Initialize the SuperVGA driver as shown in the example. }
  end;
 
 
-   end; { End of the InitSVGA procedure }
+   end; { End of the InitVGA procedure }
 
 { ------------------------------------------------------------------------ }
 
@@ -595,12 +552,12 @@ begin
     shinerec.yb     := yb;  { x,y }
     shinerec.frame  := 0;   { starting frame }
     shinerec.active := TRUE;                 { active sparkle }
-    shinerec.block  := wall[byte(xb+yb*16)]; { block type (brown or gray) }
+    shinerec.block  := wall[xb+yb*16]; { block type (brown or gray) }
 end;
 
 
-procedure checkshine; { if sparkle is enabled, then execute it }
-                      { moving on to the next frame }
+procedure check_shine; { if sparkle is enabled, then execute it }
+                       { moving on to the next frame }
 begin
     if shinerec.active=TRUE then shine_block;
 end;
@@ -788,27 +745,6 @@ begin
   
  blitBOX(BALLDIM, BALLDIM);
 
-{
- asm
-   fxs FX_MEMS #$80
- end;
-
- blt_box.src_adr.byte1:=hlp shr 8;
- blt_box.dst_adr.byte1:=hlp shr 8;
-
- blt_box.src_adr.byte0:=hlp;
- blt_box.dst_adr.byte0:=hlp;
-
- blt_box.blt_width:=BALLDIM-1;
- blt_box.blt_height:=BALLDIM-1;
-
- asm
-   fxs FX_MEMS #$00
- end;
-	
- RunBCB(blt_box);
- while BlitterBusy do; 
-}
 end;
 
 
@@ -846,13 +782,53 @@ begin
 //  if (b0 and b1) then
 
 //      remove_ball(ball); { as soon as VB starts the ball is moved to the }
-  hlp := byte(ball.oldx-BALLSPOT) + row[ball.oldy-BALLSPOT];
-  blitBOX(BALLDIM, BALLDIM);
+  hlp := byte(ball.oldx-BALLSPOT) + row[ball.oldy - BALLSPOT];
+//  blitBOX(BALLDIM, BALLDIM);
+
+
+ asm
+   fxs FX_MEMS #$80
+ end;
+
+ blt_box.src_adr.byte1:=hlp shr 8;
+ blt_box.dst_adr.byte1:=hlp shr 8;
+
+ blt_box.src_adr.byte0:=hlp;
+ blt_box.dst_adr.byte0:=hlp;
+
+ blt_box.blt_width:=BALLDIM-1;
+ blt_box.blt_height:=BALLDIM-1;
+
+ blt_zero.blt_height:=BALLDIM-1;
+ blt_zero.blt_width:=BALLDIM-1;
+
+ blt_box.blt_control := %1000;		// continue blit
+
 
 //  place_ball(ball);  { new coordinates }
   hlp := byte(ball.x-BALLSPOT) + row[ball.y - BALLSPOT];  
-  blitZERO(balldata_ofs, BALLDIM, BALLDIM); 
-  
+//  blitZERO(balldata_ofs, BALLDIM, BALLDIM);
+
+ blt_zero.src_adr.byte2:=balldata_ofs shr 16;
+ blt_zero.src_adr.byte1:=balldata_ofs shr 8;
+ blt_zero.src_adr.byte0:=balldata_ofs and $ff;
+
+ blt_zero.dst_adr.byte1:=hlp shr 8;
+ blt_zero.dst_adr.byte0:=hlp;
+
+ blt_zero.src_step_y:=BALLDIM;
+	
+ RunBCB(blt_box);
+ while BlitterBusy do;
+
+ blt_box.blt_control := 0;
+
+ asm
+   fxs FX_MEMS #$00
+ end;
+
+
+
 
   ball.oldx := ball.x; { set the old coordinates equal to the current ones, }
   ball.oldy := ball.y; { the current ones will then be modified}
@@ -1205,7 +1181,7 @@ begin
 
   vaus.oldx:=EMP;                { the old coordinates are set to EMP }
   vaus.oldy:=EMP;                { since vaus has not moved }
-  vaus.iflash:=0;                { This is incremented every 1/70 sec. }
+  vaus.iflash:=0;                { This is incremented every 1/50 sec. }
                                  { and when it reaches a certain value it is }
                                  { reset to zero and vaus.flash is incremented }
 
@@ -1259,7 +1235,7 @@ var
 
 begin
 
-  inc(vaus.iflash);               { is increased every cycle (1/70 sec.) }
+  inc(vaus.iflash);               { is increased every cycle (1/50 sec.) }
 
   if vaus.iflash>SPEEDFLASH then  { if it reaches the SPEEDFLASH value... }
      begin
@@ -1698,7 +1674,7 @@ begin
        if (block and 15)=9 then
           begin
           cl2:=202; { The color of the brick is gray. }
-          wall[byte(xa+ya*16)]:=9+(GRAYDOWN shl 4); { and the number of bricks is 9+16*n }
+          wall[xa+ya*16]:=9+(GRAYDOWN shl 4); { and the number of bricks is 9+16*n }
           { where n+1 is the number of hits needed to knock it down }
           { e.g. wall[1,2]=9+(1*16)=25 means that the brick at }
           { coordinates 1,2 falls if hit twice }
@@ -1809,7 +1785,7 @@ begin
         for x:=0 to 12 do         { i.e., the block must be <>0 and <>10}
                                   { since 0 = no block, 10 = brown}
 
-            if (wall[byte(x+y*16)] <> 0) and (wall[byte(x+y*16)] <> 10) then inc(remain_blk);
+            if (wall[x+y*16] <> 0) and (wall[x+y*16] <> 10) then inc(remain_blk);
 
     wl:=byte(wl-1) mod PATNUMBER;
 
@@ -2082,6 +2058,19 @@ end;
 { Similar to the first one, but for the collision fire_block }
 procedure shoot_block_with_fire(xb,yb : byte);
 var i: byte;
+
+
+ procedure laser_blast;
+ begin
+ 
+   fire.blastx := fire.x;
+   fire.blasty := fire.y;
+   fire.blast := true; 
+   fire.blastfrm := 0;
+ 
+ end;
+
+
 begin
     if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
@@ -2098,6 +2087,8 @@ begin
              wall[i]:=0;              { the block is deleted }
              //ball_block_sound(440,3); { emits an A (musical note) }
 	     
+	     laser_blast;
+
 	     //sfx.init(sfx_ball_brick);
              end
 
@@ -2107,15 +2098,19 @@ begin
                 begin
                 dec(wall[i],16); { decreases the resistance of the block }
                 //ball_block_sound(370,4);{ It emits an F# (musical note). }
+
+	        laser_blast;
 		
-		sfx.init(sfx_hard_brick);
-	
+		sfx.init(sfx_hard_brick);	
+
                 shine(xb,yb);           { and set the block's sparkle }
                 end
              else
                 begin
                 shine(xb,yb);     { set the sparkle }
                 //ball_block_sound(200,7); { and emits a rather low note }
+
+	        laser_blast;
 		
 		sfx.init(sfx_solid_brick);
                 end;
@@ -2239,17 +2234,17 @@ begin
           {        -------------                      }
 
 
-          if (wall[byte(i-1)] <> 0) then around:=around or $80;
-          if (wall[byte(i+1)] <> 0) then around:=around or 8;
-          if (wall[byte(i-16)] <> 0) then around:=around or 2;
-          if (wall[byte(i+16)] <> 0) then around:=around or $20;
+          if (wall[i-1] <> 0) then around:=around or $80;
+          if (wall[i+1] <> 0) then around:=around or 8;
+          if (wall[i-16] <> 0) then around:=around or 2;
+          if (wall[i+16] <> 0) then around:=around or $20;
       
          if around <> 0 then begin
 
-          if (wall[byte(i-1-16)] <> 0) then around:=around or 1;
-          if (wall[byte(i+1-16)] <> 0) then around:=around or 4;
-          if (wall[byte(i-1+16)] <> 0) then around:=around or $40;
-          if (wall[byte(i+1+16)] <> 0) then around:=around or $10;
+          if (wall[i-1-16] <> 0) then around:=around or 1;
+          if (wall[i+1-16] <> 0) then around:=around or 4;
+          if (wall[i-1+16] <> 0) then around:=around or $40;
+          if (wall[i+1+16] <> 0) then around:=around or $10;
 
 
 	  case touch of
@@ -2371,7 +2366,7 @@ begin
              yb:=(byte(oy+24) shr 3)-3;      { of the block related to such }
                                              { intersection.                }
 
-             if wall[byte(xb+yb*16)]=0 then  { If there is no blockage }
+             if wall[xb+yb*16]=0 then  { If there is no blockage }
                 begin
 		xb:=nx shr 4;
                 //xb:=min(12,max(0,i));        { Then the collision occurs at the }
@@ -2395,7 +2390,7 @@ begin
 	     if xb > 12 then xb := 12;
              yb:=(byte(ny+24) shr 3)-3;   { on the intersection nx,ny (the second one) }
 
-             if wall[byte(xb+yb*16)]=0 then    { If the blockade is not there... }
+             if wall[xb+yb*16]=0 then    { If the blockade is not there... }
                 begin
                 nx:=ox;                   { then the valid intersection is }
                 ny:=oy;                   { the other, and it goes on...   }
@@ -2908,7 +2903,6 @@ begin
 
         end;
 
-
    
     asm
 	fxs FX_MEMS #$00
@@ -2918,39 +2912,46 @@ end;
 
 
 procedure write_round_level;
-var x,y : smallint;            { Print the text ROUND xx, READY. }
-//    s,r,                      { possibly also the player's name }
-//    sc  : string[20];         { cioe' PLAYER ONE o PLAYER TWO.  }
+const
+    num : array [0..63] of char = '0102030405060708091011121314151617181920212223242526272829303132';
 
+
+var x,y : byte;               { Print the text ROUND xx, READY. }
+    r, sc : string[12];       { possibly also the player's name }
+                              { cioe' PLAYER ONE o PLAYER TWO.  }
     begin
-(*
 
-//    settextstyle(DefaultFont,HorizDir,1);
-    str(score.wall_n[cur_player]:2,s);
-    r:=concat('Round ',s);
+    x := score.wall_n[cur_player] shl 1;
+
+    r:='ROUND   ';
+
+    r[7] := num[x-2];
+    r[8] := num[x+1-2];
+
     sc:='';
-    if score.pl_numb=2 then   { Nel caso di 2 giocatori, occorre anche }
-       begin                                       { dire a chi tocca. }
-       if cur_player=1 then sc:='Player One'
-       else sc:='Player Two';
+    if score.pl_numb=2 then   { In the case of 2 players, you also need to }
+       begin                                      { say whose turn it is.  }
+       if cur_player=1 then sc:='PLAYER ONE'
+       else sc:='PLAYER TWO';
        end;
 
-    setcolor(0);                            { Stampa le scritte in nero }
-    for x:=0 to 2 do                        { come contorno spostandole }
-        for y:=0 to 2 do                    { di una coordinata in tutte }
-            begin                           { le direzioni.              }
-            outtextxy(72+x,129+y,sc);
-            outtextxy(80+x,139+y,r);
-            outtextxy(90+x,149+y,'Ready');
+    SetColor(CL_BLACK);                     { Print the text in black    }
+    for x:=0 to 2 do                        { as an outline, shifting it }
+        for y:=0 to 2 do                    { by one coordinate in all   }
+            begin                           { directions.                }
+            TextOut(72+x,129+y,sc);
+            TextOut(80+x,139+y,r);
+            TextOut(90+x,149+y,'READY');
             end;
 
-    setcolor(1);                  { E poi centrata, in bianco stampa }
-    outtextxy(73,130,sc);         { la scritta vera e propria.       }
-    outtextxy(81,140,r);
-    outtextxy(91,150,'Ready');
-*)
+    setcolor(CL_WHITE);           { And then centered, in white print, }
+    TextOut(73,130,sc);           { the actual inscription.            }
+    TextOut(81,140,r);
+    TextOut(91,150,'READY');
 
-    end;
+    pause(100);		// gra jingiel round_restart
+
+end;
 
 
 procedure remove_round_level;  { Remove the ROUND xx, READY label. }
@@ -2966,36 +2967,34 @@ end;
 
 { Print the GAME OVER script }
 procedure Game_over;
-var x,y : smallint;
-    sc  : string[20];
+var x,y : byte;
+    sc  : string[12];
 
-    begin
-//    settextstyle(DefaultFont,HorizDir,1);  { Setta la font di default }
-(*
+ begin
+
     sc:='';
     if score.pl_numb=2 then                  { Se vi sono 2 giocatori  }
        begin                                 { deve dire quale dei due }
-       if cur_player=1 then sc:='Player One' { ha finito.              }
-       else sc:='Player Two';                { E mette in sc "PLAYER ... " }
+       if cur_player=1 then sc:='PLAYER ONE' { ha finito.              }
+       else sc:='PLAYER TWO';                { E mette in sc "PLAYER ... " }
        end;                                  { altrimenti sc rimane vuoto  }
 
-    setcolor(0);
+    setcolor(CL_BLACK);
     for x:=0 to 2 do
         for y:=0 to 2 do
-            begin                                { Disegna la scritta in    }
-            outtextxy(72+x,129+y,sc);            { nero spostata di una     }
-            outtextxy(76+x,139+y,'Game Over');   { coord. in tutte le direz.}
+            begin                              { Disegna la scritta in    }
+            TextOut(72+x,129+y,sc);            { nero spostata di una     }
+            TextOut(76+x,139+y,'GAME OVER');   { coord. in tutte le direz.}
             end;
 
-    setcolor(1);                    { E poi al centro delle scritte in nero }
-    outtextxy(73,130,sc);           { stampa quella in bianco.              }
-    outtextxy(77,140,'Game Over');
+    setcolor(CL_WHITE);              { E poi al centro delle scritte in nero }
+    TextOut(73,130,sc);              { stampa quella in bianco.              }
+    TextOut(77,140,'GAME OVER');
 
     mydelay(500);
     remove_round_level; { in questo caso rimuove la scritta GAME OVER }
                         { invece della scritta ROUND xx, READY.       }
-*)
-    end;
+end;
 
 
 { It shows in sequence the frames of the vaus being destroyed. }
@@ -3083,15 +3082,16 @@ end;
 { of the vaus being built.                                      }
 procedure create_vaus;
 var x,y,w  : byte;
-    z, j,mw  : word;
+    z      : word;
     
     a, b: byte;
 
 begin
     nosound;
 
-    a:=((SCRMAX-SCRMIN) shr 1)-13;
-    b:=vaus_line-5;
+    a:=((SCRMAX-SCRMIN) shr 1)-12;
+    b:=vaus_line-4;
+
 
     asm
 	fxs FX_MEMS #$80
@@ -3099,55 +3099,40 @@ begin
 
     blitTEMP(newvaus.width, newvaus.width);
 
-    mw:=(byte(newvaus.width)*16);
+    z:=12 * (newvaus.width*16);
 
-    j:=0;
 
     for w:=11 downto 0 do
         begin
-	
-	z:=j;
+
         for y:=0 to 15 do
             begin
-	               
-	    //z:=y*newvaus.width+w*(newvaus.width*16);
 
-	    hlp := a + row[y+b];
+	    hlp := a + row[15-y+b];
 
 	    blitTEMP(newvaus.ofs + z, $280, newvaus.width, 1);		// pom
 
 	    blitTEMP(playscreen_ofs + hlp, $200, newvaus.width, 1);	// scr
 
-	    for x:=0 to newvaus.width-1 do
-                begin
-                if pom[x] = 0 then
-
-                   //screen[x+a+row[y+b]]:=playscreen.map[x+a+row[y+b]]
-                   //blitBYTE(playscreen_ofs + x+a+row[y+b], vram + x+a+row[y+b])
-
-		   //scr[x] := scr[x]
-
-                else
-                   //screen[x+a+row[y+b]]:=newvaus.map[x+z];
-                   //blitBYTE(newvaus.ofs + x+z, vram + x+a+row[y+b])
-
-		   scr[x] := pom[x]
-                end;
+	    for x:=newvaus.width-1 downto 0 do
+               if pom[x] <> 0 then scr[x] := pom[x];
 
 	    blitTEMP($200, vram + hlp, newvaus.width, 1);
 
-	    inc(z, newvaus.width);
+	    dec(z, newvaus.width);
             end;
 
         pause;
 
-	inc(j, mw);
         end;
 	
     asm
 	fxs FX_MEMS #$00
     end;
-	
+
+//    move_vaus(vaus.x-1, VAUS_LINE); 
+//    move_vaus(vaus.x, VAUS_LINE); 
+
 end;
 
 
@@ -3343,13 +3328,13 @@ var x,y,z : byte;
 begin
 
     nosound;                    { Turn off any buzzer sounds.  }
-    setcolor(0);                { Print the text in black,     }
+    setcolor(CL_BLACK);         { Print the text in black,     }
     for x:=0 to 2 do            { moving it in all directions. }
         for y:=0 to 2 do
-            outtextxy(66+x,129+y,'Game Paused');
+            TextOut(66+x,129+y,'GAME PAUSED');
 
-    setcolor(1);                      { Then print the blank one }
-    outtextxy(67,130,'Game Paused');
+    setcolor(CL_WHITE);         { Then print the blank one }
+    TextOut(67,130,'GAME PAUSED');
 
     repeat
     z:=inkey;                        { and wait until either }
@@ -3519,8 +3504,60 @@ procedure remove_fire;
 begin
 
    hlp := fire.x + row[fire.y];
-   
+
    blitBOX(shoots_width, shoots_height);
+
+end;
+
+
+procedure remove_blast;
+begin 
+
+   hlp := fire.blastx + row[fire.blasty];
+
+   blitBOX(laserblast_width, laserblast_height);
+
+end;
+
+
+procedure check_blast;
+begin
+
+ if fire.blast then begin
+
+   inc(fire.blastfrm);
+ 
+   case fire.blastfrm of
+   
+    1: begin
+
+        hlp := fire.blastx + row[fire.blasty];
+
+        blitZERO(laserblast_ofs, laserblast_width, laserblast_height);
+
+       end;
+    
+    3: begin
+
+	remove_blast;
+
+//        hlp := fire.blastx + row[fire.blasty];
+
+        blitZERO(laserblast_ofs + laserblast_width*laserblast_height, laserblast_width, laserblast_height);
+
+       end;
+    
+    5: begin
+
+        remove_blast;
+
+	fire.blast := false;
+
+       end;
+      
+   end; 
+  
+ end;
 
 end;
 
@@ -3528,6 +3565,8 @@ end;
 procedure check_fire;
 var x1,x2,y1,y2 : byte;
 begin
+
+//fire.avl := true;
 
     if (fire.avl) then
        begin
@@ -3546,7 +3585,7 @@ begin
           if fire.nw then remove_fire;
           fire.nw:=TRUE;
 
-          dec(fire.y,4);
+          dec(fire.y, 4);
           if fire.y < 22 then fire.shot:=FALSE
           else
               begin
@@ -3560,7 +3599,7 @@ begin
                  x2:=byte(fire.x+shoots_width-9) shr 4;
                  y2:=y1;
 
-                 if (wall[byte(x1+y1*16)] <> 0) or (wall[byte(x2+y2*16)] <> 0) then
+                 if (wall[x1+y1*16] <> 0) or (wall[x2+y2*16] <> 0) then
                     begin
                     remove_fire;
                     fire.shot:=FALSE;
@@ -3635,6 +3674,8 @@ begin
     wait_vbl;
     remove_vaus;
     place_vaus;
+    
+    if fire.blast then remove_blast;
 
     for x:=z to z+44 do
         begin
@@ -3802,6 +3843,8 @@ var
 
   ball_speed_result: word absolute $34;
   
+  key: byte;
+  
 
   procedure ball_speed(var ball: BALLTYPE);
   var 
@@ -3907,16 +3950,18 @@ var
 
   begin
 
+  balls_in_play:=1;
+
   scrfluxcnt:=0;
   scrflux:=FALSE;
 
-  balls_in_play:=1;
-
   fire.avl:=FALSE;
-  playvaus:=normal;
+  fire.blast:=FALSE;
 
-  lett.last:=EMP;
   lett.active:=FALSE;
+  lett.last:=EMP;
+
+  playvaus:=normal;
 
   { Sets the right background depending on the wall }
   fill_picture_with_pattern;
@@ -3972,13 +4017,14 @@ var
   { 0 and LETTER_DROP (constant defined at the beginning of the unit).       }
   lett.incoming:=rand(LETTER_DROP);
 
+  set_vaus;                       { Adjusts the initial VAUS parameters. }
+
   { Shows the animation of the VAUS materializing out of thin air }
   create_vaus;
-
+  
   { and prints the words ROUND xx, READY. }
   write_round_level;
 
-  set_vaus;                       { Adjusts the initial VAUS parameters. }
   move_vaus(vaus.x,VAUS_LINE);    { brings him to the center of the playing area }
   start_level;                    { If the sound is on, it plays the tune }
   remove_round_level;             { Removes the words ROUND xx, READY}
@@ -4083,7 +4129,8 @@ var
             end;
          end;
 *)
-     checkshine;     { check to see if there is a brick to be sparked }
+     check_blast;
+     check_shine;     { check to see if there is a brick to be sparked }
      check_letter;   { If a letter is coming down }
      check_bonus_type(ball0,ball1,ball2); { If a letter is collected }
      check_fire;     { whether a laser shot was fired }
@@ -4255,10 +4302,12 @@ var
 //     else nosound;
 
      { ---------------------- Trainer Options -------------------- }
-  (*
+
+(*  
      key:=inkey;  { checks whether a key is pressed }
 
-     if (key=ord('p')) or (key=32) then pause_game; { The P key pauses the game. }
+     if (key=ord('P')) or (key=32) then pause_game; { The P key pauses the game. }
+
 
      if key=7680 then score.abortplay:=TRUE;  { ALT+A, the game is over }
 
@@ -4343,21 +4392,21 @@ var
     for x:=-1 to 1 do
         for y:=-1 to 1 do
             begin
-            outtextxy(px+5+x,py+y,sc);
-            outtextxy(px+x,py+y+10,'Choose your');
-            outtextxy(px+6+x,py+y+20,'start wall');
+            TextOut(px+5+x,py+y,sc);
+            TextOut(px+x,py+y+10,'Choose your');
+            TextOut(px+6+x,py+y+20,'start wall');
 
-            outtextxy(px-39+x,py+58+y,'Move mouse to select;');
-            outtextxy(px-45+x,py+68+y,'left button to confirm');
+            TextOut(px-39+x,py+58+y,'Move mouse to select;');
+            TextOut(px-45+x,py+68+y,'left button to confirm');
             end;
 
     setcolor(1);
-    outtextxy(px+5,py,sc);
-    outtextxy(px,py+10,'Choose your');
-    outtextxy(px+6,py+20,'start wall');
+    TextOut(px+5,py,sc);
+    TextOut(px,py+10,'Choose your');
+    TextOut(px+6,py+20,'start wall');
 
-    outtextxy(px-39,py+58,'Move mouse to select;');
-    outtextxy(px-45,py+68,'left button to confirm');
+    TextOut(px-39,py+58,'Move mouse to select;');
+    TextOut(px-45,py+68,'left button to confirm');
 
     { Disegna il quadrato nero in cui devono apparire i numeri del muro }
     { da scegliere.                                                     }
@@ -4468,13 +4517,9 @@ var
       fxs FX_MEMS #$00
     end;
   
-  
 
-//    soundicon;         { draw the sound icon }
-//    level_selection;   { and that of the level }
-//    mousereset;        { reset the mouse as a precaution }
 
-//    repeat             { It cycles until something is done }
+    repeat             { It cycles until something is done }
        { K holds the status of the mouse, IK any keys pressed }
 (*
        k:=mouseclick;
@@ -4503,9 +4548,9 @@ var
           level_selection;     { e stampa il numero sullo schermo }
           end;
    *)
-    //until k<>0;    { the cycle breaks if k is different from 0 }
+    until trig0 = 0;    { the cycle breaks if k is different from 0 }
 
-    mainscreen:=1;//k; { thus returns: -1=quit, 1=one player, 2=two players }
+    mainscreen := 1;//k; { thus returns: -1=quit, 1=one player, 2=two players }
     end;
 
 

@@ -33,8 +33,12 @@
 
  Arkanoid VBXE v2.0 by Tebe/Madteam
 
-
- 2026-02-26
+ 2026-02-15
+ - optymalizacje
+ - laser_blast
+ - TextOut
+ 
+ 2026-02-06
  - optymalizacje smallint -> byte absolute zpage (split_line)
  - mouseclick -> (trig0 = 0)
 
@@ -74,7 +78,7 @@
 *)
 
 
-// 200568
+// 204851
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
@@ -177,6 +181,10 @@ type
                 shot : boolean;        { if the shot went off }
                 avl  : boolean;        { if it's available (thanks to L) }
                 nw   : boolean;        { if he just left VAUS }
+		blastx,
+		blasty,
+		blastfrm: byte;
+		blast: Boolean;
                 end;
 
 
@@ -184,6 +192,8 @@ type
 
 
 const
+	charset = $b000;
+
 	VBXE_DIGIT = $5000;
 
         VBXE_DATA = $6000;
@@ -206,6 +216,11 @@ const
 	presents_ofs = VBXE_DATA + 90*320;
 
 	flux2_ofs = presents_ofs + 320*200;
+	
+	laserblast_ofs = flux2_ofs + 24*21;
+
+	opengate_ofs = laserblast_ofs + 16*12;
+
 
 	minivaus_width = 20;
 	minivaus_height = 5;
@@ -215,6 +230,16 @@ const
 	shoots_width = 13;
 	shoots_height = 8;
 
+	laserblast_width = 16;
+	laserblast_height = 6;
+	
+	opengate_width = 32;
+	opengate_height = 8;
+
+//	enemy1_width
+
+   CL_BLACK = 32;
+   CL_WHITE = 84;
 
    err1 = 1; // 'Ball speed exceed program capability'
    err2 = 2; // 'Ball seems to be still'
@@ -1073,9 +1098,12 @@ begin
    sfx.add(@sfx12);
 
    sfx.play;
+   
+   mem[756] := hi(charset);
 
+   vbxe.VideoRAM := vram;	// VBXE video ram address
 
-   initSVGA;       { Activates 320x200x256 col. graphics mode. }
+   initVGA;       { Activates 320x200x256 col. graphics mode. }
    initRowArray;   { Initializes a useful array to avoid multiplications }
                    { by 320. }
 
@@ -1093,13 +1121,10 @@ begin
 
    repeat
 
-//      mousereset;
-
       { mainscreen returns 1,2 (play number ) or -1 = quit }
       score.pl_numb:=mainscreen;
 
-      if score.pl_numb>0 then start_game(1);//score.pl_numb);
-
+      if score.pl_numb>0 then start_game(score.pl_numb);
 
    until score.pl_numb<1; { cycle until it's worth -1 = quit }
 
