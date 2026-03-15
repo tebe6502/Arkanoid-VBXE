@@ -472,7 +472,7 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
 
 procedure shine_block;    { performs block scintillation }
 const
-   mul_128 : array [0..10] of word = ( {$eval 11,":1*128"} );
+   [striped] mul_128 : array [0..10] of word = ( {$eval 11,":1*128"} );
 
 var
     xb,yb: byte;          { The block parameters are contained }
@@ -487,7 +487,7 @@ begin
     xb:= shinerec.xb;     { puts the coordinates of the block in xb,yb }
     yb:= shinerec.yb;
     
-    i := xb+yb*16;
+    i := xb+mul16[yb];
 
     asm
 	fxs FX_MEMS #$80
@@ -499,8 +499,8 @@ begin
        frame:=(shinerec.frame shr 1);  { calculate the frame number }
        if wall[i]<>10 then inc(frame,5);
 
-       xf:= 9+(xb shl 4);  { find the coordinates on the screen of the block }
-       yf:=22+(yb shl 3);  { to be made to flash }
+       xf:=mul16[xb]+9  ;  { find the coordinates on the screen of the block }
+       yf:=(yb shl 3)+22;  { to be made to flash }
 
        fr:=mul_128[frame]; { calculate the position of the nth frame. }
 
@@ -552,7 +552,7 @@ begin
     shinerec.yb     := yb;  { x,y }
     shinerec.frame  := 0;   { starting frame }
     shinerec.active := TRUE;                 { active sparkle }
-    shinerec.block  := wall[xb+yb*16]; { block type (brown or gray) }
+    shinerec.block  := wall[xb+mul16[yb]];   { block type (brown or gray) }
 end;
 
 
@@ -591,8 +591,7 @@ end;
 
 procedure put_letter;
 const
-	mul1024: array [0..8] of word = (0, 1024, 1024*2, 1024*3, 1024*4, 1024*5, 1024*6, 1024*7, 1024*8);
-	mul16: array [0..8] of word = (0, 16, 16*2, 16*3, 16*4, 16*5, 16*6, 16*7, 16*8);
+	[striped] mul1024: array [0..8] of word = (0, 1024, 1024*2, 1024*3, 1024*4, 1024*5, 1024*6, 1024*7, 1024*8);
 
 var src : cardinal;
 begin
@@ -1348,7 +1347,7 @@ var
 
 begin
   
-    xs:=(xa shl 4)+9;      { calculate the coordinates on the screen }
+    xs:=mul16[xa]+9;      { calculate the coordinates on the screen }
     ys:=(ya shl 3)+22;     { of the brick, e.g., 0.0 ---screen---> 9.22 }
 
     hlp := row[ys] + xs;
@@ -1527,7 +1526,7 @@ var
 
 begin
 
-    xs:=(xa shl 4)+9;   { calculate the coordinates on the screen relative }  // xa = [0..12]
+    xs:=mul16[xa]+9;   { calculate the coordinates on the screen relative }  // xa = [0..12]
     ys:=(ya shl 3)+22;  { to the brick xa,ya }				      // ya = [0..14]
 
     hlp := row[ys] + xs;
@@ -1674,7 +1673,7 @@ begin
        if (block and 15)=9 then
           begin
           cl2:=202; { The color of the brick is gray. }
-          wall[xa+ya*16]:=9+(GRAYDOWN shl 4); { and the number of bricks is 9+16*n }
+          wall[xa+mul16[ya]]:=9+(GRAYDOWN shl 4); { and the number of bricks is 9+16*n }
           { where n+1 is the number of hits needed to knock it down }
           { e.g. wall[1,2]=9+(1*16)=25 means that the brick at }
           { coordinates 1,2 falls if hit twice }
@@ -1748,7 +1747,7 @@ begin
 
     for y:=0 to 14 do begin
    
-	i:=y*16;
+	i := mul16[y];
     
         for x:=0 to 12 do
             if wall[x + i] <> 0 then place_block(x,y, wall[x + i]);
@@ -1785,7 +1784,7 @@ begin
         for x:=0 to 12 do         { i.e., the block must be <>0 and <>10}
                                   { since 0 = no block, 10 = brown}
 
-            if (wall[x+y*16] <> 0) and (wall[x+y*16] <> 10) then inc(remain_blk);
+            if (wall[x+mul16[y]] <> 0) and (wall[x+mul16[y]] <> 10) then inc(remain_blk);
 
     wl:=byte(wl-1) mod PATNUMBER;
 
@@ -2000,7 +1999,7 @@ begin
     if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
-       i:=xb+yb*16;
+       i:=xb+mul16[yb];
 
        if wall[i] <> 0 then    { ... that there is a block to hit ... }
           begin
@@ -2015,7 +2014,7 @@ begin
 
              inc(lett.incoming,rand(LETTER_PROB));
 
-             lett.nextx:=(xb shl 4)+9;
+             lett.nextx:=mul16[xb]+9;
              lett.nexty:=((yb+1) shl 3)+22;
              lett.nexttype:=random_letter_drop;
 
@@ -2075,7 +2074,7 @@ begin
     if {(xb>=0) and} (xb<=12) and {(yb>=0) and} (yb<=14) then
        begin
        
-       i:=xb+yb*16;
+       i:=xb+mul16[yb];
        
        if wall[i] <> 0 then    { ... that there is a block to hit... }
           begin
@@ -2183,7 +2182,7 @@ var
     f1: word absolute $2c;
     f2: word absolute $2e;
 
-    adjw     : array[0..3,0..3] of byte absolute $0000;
+    adjw     : array [0..3,0..3] of byte absolute $0000;
 
 begin
     emergency:=EMP;   { the emergency rebound indicator }
@@ -2199,7 +2198,7 @@ begin
     yb:=ny shr 3;     { block on which the ball is now located. Remember that    }
                       { (0,0) is the block in the upper right-hand corner        }
 
-    i:=xb+yb*16;
+    i:=xb+mul16[yb];
 
 
 { collision test with blocks touching only at the corners }
@@ -2366,7 +2365,7 @@ begin
              yb:=(byte(oy+24) shr 3)-3;      { of the block related to such }
                                              { intersection.                }
 
-             if wall[xb+yb*16]=0 then  { If there is no blockage }
+             if wall[xb+mul16[yb]]=0 then    { If there is no blockage }
                 begin
 		xb:=nx shr 4;
                 //xb:=min(12,max(0,i));        { Then the collision occurs at the }
@@ -2390,7 +2389,7 @@ begin
 	     if xb > 12 then xb := 12;
              yb:=(byte(ny+24) shr 3)-3;   { on the intersection nx,ny (the second one) }
 
-             if wall[xb+yb*16]=0 then    { If the blockade is not there... }
+             if wall[xb+mul16[yb]]=0 then    { If the blockade is not there... }
                 begin
                 nx:=ox;                   { then the valid intersection is }
                 ny:=oy;                   { the other, and it goes on...   }
@@ -2509,7 +2508,7 @@ begin
 
                   if (mx < 0 ) or
                      (mx > 12) or
-                     (wall[byte(mx)+byte(my)*16] <> 0) then
+                     (wall[byte(mx)+mul16[byte(my)]] <> 0) then
                         adjw[byte(lx+1),byte(ly+1)] := 10  { There are bricks }
                   else
                      adjw[byte(lx+1),byte(ly+1)] := 20     { There are no bricks }
@@ -3099,7 +3098,7 @@ begin
 
     blitTEMP(newvaus.width, newvaus.width);
 
-    z:=12 * (newvaus.width*16);
+    z := mul16[newvaus.width] * 12;
 
 
     for w:=11 downto 0 do
@@ -3599,7 +3598,7 @@ begin
                  x2:=byte(fire.x+shoots_width-9) shr 4;
                  y2:=y1;
 
-                 if (wall[x1+y1*16] <> 0) or (wall[x2+y2*16] <> 0) then
+                 if (wall[x1+mul16[y1]] <> 0) or (wall[x2+mul16[y2]] <> 0) then
                     begin
                     remove_fire;
                     fire.shot:=FALSE;

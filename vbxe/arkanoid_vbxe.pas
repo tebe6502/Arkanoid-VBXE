@@ -32,6 +32,10 @@
 
 
  Arkanoid VBXE v2.0 by Tebe/Madteam
+ 
+ 2026-03-14
+ - const [striped]
+ - mul16
 
  2026-02-15
  - optymalizacje
@@ -78,11 +82,15 @@
 *)
 
 
-// 204851
+// 207240
 
 // TO DO:
 // C - z prawej strony przyklejona pilka leci w prawo, z lewej w lewo
 // wieksze szanse na L, R
+
+
+// service.pas   3102 (*16, *12)
+
 
 
 program arkanoid;
@@ -279,7 +287,7 @@ const
    FLASH      : array[0..10] of byte = ( 255,212,211,210,209, 208,207,206,205,204,203);
 		    { Colors that the extremes of the VAUS take on during flashing }
 
-   SCORE_WALL : array[0..10] of word = (0, 10,20,30,40,50,100,200,250,500,1000 );
+   [striped] SCORE_WALL : array[0..10] of word = (0, 10,20,30,40,50,100,200,250,500,1000 );
 
 
    EMERG_DEV  : array[0..8] of byte = (0, $02,$13,$24,$35,$12,$23,$34,$45 );
@@ -305,7 +313,7 @@ const
 //   DIGITS     : array[0..10] of byte = ( 125,96,55,103,106,79, 95,97,127,111,0 );
    { Data for displaying digital digits in scores }
 
-   LEVEL      : array[0..5] of word = (0, 1000,300,100,60,35);
+   [striped] LEVEL      : array[0..5] of word = (0, 1000,300,100,60,35);
 
    SBDIR      = 600; { Cycles it must do before the ball you have to (dev. adjust) }
    DEFLEVEL   = 3;   { Default game level }
@@ -318,6 +326,8 @@ const
 
    { Probability of letter drop in % }   {  L   E   B   D   S   C  P }
    LETTER_DIS : array[0..7] of byte = (  0, 16, 20, 3, 18, 20, 20, 5 );
+
+   [striped] MUL16: array of word = [ {$eval 48,":1*16"} ] ;
 
    FLUXLEVEL  = 177;
 
