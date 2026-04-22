@@ -30,9 +30,14 @@
 
  !!! kod programu nie może przekroczyć $A000 !!!
 
+---------------------------------------
+ Arkanoid VBXE v2.1 by Tebe/Madteam
+---------------------------------------
 
- Arkanoid VBXE v2.0 by Tebe/Madteam
- 
+ 2026-04-22
+ - MAXSPEED = 1440, skalowanie SQRT (najpierw SHR 3, na koncu wynik SQRT16 SHL 3)
+ - tablica SQRTABLE dzięki skalowaniu tylko 256 elementów
+
  2026-03-14
  - const [striped]
  - mul16
@@ -41,7 +46,7 @@
  - optymalizacje
  - laser_blast
  - TextOut
- 
+
  2026-02-06
  - optymalizacje smallint -> byte absolute zpage (split_line)
  - mouseclick -> (trig0 = 0)
@@ -224,7 +229,7 @@ const
 	presents_ofs = VBXE_DATA + 90*320;
 
 	flux2_ofs = presents_ofs + 320*200;
-	
+
 	laserblast_ofs = flux2_ofs + 24*21;
 
 	opengate_ofs = laserblast_ofs + 16*12;
@@ -240,7 +245,7 @@ const
 
 	laserblast_width = 16;
 	laserblast_height = 6;
-	
+
 	opengate_width = 32;
 	opengate_height = 8;
 
@@ -300,7 +305,7 @@ const
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
    BALLSPEED  = 587; { Ball speed (256 = 70 pixels per second }
-   MAXSPEED   = 1023;{ Maximum speed attainable by the ball }
+   MAXSPEED   = 1440;{ Maximum speed attainable by the ball }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
 
@@ -617,14 +622,12 @@ var
     old_scores : cardinal;
 
     hlp: word;
-    //f_hlp: single;
-
 
     scr: array [0..255] of byte absolute VBXE_WINDOW+$0200;
     pom: array [0..127] of byte absolute VBXE_WINDOW+$0280;
     //pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
 
-    sqrtable : array [0..1023] of cardinal absolute $a000;
+    [striped] sqrtable : array [0..255] of word absolute $a000;
 
 
     [striped] row : array[0..255] of WORD absolute $c000; { array (see initRowArray) }
@@ -839,13 +842,92 @@ begin
 end;
 
 
-function FastSqrt(x: Single): Single;	// much faster with little less precision
-var
-  i: cardinal absolute x;
-begin
-  i := (i shr 1) + $1fc00000;
+function sqrt16(Number: word): word; assembler; register;
+(*
+@description:
+Returns the 8-bit square root of the 16-bit number.
 
-  Result := PSingle(@i)^;
+https://6502.org/users/mycorner/6502/code/root.html
+
+; Calculates the 8 bit root and 9 bit remainder of a 16 bit unsigned integer in
+; Numberl/Numberh. The result is always in the range 0 to 255 and is held in
+; Root, the remainder is in the range 0 to 511 and is held in Reml/Remh
+;
+; partial results are held in templ/temph
+;
+; This routine is the complement to the integer square program.
+;
+; Destroys A, X registers.
+
+; variables - must be in RAM
+
+*)
+asm
+Reml		= :EAX		; remainder low byte
+Remh		= :EAX+1	; remainder high byte
+templ		= :EAX+2	; temp partial low byte
+temph		= :EAX+3	; temp partial high byte
+
+	LDA	#$00		; clear A
+	STA	Reml		; clear remainder low byte
+	STA	Remh		; clear remainder high byte
+	STA	Result		; clear Root
+	STA	Result+1
+
+	LDY	#$08		; 8 pairs of bits to do
+Loop
+	ASL	Result		; Root = Root * 2
+
+	ASL	Number		; shift highest bit of number ..
+	ROL	Number+1	;
+	ROL	Reml		; .. into remainder
+	ROL	Remh		;
+
+	ASL	Number		; shift highest bit of number ..
+	ROL	Number+1	;
+	ROL	Reml		; .. into remainder
+	ROL	Remh		;
+
+	LDA	Result		; copy Root ..
+	STA	templ		; .. to templ
+	LDA	#$00		; clear byte
+	STA	temph		; clear temp high byte
+
+	SEC			; +1
+	ROL	templ		; temp = temp * 2 + 1
+	ROL	temph		;
+
+	LDA	Remh		; get remainder high byte
+	CMP	temph		; comapre with partial high byte
+	BCC	Next		; skip sub if remainder high byte smaller
+
+	BNE	Subtr		; do sub if <> (must be remainder>partial !)
+
+	LDA	Reml		; get remainder low byte
+	CMP	templ		; comapre with partial low byte
+	BCC	Next		; skip sub if remainder low byte smaller
+
+				; else remainder>=partial so subtract then
+				; and add 1 to root. carry is always set here
+Subtr
+	LDA	Reml		; get remainder low byte
+	SBC	templ		; subtract partial low byte
+	STA	Reml		; save remainder low byte
+	LDA	Remh		; get remainder high byte
+	SBC	temph		; subtract partial high byte
+	STA	Remh		; save remainder high byte
+
+	INC	Result		; increment Root
+Next
+	DEY			; decrement bit pair count
+	BNE	Loop		; loop if not all done
+
+	asl Result		; *8 (scale factor)
+	rol Result+1
+	asl Result
+	rol Result+1
+	asl Result
+	rol Result+1
 end;
 
 
@@ -1108,7 +1190,7 @@ begin
    sfx.add(@sfx12);
 
    sfx.play;
-   
+
    mem[756] := hi(charset);
 
    vbxe.VideoRAM := vram;	// VBXE video ram address

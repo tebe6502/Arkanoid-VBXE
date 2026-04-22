@@ -747,7 +747,6 @@ begin
 end;
 
 
-
 procedure Wait_VBL;
 //label ALTO,BASSO;
    begin
@@ -827,8 +826,6 @@ begin
  end;
 
 
-
-
   ball.oldx := ball.x; { set the old coordinates equal to the current ones, }
   ball.oldy := ball.y; { the current ones will then be modified}
 end;
@@ -836,9 +833,6 @@ end;
 
 procedure set_ball_speed(var ball : BALLTYPE; speed : word);
 var
-//  sx, sy: smallInt;
-//  a, b, x, y, len: word;
-//  i: cardinal;
 
   sx: smallint absolute $00;
   sy: smallint absolute $02;
@@ -849,7 +843,7 @@ var
   y: word absolute $0a;
   len: word absolute $0c;
 
-  i: cardinal absolute $0e;
+  i: word absolute $0e;
   
 begin
 
@@ -869,9 +863,9 @@ begin
   if a > MAXSPEED then a := MAXSPEED;
   if b > MAXSPEED then b := MAXSPEED;
 
-  i:=sqrtable[a] + sqrtable[b];
+  i := sqrtable[a shr 3] + sqrtable[b shr 3];
   
-  len := trunc( FastSqrt(i) );
+  len := sqrt16(i);
   
   if len = 0 then
     Exit;
@@ -906,90 +900,17 @@ begin
 end;
 
 
-
-(*
-procedure set_ball_speed(var ball : BALLTYPE; speed : word);
-var
-  sx,sy : smallint;   { Sets the speed of the ball based on the speed }
-  vm : single;        { vector module passed in SPEED: smallint.      }
-  i: cardinal;
-  
-  a,b: word;
-begin
-
-  sx:=ball.speedx;  { stores the x and y components of velocity }
-  sy:=ball.speedy;  { in sx and sy, respectively                }
-  
-  a:=abs(sx) and 1023;
-  b:=abs(sy) and 1023;
-  
-  i:=sqrtable[a] + sqrtable[b];
-  
-  f_hlp := FastSqrt(i);
-  
-  vm:=speed / f_hlp ;//sqrt(sx*sx+sy*sy); { calculate the coefficient of proportionality  }
-                                 { between the old and new speeds                }
-                                 { (the direction does not change, only          }
-                                 { the modulus changes).                         }
-
-  ball.speedx:=trunc(sx * vm);   { and then multiply by that coefficient. }
-  ball.speedy:=trunc(sy * vm);   { the two projections of the velocity.   }
-    
-
-  if ball.speedx = 0 then ball.speedx := $a0;
-  if ball.speedy = 0 then ball.speedy := $a0;
-
-end;
-*)
-
-
 procedure set_ball_direction(var ball : BALLTYPE; angle : smallint);
-//var w : single;
 begin                  { sets the trajectory angle of the ball }
 
   ball.speedx := SinDeg(angle+90);  { the velocity is assumed to be unitary }
   ball.speedy := -SinDeg(angle);    { v=256 equals 70 pixels per sec. }
 
-(*
-  w:=angle*pi/180.0;     { w viene espresso in gradi }
-
-  ball.speedx:=trunc(256*cos(w));  { la velocita' si suppone unitaria }
-  ball.speedy:=-trunc(256*sin(w)); { v=256 equivale a 70 pixel al sec. }
-*)
 end;
 
 
 function get_ball_direction(var ball : BALLTYPE): smallint;
-//var w : smallint; { Returns the direction in which the ball is moving }
 begin
-
-
-(*
-  if ball.speedx=0 then begin
-   
-   if ball.speedy >= 0 then
-    w:=-90
-   else
-    w:=90;
-   
-  end 
-  else
-    begin
-    { calculates the arcotangent and adds multiples of 90 degrees depending on }
-    { signs of ball.speedx and ball.speedy }
-      
-    f_hlp := -ball.speedy / ball.speedx;
-    
-    f_hlp := arctan(f_hlp)*180.0/pi;
-
-    w:=trunc(f_hlp);
-
-    if(ball.speedx<0) then inc(w,180);
-    
-    inc(w,360);
-    w:=mod360(w);
-    end;
-*)
 
   get_ball_direction := scale360[ Atan2(-ball.speedy, ball.speedx) ];
 
@@ -3665,7 +3586,7 @@ begin
 
     sfx.init(sfx_vaus_teleport);
 
-    inc(score.player[cur_player],10000);
+    inc(score.player[cur_player], 10000);
     remain_blk:=0;
 
     z:=vaus.x;
@@ -3847,10 +3768,7 @@ var
 
   procedure ball_speed(var ball: BALLTYPE);
   var 
-  //    i: cardinal;
-  //    a, b: word;
-
-    i: cardinal absolute $00;
+    i: word absolute $00;
 
     a: word absolute $04;
     b: word absolute $06;
@@ -3872,14 +3790,13 @@ var
     if a > MAXSPEED then a := MAXSPEED;
     if b > MAXSPEED then b := MAXSPEED;
 
-    i:=sqrtable[a] + sqrtable[b];
+    i := sqrtable[a shr 3] + sqrtable[b shr 3];
 
-    ball_speed_result := trunc( FastSqrt(i) );
-  
+    ball_speed_result := sqrt16(i);
+
     if ball_speed_result > MAXSPEED then ball_speed_result := MAXSPEED;
 
   end;
-
 
 
   procedure check_ball(var ball: BALLTYPE);
@@ -4328,14 +4245,14 @@ var
         end;
 
 
-     { La 'R' maiuscola abilita la modalita' automatica del vaus }
+     { The uppercase ‘R’ enables the vaus's automatic mode }
      if key=ord('R') then trainer:=1;
 
-     { La 'r' minuscola la disabilita }
+     { Disable the lowercase 'r' }
      if key=ord('r') then trainer:=0;
 
-     { Se il tasto e' una a,b,c,d,e,f,g: viene fatta cadere una lettera }
-     if (key>=97) and (key<(97+LETTER_NUMB-1)) then { Fa cadere la lettera }
+     { If the key is a, b, c, d, e, f, or g, a letter is dropped }
+     if (key>=97) and (key<(97+LETTER_NUMB-1)) then { He drops the letter }
         start_letter(104,30,key-97);
 
      if key=11520 then                        { ALT+X, quit-ta }
@@ -4383,11 +4300,11 @@ var
     //settextstyle(DefaultFont,HorizDir,1);
     setcolor(0);
 
-    { Stampa PLAYER xxx se il numero di giocatori e' 2 }
+    { Print “PLAYER xxx” if the number of players is 2 }
     if cur_player=1 then sc:='Player One'
     else sc:='Player Two';
 
-    { stampa le scritte CHOOSE YOER WALL, ecc... }
+    { prints the words “CHOOSE YOUR WALL,” etc... }
     for x:=-1 to 1 do
         for y:=-1 to 1 do
             begin
@@ -4407,31 +4324,31 @@ var
     TextOut(px-39,py+58,'Move mouse to select;');
     TextOut(px-45,py+68,'left button to confirm');
 
-    { Disegna il quadrato nero in cui devono apparire i numeri del muro }
-    { da scegliere.                                                     }
+    { Draw the black square where the numbers for the wall you want }
+    { to choose should appear.                                      }
     for y:=py+dy to py+dy+ddy do
         for x:=px+dx to px+dx+ddx do
             screen[x+row[y]]:=0;
 
-    mousecoords(oldx,oldy);  { rileva le coordinate del mouse }
+    mousecoords(oldx,oldy);  { detects the mouse coordinates }
 
 //    while(mouseclick=1) do;
     while(mouseclick<>1) do
        begin
-       put_digit(px+dx+3,py+dy+2,st div 10); { Scrive il numero del quadro }
+       put_digit(px+dx+3,py+dy+2,st div 10); { Enter the panel number }
        put_digit(px+dx+11,py+dy+2,st mod 10);
 
-       mousecoords(newx,newy);       { Se le coord. sono diverse: }
-       if newx>oldx then inc(st);    { se la x e' maggiore il quadro aumenta }
-       if newx<oldx then dec(st);    { se e' munore diminuisce.              }
+       mousecoords(newx,newy);       { If the coordinates are different:   }
+       if newx>oldx then inc(st);    { If x is greater, the area increases }
+       if newx<oldx then dec(st);    { if it's a munore, it decreases.     }
 
-       { Se supera il massimo selezionabile torna al n.1 }
+       { If it exceeds the maximum selectable value, go back to #1 }
        if st>totalwall then st:=st-totalwall;
 
-       { se supera il minimo selezionabile torna al massimo (n.32) }
+       { If it exceeds the minimum selectable value, it returns to the maximum (32) }
        if st<1 then st:=st+totalwall;
 
-       oldx:=newx; { le nuove coord. diventano le vecchie. }
+       oldx:=newx; { The new coordinates become the old ones. }
        oldy:=newy;
 
        end;
@@ -4466,12 +4383,12 @@ procedure level_selection;
 var x,y,fl,fw,h : word;
 
     begin
-    { Disegna sullo schermo uno dei 5 numeri a seconda del valore di lv }
-    h:=levelsel.height div 5;    { I frames sono 5 quindi l'altezza di un }
-                                 { frame e' l'altezza totale del disegno/5 }
+    { Draw one of the 5 numbers on the screen depending on the value of lv }
+    h:=levelsel.height div 5;    { There are 5 frames, so the height of each frame }
+                                 { is the total height of the drawing divided by 5 }
 
-    fl:=(lv-1)*h*levelsel.width; { fl contiene l'indirizzo del frame da }
-                                 { copiare sullo schermo.               }
+    fl:=(lv-1)*h*levelsel.width; { fl contains the address of the frame }
+                                 { to be displayed on the screen.       }
 
     for y:=0 to h-1 do
         begin
@@ -4529,22 +4446,22 @@ var
 
        if ik=32 then             { SPACE BAR = sound on/off switch }
           begin
-          sound_on:=sound_on XOR TRUE;    { x xor 1 inverte il valore di x }
+          sound_on:=sound_on XOR TRUE;    { x XOR 1 inverts the value of x }
           soundicon; { e disegna l'icona} { 0 xor 1 = 1; 1 xor 1 = 0 }
           end;
 
-       if ik=15104 then    { se si preme F1 il livello aumenta }
+       if ik=15104 then    { If you press F1, the volume increases }
           begin
           inc(lv);
-          if lv>5 then lv:=1;   { se e' superiore a 5 torna ad 1 }
-          level_selection;      { e stampa il numero sullo schermo }
+          if lv>5 then lv:=1;   { If it is greater than 5, reset it to 1 }
+          level_selection;      { and display the number on the screen   }
           end;
 
-       if ik=15360 then    { se si preme F2 il livello diminuisce }
+       if ik=15360 then    { If you press F2, the volume decreases }
           begin
           dec(lv);
-          if lv<1 then lv:=5;  { se e' inferiore a 1 torna a 5 }
-          level_selection;     { e stampa il numero sullo schermo }
+          if lv<1 then lv:=5;  { If it is less than 1, go back to 5   }
+          level_selection;     { and display the number on the screen }
           end;
    *)
     until trig0 = 0;    { the cycle breaks if k is different from 0 }
@@ -4557,24 +4474,23 @@ procedure start_game(players : smallint);
 var nwall : boolean;
 
     begin
-    set_start_parameters;                 { imposta i parametri di partenza }
-    if players=1 then score.lives[2]:=0;  { se c'e' un solo giocatore il }
-                                          { seconda non ha neanche una vita }
+    set_start_parameters;                 { Set the starting parameters }
+    if players=1 then score.lives[2]:=0;  { If there is only one player, the }
+                                          { second player doesn't even have a life }
 
-    trainer:=0;                           { il trainer viene disattivato }
-    wall:=wall_p[cur_player];             { si copia nel muro corrente }
+    trainer:=0;                           { The trainer is disabled }
+    wall:=wall_p[cur_player];             { It is copied to the current wall }
 
+                                          { the current player's }
+    set_wall;                             { and draw it }
 
-                                          { quello del giocatore corrente }
-    set_wall;                             { e lo si disegna }
-
-    fill_picture_with_pattern;            { si imposta lo sfondo }
+    fill_picture_with_pattern;            { Set the backgroun }
     
     hlp:=0;
-    blitBOX(320, 200);                    { e si disegna tutto quanto sullo }
-                                          { schermo }
+    blitBOX(320, 200);                    { and everything is displayed on the }
+                                          { screen }
 
-//    setpalette(playscreen);               { si impostano i colori. }
+//    setpalette(playscreen);               { Set the colors. }
     
 
     { you print the three scores, player 1, 2 and hi-score }
