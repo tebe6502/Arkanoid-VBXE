@@ -34,9 +34,12 @@
  Arkanoid VBXE v2.2 by Tebe/Madteam
 ---------------------------------------
 
+ 2026-05-20
+ - enemies
+
  2026-05-17
  - ultra-fast-sqrt (sqrt16)
- 
+
  2026-04-22
  - MAXSPEED = 1440, skalowanie SQRT (najpierw SHR 3, na koncu wynik SQRT16 SHL 3)
  - tablica SQRTABLE dzięki skalowaniu tylko 256 elementów
@@ -214,11 +217,11 @@ const
 
         VBXE_DATA = $6000;
 
-	playscreen_ofs  = $020000;
+	playscreen_ofs  = $030000;
 
-	vram = $030000;
+	vram = $040000;
 
-	pattern_temp = $040000;
+	pattern_temp = $050000;
 
 
 	explosion_ofs   = VBXE_DATA;
@@ -236,6 +239,8 @@ const
 	laserblast_ofs = flux2_ofs + 24*21;
 
 	opengate_ofs = laserblast_ofs + 16*12;
+
+	enemies_ofs = opengate_ofs + 32*48;
 
 
 	minivaus_width = 20;
@@ -889,7 +894,7 @@ ARGLO      =  :EAX+2
 	rol @
 
 	sta Result+1
-	
+
 @sp	ldx #$00
 	jmp @exit
 

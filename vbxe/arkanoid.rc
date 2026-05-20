@@ -9,4 +9,5 @@ opengate_ofs xbmp 'assets\opengate.bmp' 0 1
 presents_ofs xbmp 'assets\title.bmp' 0 1
 playscreen_ofs xbmp 'assets\playscreen.bmp' 0 1
 vbxe_data xbmp 'assets\btm.bmp' 0 1
+enemies_ofs xbmp 'assets\enemies.bmp' 0 1
 charset rcdata 'assets\arkanoid.fnt'
