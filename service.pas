@@ -388,6 +388,10 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
  fillByte(blt_letter, sizeof(TBCB), 0);
  fillByte(blt_box, sizeof(TBCB), 0);
  fillByte(blt_zero, sizeof(TBCB), 0);
+
+ fillByte(enemy0, sizeof(TBCB), 0);
+ fillByte(enemy1, sizeof(TBCB), 0);
+ fillByte(enemy2, sizeof(TBCB), 0);
  
  
  blt.src_step_x:=1;
@@ -396,6 +400,70 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
 // blt.blt_control := 0;
 
  blt.blt_and_mask:=$ff;
+
+
+ with enemy0 do begin
+  src_adr.byte0:=enemies_ofs;
+  src_adr.byte1:=enemies_ofs shr 8;
+  src_adr.byte2:=enemies_ofs shr 16;
+  
+  dst_adr.byte2:=vram shr 16;
+
+  src_step_x:=1;
+  dst_step_x:=1;
+
+  blt_control := 1;
+
+  dst_step_y:=320;
+  src_step_y:=128;
+ 
+  blt_height:=16-1;
+  blt_width:=16-1;
+
+  blt_and_mask := $ff;
+ end; 
+
+ with enemy1 do begin
+  src_adr.byte0:=enemies_ofs;
+  src_adr.byte1:=enemies_ofs shr 8;
+  src_adr.byte2:=enemies_ofs shr 16;
+
+  dst_adr.byte2:=vram shr 16;
+
+  src_step_x:=1;
+  dst_step_x:=1;
+
+  blt_control := 1;
+
+  dst_step_y:=320;
+  src_step_y:=128;
+ 
+  blt_height:=16-1;
+  blt_width:=16-1;
+
+  blt_and_mask := $ff;
+ end; 
+
+ with enemy2 do begin
+  src_adr.byte0:=enemies_ofs;
+  src_adr.byte1:=enemies_ofs shr 8;
+  src_adr.byte2:=enemies_ofs shr 16;
+
+  dst_adr.byte2:=vram shr 16;
+
+  src_step_x:=1;
+  dst_step_x:=1;
+
+  blt_control := 1;
+
+  dst_step_y:=320;
+  src_step_y:=128;
+ 
+  blt_height:=16-1;
+  blt_width:=16-1;
+
+  blt_and_mask := $ff;
+ end; 
 
 
 
@@ -940,6 +1008,44 @@ begin
 
   ball.sbd:=0;
   ball.brwhit:=0;
+
+end;
+
+
+procedure move_enemy(var enm: ENEMYTYPE);
+var src: cardinal;
+begin
+
+     enm.tic:=(enm.tic + 1) and 3;
+     if enm.tic = 0 then begin
+     
+      inc(enm.frm);
+      if enm.frm = enm.mfrm then enm.frm:=0;
+
+     end;
+
+
+
+     src := enemies_ofs {+ 128*16} + mul16[enm.frm];
+
+     asm
+       fxs FX_MEMS #$80
+     end;
+
+     enemy0.src_adr.byte2:=src shr 16;
+     enemy0.src_adr.byte1:=src shr 8;
+     enemy0.src_adr.byte0:=src;
+
+     hlp := 50 + row[100];
+
+     enemy0.dst_adr.byte1:=hlp shr 8;
+     enemy0.dst_adr.byte0:=hlp;
+
+     asm
+       fxs FX_MEMS #$00
+     end;
+
+     RunBCB(enemy0);
 
 end;
 
@@ -3929,6 +4035,9 @@ var
   { exceeds 2000 units, the ball is launched automatically      }
   ball0.stm:=0;
 
+  enm0.mfrm:=8;
+
+
   { At the start, the variable lett.incoming takes on a random value between }
   { 0 and LETTER_DROP (constant defined at the beginning of the unit).       }
   lett.incoming:=rand(LETTER_DROP);
@@ -3986,6 +4095,8 @@ var
      
 
      mousecoords(x);  { reads mouse coordinates }
+     
+     move_enemy(enm0);
 
      move_vaus(x,VAUS_LINE);
 

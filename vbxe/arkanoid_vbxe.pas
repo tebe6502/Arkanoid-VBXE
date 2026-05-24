@@ -122,12 +122,19 @@ type
                sfx_hard_brick = 8, sfx_shot_enemy = 4, sfx_fire = 5, sfx_vaus_enlarged = 3, sfx_vaus_teleport = 12);
 
 
+   ENEMYTYPE= RECORD of $b0
+              typ: cardinal;
+              x, y: byte;
+              tic: byte;		{ tick counter }
+              frm: byte;		{ frame counter }
+              mfrm: byte;		{ maximum frame number }
+	      END;
 
    BTMTYPE  = RECORD                   { for a drawing in BTM format }
               width   : word;          { drawing width }
               height  : byte;          { height }
               ofs : cardinal;
-              end;
+              END;
 
    VAUSTYPE = RECORD                   { for vaus data }
               x,y: byte;               { current x,y coordinates }
@@ -141,7 +148,7 @@ type
               iflash : byte;           { delay counter for}
                                        { the blinking of edges }
               letter : byte;
-              end;
+              END;
 
 
    BALLTYPE = RECORD of $00            { contains the data of the ball }
@@ -159,7 +166,7 @@ type
                                        { thrown again }
               onvaus : byte;           { width in pixels of the vaus }
               stm    : byte;           { magnet counter }
-              end;
+              END;
 
    WALLTYPE = array [0..16*16-1] of byte;//array[0..12,-1..15] of byte; { for the wall (13x15 bricks) }
 
@@ -173,14 +180,14 @@ type
                 pl_numb: byte;                    { current player }
                 roundsel : array[0..2] of boolean;
                 abortplay : boolean;
-                end;
+                END;
 
    SHREC      = RECORD                 { for the sparkle of the bricks }
                 xb, yb      : byte;
                 frame       : byte;
                 block       : byte;
                 active      : boolean;
-                end;
+                END;
 
    LETTERREC  = RECORD                 { data related to the letter }
                 x,y      : byte;       { coord. }
@@ -193,7 +200,7 @@ type
                 nexty,
                 nexttype,	       { type of letter that will have to fall }
                 last     : byte;       { last letter dropped }
-                end;
+                END;
 
    FIRETYPE   = RECORD                 { for lasers }
                 x,y  : byte;           { coord. }
@@ -204,7 +211,7 @@ type
 		blasty,
 		blastfrm: byte;
 		blast: Boolean;
-                end;
+                END;
 
 
 { ------------------------------------------------------------------------- }
@@ -257,7 +264,6 @@ const
 	opengate_width = 32;
 	opengate_height = 8;
 
-//	enemy1_width
 
    CL_BLACK = 32;
    CL_WHITE = 84;
@@ -575,6 +581,10 @@ var
     blt_box    : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*2;
     blt_zero   : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*3;
 
+    enemy0     : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*4;
+    enemy1     : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*5;
+    enemy2     : TBCB absolute VBXE_BCBADR+VBXE_WINDOW+21*6;
+
     vbxe_ram: TVBXEMemoryStream;
 
     sfx: TSFX;
@@ -636,6 +646,10 @@ var
     //pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
 
     [striped] sqrtable : array [0..255] of word absolute $a000;
+    
+    enm0: ENEMYTYPE absolute $b000;
+    enm1: ENEMYTYPE absolute $b000 + sizeof(ENEMYTYPE);
+    enm2: ENEMYTYPE absolute $b000 + sizeof(ENEMYTYPE)*2;
 
 
     [striped] row : array[0..255] of WORD absolute $c000; { array (see initRowArray) }
