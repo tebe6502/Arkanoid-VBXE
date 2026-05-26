@@ -128,6 +128,8 @@ type
    ENEMYTYPE= RECORD of $cb
               typ: cardinal;
               x, y: byte;
+	      adf: byte;		{ add frame }
+	      ping: Boolean;            { ping_pong on/off }
 	      adx, ady: byte;
               tic: byte;		{ tick counter }
               frm: byte;		{ frame counter }
@@ -251,7 +253,10 @@ const
 
 	opengate_ofs = laserblast_ofs + 16*12;
 
-	enemies_ofs = opengate_ofs + 32*48;
+	enemies_ofs0 = opengate_ofs + 32*48;
+	enemies_ofs1 = enemies_ofs0 + 128*16;
+	enemies_ofs2 = enemies_ofs1 + 384*16;
+	enemies_ofs3 = enemies_ofs2 + 176*16;
 
 
 	minivaus_width = 20;
@@ -642,6 +647,7 @@ var
     sound_on   : Boolean;
 
     old_scores : cardinal;
+    enemies_adr: cardinal;
 
     hlp: word;
 
@@ -650,7 +656,7 @@ var
     //pat: array [0..2047] of byte absolute VBXE_WINDOW+$0300;
 
     [striped] sqrtable : array [0..255] of word absolute $a000;
-    
+
 
     { !!! the $B000..$BFFF area is occupied by the VBXE window !!! }
 

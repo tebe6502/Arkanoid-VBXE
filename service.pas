@@ -402,11 +402,7 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
  blt.blt_and_mask:=$ff;
 
 
- with enemy0 do begin
-  src_adr.byte0:=enemies_ofs;
-  src_adr.byte1:=enemies_ofs shr 8;
-  src_adr.byte2:=enemies_ofs shr 16;
-  
+ with enemy0 do begin 
   dst_adr.byte2:=vram shr 16;
 
   src_step_x:=1;
@@ -424,10 +420,6 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
  end; 
 
  with enemy1 do begin
-  src_adr.byte0:=enemies_ofs;
-  src_adr.byte1:=enemies_ofs shr 8;
-  src_adr.byte2:=enemies_ofs shr 16;
-
   dst_adr.byte2:=vram shr 16;
 
   src_step_x:=1;
@@ -445,10 +437,6 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
  end; 
 
  with enemy2 do begin
-  src_adr.byte0:=enemies_ofs;
-  src_adr.byte1:=enemies_ofs shr 8;
-  src_adr.byte2:=enemies_ofs shr 16;
-
   dst_adr.byte2:=vram shr 16;
 
   src_step_x:=1;
@@ -1022,8 +1010,15 @@ var src: cardinal;
      enm.tic:=(enm.tic + 1) and 3;
      if enm.tic = 0 then begin
      
-      inc(enm.frm);
-      if enm.frm = enm.mfrm then enm.frm:=0;
+      inc(enm.frm, enm.adf);
+      if (enm.frm = 0) or (enm.frm = enm.mfrm) then begin
+
+       if enm.ping then 
+        enm.adf := -enm.adf
+       else
+        enm.frm := 0;
+
+      end;
       
      end; 
 
@@ -1038,18 +1033,32 @@ var src: cardinal;
 
 
 begin
-   
+
+    { remove enemies }
+
+    hlp := enm0.x + row[enm0.y];
+    blitBOX(16, 16);
+
+    hlp := enm1.x + row[enm1.y];
+    blitBOX(16, 16);
+
+    hlp := enm2.x + row[enm2.y];
+    blitBOX(16, 16);
+
+
+    { new x:y enemies }
+
     enemy_update(enm0);
     enemy_update(enm1);
     enemy_update(enm2);
 
-
+ 
      asm
        fxs FX_MEMS #$80
      end;
 
 
-     src := enemies_ofs {+ 128*16} + mul16[enm0.frm];
+     src := enemies_adr + mul16[enm0.frm];
 
      enemy0.src_adr.byte2:=src shr 16;
      enemy0.src_adr.byte1:=src shr 8;
@@ -1062,7 +1071,7 @@ begin
 
 
 
-     src := enemies_ofs {+ 128*16} + mul16[enm1.frm];
+     src := enemies_adr + mul16[enm1.frm];
 
      enemy1.src_adr.byte2:=src shr 16;
      enemy1.src_adr.byte1:=src shr 8;
@@ -1075,7 +1084,7 @@ begin
 
 
 
-     src := enemies_ofs {+ 128*16} + mul16[enm2.frm];
+     src := enemies_adr + mul16[enm2.frm];
 
      enemy2.src_adr.byte2:=src shr 16;
      enemy2.src_adr.byte1:=src shr 8;
@@ -1085,7 +1094,6 @@ begin
 
      enemy2.dst_adr.byte1:=hlp shr 8;
      enemy2.dst_adr.byte0:=hlp;
-
 
 
      asm
@@ -1869,6 +1877,116 @@ begin
      3: pattern := pattern3;
 //     4: pattern := pattern4;
     end;
+
+
+    wl:=3;
+
+    asm
+     fxs FX_MEMS #$80
+    end;
+
+    case wl of
+
+     0:
+     begin
+      enemies_adr := enemies_ofs0;
+
+      enemy0.src_step_y:=128;
+      enemy1.src_step_y:=128;
+      enemy2.src_step_y:=128;
+
+      enm0.mfrm:=8;
+      enm1.mfrm:=8;
+      enm2.mfrm:=8;
+
+      enm0.ping:=false;
+      enm1.ping:=false;
+      enm2.ping:=false;
+     end;
+
+     1:
+     begin
+      enemies_adr := enemies_ofs1;
+
+      enemy0.src_step_y:=176;
+      enemy1.src_step_y:=176;
+      enemy2.src_step_y:=176;     
+
+      enm0.mfrm:=11-1;
+      enm1.mfrm:=11-1;
+      enm2.mfrm:=11-1;
+
+      enm0.ping:=true;
+      enm1.ping:=true;
+      enm2.ping:=true;
+     end;
+
+     2:
+     begin
+      enemies_adr := enemies_ofs2;
+
+      enemy0.src_step_y:=384;
+      enemy1.src_step_y:=384;
+      enemy2.src_step_y:=384;     
+
+      enm0.mfrm:=24;
+      enm1.mfrm:=24;
+      enm2.mfrm:=24;
+
+      enm0.ping:=false;
+      enm1.ping:=false;
+      enm2.ping:=false;
+     end;
+
+     3:
+     begin
+      enemies_adr := enemies_ofs3;
+
+      enemy0.src_step_y:=160;
+      enemy1.src_step_y:=160;
+      enemy2.src_step_y:=160;     
+
+      enm0.mfrm:=10-1;
+      enm1.mfrm:=10-1;
+      enm2.mfrm:=10-1;
+
+      enm0.ping:=true;
+      enm1.ping:=true;
+      enm2.ping:=true;
+     end;
+
+    end;
+
+
+    asm
+     fxs FX_MEMS #$00
+    end;
+
+
+  enm0.frm:=0;
+  enm1.frm:=2;
+  enm2.frm:=4;
+
+  enm0.adf:=1;
+  enm1.adf:=1;
+  enm2.adf:=1;
+
+  enm0.adx:=1;
+  enm1.adx:=1;
+  enm2.adx:=1;
+
+  enm0.ady:=1;
+  enm1.ady:=1;
+  enm2.ady:=1;
+
+  enm0.x:=50;
+  enm1.x:=70;
+  enm2.x:=90;
+  
+  enm0.y:=40;
+  enm1.y:=70;
+  enm2.y:=100;
+  
 
 end;
 
@@ -4081,31 +4199,6 @@ var
   { when the ball appears to when it is launched. If the value  }
   { exceeds 2000 units, the ball is launched automatically      }
   ball0.stm:=0;
-
-
-  enm0.mfrm:=8;
-  enm1.mfrm:=8;
-  enm2.mfrm:=8;
-
-  enm0.frm:=0;
-  enm1.frm:=0;
-  enm2.frm:=0;
-
-  enm0.adx:=1;
-  enm1.adx:=1;
-  enm2.adx:=1;
-
-  enm0.ady:=1;
-  enm1.ady:=1;
-  enm2.ady:=1;
-
-  enm0.x:=50;
-  enm1.x:=70;
-  enm2.x:=90;
-  
-  enm0.y:=40;
-  enm1.y:=70;
-  enm2.y:=100;
 
 
   { At the start, the variable lett.incoming takes on a random value between }
