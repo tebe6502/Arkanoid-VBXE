@@ -125,9 +125,10 @@ type
                sfx_hard_brick = 8, sfx_shot_enemy = 4, sfx_fire = 5, sfx_vaus_enlarged = 3, sfx_vaus_teleport = 12);
 
 
-   ENEMYTYPE= RECORD of $b0
+   ENEMYTYPE= RECORD of $cb
               typ: cardinal;
               x, y: byte;
+	      adx, ady: byte;
               tic: byte;		{ tick counter }
               frm: byte;		{ frame counter }
               mfrm: byte;		{ maximum frame number }
@@ -650,9 +651,8 @@ var
 
     [striped] sqrtable : array [0..255] of word absolute $a000;
     
-    enm0: ENEMYTYPE absolute $b000;				// the $b000 area is occupied by the VBXE window !!!
-    enm1: ENEMYTYPE absolute $b000 + sizeof(ENEMYTYPE);
-    enm2: ENEMYTYPE absolute $b000 + sizeof(ENEMYTYPE)*2;
+
+    { !!! the $B000..$BFFF area is occupied by the VBXE window !!! }
 
 
     [striped] row : array[0..255] of WORD absolute $c000; { array (see initRowArray) }
@@ -668,6 +668,10 @@ var
     [striped] scale360 : array [0..255] of WORD absolute $c000+$800;
 
     [striped] sintable: array [0..90-1] of smallint absolute $c000+$a00;
+
+    enm0: ENEMYTYPE absolute $cb00;
+    enm1: ENEMYTYPE absolute $cb00 + sizeof(ENEMYTYPE);
+    enm2: ENEMYTYPE absolute $cb00 + sizeof(ENEMYTYPE)*2;
 
 
     wall_p : array[0..2] of WALLTYPE absolute $d800;   { memorization of the wall itself }

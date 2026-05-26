@@ -1013,7 +1013,7 @@ end;
 
 
 procedure move_enemy;
-var src0, src1, src2: cardinal;
+var src: cardinal;
 
 
   procedure enemy_update(var enm: ENEMYTYPE);
@@ -1024,8 +1024,15 @@ var src0, src1, src2: cardinal;
      
       inc(enm.frm);
       if enm.frm = enm.mfrm then enm.frm:=0;
-
+      
      end; 
+
+     if enm.tic = 2 then begin
+     
+      inc(enm.x, enm.adx); if (enm.x < SCRMIN) or (enm.x > SCRMAX-17) then enm.adx := -enm.adx;
+      inc(enm.y, enm.ady); if (enm.y < SCRTOP) or (enm.y > SCRBOT-32) then enm.ady := -enm.ady;
+     
+     end;
   
   end;
 
@@ -1036,43 +1043,45 @@ begin
     enemy_update(enm1);
     enemy_update(enm2);
 
-    src0 := enemies_ofs {+ 128*16} + mul16[enm0.frm];
-    src1 := enemies_ofs {+ 128*16} + mul16[enm1.frm];
-    src2 := enemies_ofs {+ 128*16} + mul16[enm2.frm];
-
 
      asm
        fxs FX_MEMS #$80
      end;
 
 
-     enemy0.src_adr.byte2:=src0 shr 16;
-     enemy0.src_adr.byte1:=src0 shr 8;
-     enemy0.src_adr.byte0:=src0;
+     src := enemies_ofs {+ 128*16} + mul16[enm0.frm];
 
-     hlp := 50 + row[100];
+     enemy0.src_adr.byte2:=src shr 16;
+     enemy0.src_adr.byte1:=src shr 8;
+     enemy0.src_adr.byte0:=src;
+
+     hlp := enm0.x + row[enm0.y];
 
      enemy0.dst_adr.byte1:=hlp shr 8;
      enemy0.dst_adr.byte0:=hlp;
 
 
 
-     enemy1.src_adr.byte2:=src1 shr 16;
-     enemy1.src_adr.byte1:=src1 shr 8;
-     enemy1.src_adr.byte0:=src1;
+     src := enemies_ofs {+ 128*16} + mul16[enm1.frm];
 
-     hlp := 80 + row[60];
+     enemy1.src_adr.byte2:=src shr 16;
+     enemy1.src_adr.byte1:=src shr 8;
+     enemy1.src_adr.byte0:=src;
+
+     hlp := enm1.x + row[enm1.y];
 
      enemy1.dst_adr.byte1:=hlp shr 8;
      enemy1.dst_adr.byte0:=hlp;
 
 
 
-     enemy2.src_adr.byte2:=src2 shr 16;
-     enemy2.src_adr.byte1:=src2 shr 8;
-     enemy2.src_adr.byte0:=src2;
+     src := enemies_ofs {+ 128*16} + mul16[enm2.frm];
 
-     hlp := 90 + row[150];
+     enemy2.src_adr.byte2:=src shr 16;
+     enemy2.src_adr.byte1:=src shr 8;
+     enemy2.src_adr.byte0:=src;
+
+     hlp := enm2.x + row[enm2.y];
 
      enemy2.dst_adr.byte1:=hlp shr 8;
      enemy2.dst_adr.byte0:=hlp;
@@ -4081,6 +4090,22 @@ var
   enm0.frm:=0;
   enm1.frm:=0;
   enm2.frm:=0;
+
+  enm0.adx:=1;
+  enm1.adx:=1;
+  enm2.adx:=1;
+
+  enm0.ady:=1;
+  enm1.ady:=1;
+  enm2.ady:=1;
+
+  enm0.x:=50;
+  enm1.x:=70;
+  enm2.x:=90;
+  
+  enm0.y:=40;
+  enm1.y:=70;
+  enm2.y:=100;
 
 
   { At the start, the variable lett.incoming takes on a random value between }
