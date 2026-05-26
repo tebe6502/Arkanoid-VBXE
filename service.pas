@@ -412,7 +412,7 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
   src_step_x:=1;
   dst_step_x:=1;
 
-  blt_control := 1;
+  blt_control := %1001;
 
   dst_step_y:=320;
   src_step_y:=128;
@@ -433,7 +433,7 @@ procedure InitVGA; { Initialize the SuperVGA driver as shown in the example. }
   src_step_x:=1;
   dst_step_x:=1;
 
-  blt_control := 1;
+  blt_control := %1001;
 
   dst_step_y:=320;
   src_step_y:=128;
@@ -1012,34 +1012,72 @@ begin
 end;
 
 
-procedure move_enemy(var enm: ENEMYTYPE);
-var src: cardinal;
-begin
+procedure move_enemy;
+var src0, src1, src2: cardinal;
 
+
+  procedure enemy_update(var enm: ENEMYTYPE);
+  begin
+  
      enm.tic:=(enm.tic + 1) and 3;
      if enm.tic = 0 then begin
      
       inc(enm.frm);
       if enm.frm = enm.mfrm then enm.frm:=0;
 
-     end;
+     end; 
+  
+  end;
 
 
+begin
+   
+    enemy_update(enm0);
+    enemy_update(enm1);
+    enemy_update(enm2);
 
-     src := enemies_ofs {+ 128*16} + mul16[enm.frm];
+    src0 := enemies_ofs {+ 128*16} + mul16[enm0.frm];
+    src1 := enemies_ofs {+ 128*16} + mul16[enm1.frm];
+    src2 := enemies_ofs {+ 128*16} + mul16[enm2.frm];
+
 
      asm
        fxs FX_MEMS #$80
      end;
 
-     enemy0.src_adr.byte2:=src shr 16;
-     enemy0.src_adr.byte1:=src shr 8;
-     enemy0.src_adr.byte0:=src;
+
+     enemy0.src_adr.byte2:=src0 shr 16;
+     enemy0.src_adr.byte1:=src0 shr 8;
+     enemy0.src_adr.byte0:=src0;
 
      hlp := 50 + row[100];
 
      enemy0.dst_adr.byte1:=hlp shr 8;
      enemy0.dst_adr.byte0:=hlp;
+
+
+
+     enemy1.src_adr.byte2:=src1 shr 16;
+     enemy1.src_adr.byte1:=src1 shr 8;
+     enemy1.src_adr.byte0:=src1;
+
+     hlp := 80 + row[60];
+
+     enemy1.dst_adr.byte1:=hlp shr 8;
+     enemy1.dst_adr.byte0:=hlp;
+
+
+
+     enemy2.src_adr.byte2:=src2 shr 16;
+     enemy2.src_adr.byte1:=src2 shr 8;
+     enemy2.src_adr.byte0:=src2;
+
+     hlp := 90 + row[150];
+
+     enemy2.dst_adr.byte1:=hlp shr 8;
+     enemy2.dst_adr.byte0:=hlp;
+
+
 
      asm
        fxs FX_MEMS #$00
@@ -4035,7 +4073,14 @@ var
   { exceeds 2000 units, the ball is launched automatically      }
   ball0.stm:=0;
 
+
   enm0.mfrm:=8;
+  enm1.mfrm:=8;
+  enm2.mfrm:=8;
+
+  enm0.frm:=0;
+  enm1.frm:=0;
+  enm2.frm:=0;
 
 
   { At the start, the variable lett.incoming takes on a random value between }
@@ -4096,7 +4141,7 @@ var
 
      mousecoords(x);  { reads mouse coordinates }
      
-     move_enemy(enm0);
+     move_enemy;
 
      move_vaus(x,VAUS_LINE);
 
@@ -4471,7 +4516,7 @@ var
 procedure set_start_parameters;
 var x : byte;
    begin
-   { Imposta i parametri del giocatore 1 e 2 }
+   { Set the settings for Player 1 and Player 2 }
    
    old_scores := 1;
 

@@ -31,8 +31,11 @@
  !!! kod programu nie może przekroczyć $A000 !!!
 
 ---------------------------------------
- Arkanoid VBXE v2.2 by Tebe/Madteam
+ Arkanoid VBXE v2.3 by Tebe/Madteam
 ---------------------------------------
+
+ 2026-05-25
+ - enemies, 3 VBXE blits
 
  2026-05-20
  - enemies
@@ -647,7 +650,7 @@ var
 
     [striped] sqrtable : array [0..255] of word absolute $a000;
     
-    enm0: ENEMYTYPE absolute $b000;
+    enm0: ENEMYTYPE absolute $b000;				// the $b000 area is occupied by the VBXE window !!!
     enm1: ENEMYTYPE absolute $b000 + sizeof(ENEMYTYPE);
     enm2: ENEMYTYPE absolute $b000 + sizeof(ENEMYTYPE)*2;
 
