@@ -130,10 +130,13 @@ type
               x, y: byte;
 	      adf: byte;		{ add frame }
 	      ping: Boolean;            { ping_pong on/off }
+	      fade: Boolean;
 	      adx, ady: byte;
               tic: byte;		{ tick counter }
               frm: byte;		{ frame counter }
               mfrm: byte;		{ maximum frame number }
+	      width, fade_tmp,
+	      fadein: word;		{ 16*width..0 }
 	      END;
 
    BTMTYPE  = RECORD                   { for a drawing in BTM format }
@@ -254,9 +257,9 @@ const
 	opengate_ofs = laserblast_ofs + 16*12;
 
 	enemies_ofs0 = opengate_ofs + 32*48;
-	enemies_ofs1 = enemies_ofs0 + 128*16;
-	enemies_ofs2 = enemies_ofs1 + 384*16;
-	enemies_ofs3 = enemies_ofs2 + 176*16;
+	enemies_ofs1 = enemies_ofs0 + 128*32;
+	enemies_ofs2 = enemies_ofs1 + 384*32;
+	enemies_ofs3 = enemies_ofs2 + 176*32;
 
 
 	minivaus_width = 20;

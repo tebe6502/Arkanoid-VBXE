@@ -1022,10 +1022,20 @@ var src: cardinal;
       
      end; 
 
+
      if enm.tic = 2 then begin
+
+       if enm.fade then begin
      
-      inc(enm.x, enm.adx); if (enm.x < SCRMIN) or (enm.x > SCRMAX-17) then enm.adx := -enm.adx;
-      inc(enm.y, enm.ady); if (enm.y < SCRTOP) or (enm.y > SCRBOT-32) then enm.ady := -enm.ady;
+        if enm.fadein = 0 then inc(enm.y);
+        if enm.y > SCRTOP then enm.fade := false;
+     
+       end else begin
+     
+        inc(enm.x, enm.adx); if (enm.x < SCRMIN) or (enm.x > SCRMAX-17) then enm.adx := -enm.adx;
+        inc(enm.y, enm.ady); if (enm.y < SCRTOP) or (enm.y > SCRBOT-32) then enm.ady := -enm.ady;
+	
+       end;	
      
      end;
   
@@ -1058,7 +1068,7 @@ begin
      end;
 
 
-     src := enemies_adr + mul16[enm0.frm];
+     src := enemies_adr + mul16[enm0.frm] + enm0.fadein;
 
      enemy0.src_adr.byte2:=src shr 16;
      enemy0.src_adr.byte1:=src shr 8;
@@ -1071,7 +1081,7 @@ begin
 
 
 
-     src := enemies_adr + mul16[enm1.frm];
+     src := enemies_adr + mul16[enm1.frm] + enm1.fadein;
 
      enemy1.src_adr.byte2:=src shr 16;
      enemy1.src_adr.byte1:=src shr 8;
@@ -1084,7 +1094,7 @@ begin
 
 
 
-     src := enemies_adr + mul16[enm2.frm];
+     src := enemies_adr + mul16[enm2.frm] + enm2.fadein;
 
      enemy2.src_adr.byte2:=src shr 16;
      enemy2.src_adr.byte1:=src shr 8;
@@ -1095,12 +1105,16 @@ begin
      enemy2.dst_adr.byte1:=hlp shr 8;
      enemy2.dst_adr.byte0:=hlp;
 
-
      asm
        fxs FX_MEMS #$00
      end;
 
      RunBCB(enemy0);
+
+
+    if enm0.fadein <> 0 then dec(enm0.fadein, enm0.width);
+    if enm1.fadein <> 0 then dec(enm1.fadein, enm1.width);
+    if enm2.fadein <> 0 then dec(enm2.fadein, enm2.width);
 
 end;
 
@@ -1890,10 +1904,8 @@ begin
      0:
      begin
       enemies_adr := enemies_ofs0;
-
-      enemy0.src_step_y:=128;
-      enemy1.src_step_y:=128;
-      enemy2.src_step_y:=128;
+      
+      hlp:=128;
 
       enm0.mfrm:=8;
       enm1.mfrm:=8;
@@ -1908,9 +1920,7 @@ begin
      begin
       enemies_adr := enemies_ofs1;
 
-      enemy0.src_step_y:=176;
-      enemy1.src_step_y:=176;
-      enemy2.src_step_y:=176;     
+      hlp:=176;     
 
       enm0.mfrm:=11-1;
       enm1.mfrm:=11-1;
@@ -1925,9 +1935,7 @@ begin
      begin
       enemies_adr := enemies_ofs2;
 
-      enemy0.src_step_y:=384;
-      enemy1.src_step_y:=384;
-      enemy2.src_step_y:=384;     
+      hlp:=384;
 
       enm0.mfrm:=24;
       enm1.mfrm:=24;
@@ -1942,9 +1950,7 @@ begin
      begin
       enemies_adr := enemies_ofs3;
 
-      enemy0.src_step_y:=160;
-      enemy1.src_step_y:=160;
-      enemy2.src_step_y:=160;     
+      hlp:=160;
 
       enm0.mfrm:=10-1;
       enm1.mfrm:=10-1;
@@ -1956,6 +1962,10 @@ begin
      end;
 
     end;
+
+    enemy0.src_step_y:=hlp;
+    enemy1.src_step_y:=hlp;
+    enemy2.src_step_y:=hlp;
 
 
     asm
@@ -1971,9 +1981,9 @@ begin
   enm1.adf:=1;
   enm2.adf:=1;
 
-  enm0.adx:=1;
-  enm1.adx:=1;
-  enm2.adx:=1;
+  enm0.adx:=0;
+  enm1.adx:=0;
+  enm2.adx:=0;
 
   enm0.ady:=1;
   enm1.ady:=1;
@@ -1983,10 +1993,27 @@ begin
   enm1.x:=70;
   enm2.x:=90;
   
-  enm0.y:=40;
-  enm1.y:=70;
-  enm2.y:=100;
+  enm0.y:=0;
+  enm1.y:=0;
+  enm2.y:=0;
+
+  enm0.width:=hlp;
+  enm1.width:=hlp;
+  enm2.width:=hlp;
   
+  hlp:=hlp*16;
+
+  enm0.fade_tmp:=hlp;
+  enm1.fade_tmp:=hlp;
+  enm2.fade_tmp:=hlp;
+  
+  enm0.fadein:=hlp;
+  enm1.fadein:=hlp;
+  enm2.fadein:=hlp;
+
+  enm0.fade:=true;
+  enm1.fade:=true;
+  enm2.fade:=true;
 
 end;
 
