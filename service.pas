@@ -1002,21 +1002,35 @@ end;
 
 procedure move_enemy;
 var src: cardinal;
+    yes: Boolean;
+
+
+  procedure enemy_enter(var enm: ENEMYTYPE);
+  begin
+  
+    if (enm.y < MAXENEMYY) and (enm.fadein <> 0) then dec(enm.fadein, enm.width);
+  
+  end;
 
 
   procedure enemy_update(var enm: ENEMYTYPE);
   begin
   
+     if enm.y >= MAXENEMYY then exit;
+  
+     hlp := enm.x + row[enm.y];   { remove enemies }
+     blitBOX(16, 16);
+
      enm.tic:=(enm.tic + 1) and 3;
      if enm.tic = 0 then begin
      
       inc(enm.frm, enm.adf);
       if (enm.frm = 0) or (enm.frm = enm.mfrm) then begin
 
-       if enm.ping then 
+       if enm.ping then		// 0..N -> N..0 ->
         enm.adf := -enm.adf
        else
-        enm.frm := 0;
+        enm.frm := 0;		// 0..N -> 0..N ->
 
       end;
       
@@ -1044,83 +1058,102 @@ var src: cardinal;
 
 begin
 
-    { remove enemies }
-
-    hlp := enm0.x + row[enm0.y];
-    blitBOX(16, 16);
-
-    hlp := enm1.x + row[enm1.y];
-    blitBOX(16, 16);
-
-    hlp := enm2.x + row[enm2.y];
-    blitBOX(16, 16);
-
-
     { new x:y enemies }
 
     enemy_update(enm0);
     enemy_update(enm1);
     enemy_update(enm2);
 
- 
-     asm
-       fxs FX_MEMS #$80
+    yes := FALSE;
+
+    asm
+      fxs FX_MEMS #$80
+    end;
+
+
+     if enm0.y < MAXENEMYY then begin
+       src := enemies_adr + mul16[enm0.frm] + enm0.fadein;
+
+       enemy0.src_adr.byte2:=src shr 16;
+       enemy0.src_adr.byte1:=src shr 8;
+       enemy0.src_adr.byte0:=src;
+
+       hlp := enm0.x + row[enm0.y];
+
+       enemy0.dst_adr.byte1:=hlp shr 8;
+       enemy0.dst_adr.byte0:=hlp;
+       
+       yes := TRUE;
      end;
 
 
-     src := enemies_adr + mul16[enm0.frm] + enm0.fadein;
+     if enm1.y < MAXENEMYY then begin
+       src := enemies_adr + mul16[enm1.frm] + enm1.fadein;
 
-     enemy0.src_adr.byte2:=src shr 16;
-     enemy0.src_adr.byte1:=src shr 8;
-     enemy0.src_adr.byte0:=src;
+       enemy1.src_adr.byte2:=src shr 16;
+       enemy1.src_adr.byte1:=src shr 8;
+       enemy1.src_adr.byte0:=src;
 
-     hlp := enm0.x + row[enm0.y];
+       hlp := enm1.x + row[enm1.y];
 
-     enemy0.dst_adr.byte1:=hlp shr 8;
-     enemy0.dst_adr.byte0:=hlp;
+       enemy1.dst_adr.byte1:=hlp shr 8;
+       enemy1.dst_adr.byte0:=hlp;
 
-
-
-     src := enemies_adr + mul16[enm1.frm] + enm1.fadein;
-
-     enemy1.src_adr.byte2:=src shr 16;
-     enemy1.src_adr.byte1:=src shr 8;
-     enemy1.src_adr.byte0:=src;
-
-     hlp := enm1.x + row[enm1.y];
-
-     enemy1.dst_adr.byte1:=hlp shr 8;
-     enemy1.dst_adr.byte0:=hlp;
+       yes := TRUE;
+     end;
 
 
+     if enm2.y < MAXENEMYY then begin
+       src := enemies_adr + mul16[enm2.frm] + enm2.fadein;
 
-     src := enemies_adr + mul16[enm2.frm] + enm2.fadein;
+       enemy2.src_adr.byte2:=src shr 16;
+       enemy2.src_adr.byte1:=src shr 8;
+       enemy2.src_adr.byte0:=src;
 
-     enemy2.src_adr.byte2:=src shr 16;
-     enemy2.src_adr.byte1:=src shr 8;
-     enemy2.src_adr.byte0:=src;
+       hlp := enm2.x + row[enm2.y];
 
-     hlp := enm2.x + row[enm2.y];
+       enemy2.dst_adr.byte1:=hlp shr 8;
+       enemy2.dst_adr.byte0:=hlp;
 
-     enemy2.dst_adr.byte1:=hlp shr 8;
-     enemy2.dst_adr.byte0:=hlp;
+       yes := TRUE;
+     end;
+
 
      asm
        fxs FX_MEMS #$00
      end;
 
-     RunBCB(enemy0);
+
+     if yes then RunBCB(enemy0);
 
 
-    if enm0.fadein <> 0 then dec(enm0.fadein, enm0.width);
-    if enm1.fadein <> 0 then dec(enm1.fadein, enm1.width);
-    if enm2.fadein <> 0 then dec(enm2.fadein, enm2.width);
+    { enemies are spawned onto the playing field }
+    
+    enemy_enter(enm0);
+    enemy_enter(enm1);
+    enemy_enter(enm2);
 
 end;
 
 
 procedure move_ball(var ball : BALLTYPE);
 var b0,b1,b2: Boolean;
+
+
+  function hitBox(var A: ENEMYTYPE): Boolean;
+  begin
+
+   Result:=true;
+
+   if ( byte(ball.x - A.x+2 + 5 - 1 - BALLSPOT) >= byte(16-4 + 5 - 1) ) then exit(false);
+
+   if ( byte(ball.y - A.y+2 + 5 - 1 - BALLSPOT) >= byte(16-4 + 5 - 1) ) then exit(false);
+
+   while true do;
+   
+  end;
+
+
 var
   x,y : word;
   angle : smallint;
@@ -1135,6 +1168,14 @@ var
 
   ball.x:=x shr 8;
   ball.y:=y shr 8;
+  
+  
+  { detecting collisions between the ball and enemies }
+
+  hitBox(enm0);
+  hitBox(enm1);
+  hitBox(enm2);
+   
 
   ball.finex:=x and $ff;
   ball.finey:=y and $ff;
@@ -1994,8 +2035,8 @@ begin
   enm2.x:=90;
   
   enm0.y:=0;
-  enm1.y:=0;
-  enm2.y:=0;
+  enm1.y:=255;
+  enm2.y:=255;
 
   enm0.width:=hlp;
   enm1.width:=hlp;

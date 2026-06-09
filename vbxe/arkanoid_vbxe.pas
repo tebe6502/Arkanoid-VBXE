@@ -109,7 +109,7 @@
 
 program arkanoid;
 
-uses crt, atari, vbxe, joystick, xSFX;
+uses crt, atari, vbxe, joystick, xsfx;
 
 {$r arkanoid.rc}
 
@@ -327,11 +327,12 @@ const
    COLORBLOCK : array[0..9] of byte = ( 212,211,210,209,208, 207,206,205,204,203 );
                                          { Color of the bricks }
 
+   MAXENEMYY  = 250;
 
    GRAYDOWN   = 1;   { Number of strokes-1 to knock down a gray brick }
    STARTWALL  = 1;   { Starting level }
    BALLSPEED  = 587; { Ball speed (256 = 70 pixels per second }
-   MAXSPEED   = 1440;{ Maximum speed attainable by the ball }
+   MAXSPEED   = 1440;{ Maximum permitted ball speed }
    MAXBRWHIT  = 100; { Maximum number of indistr. blocks it can hit }
                      { before splashing off changing speed          }
 
