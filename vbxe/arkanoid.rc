@@ -13,4 +13,6 @@ enemies_ofs0 xbmp 'assets\enemy_0.bmp' 0 1
 enemies_ofs1 xbmp 'assets\enemy_1.bmp' 0 1
 enemies_ofs2 xbmp 'assets\enemy_2.bmp' 0 1
 enemies_ofs3 xbmp 'assets\enemy_3.bmp' 0 1
+explossion0 xbmp 'assets\explossion_0.bmp' 0 1
+explossion1 xbmp 'assets\explossion_1.bmp' 0 1
 charset rcdata 'assets\arkanoid.fnt'

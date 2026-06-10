@@ -1934,6 +1934,8 @@ begin
     end;
 
 
+    { select enemies }
+
     wl:=3;
 
     asm
@@ -2013,6 +2015,8 @@ begin
      fxs FX_MEMS #$00
     end;
 
+
+  { enemies init }
 
   enm0.frm:=0;
   enm1.frm:=2;

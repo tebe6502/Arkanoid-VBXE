@@ -126,16 +126,18 @@ type
 
 
    ENEMYTYPE= RECORD of $cb
-              typ: cardinal;
+              typ: cardinal;		{ address }
               x, y: byte;
-	      adf: byte;		{ add frame }
-	      ping: Boolean;            { ping_pong on/off }
-	      fade: Boolean;
 	      adx, ady: byte;
+	      adf: byte;		{ add frame }
+	      hit,
+	      ping,			{ ping_pong on/off }
+	      fade: Boolean;		{ enter to playfield }
               tic: byte;		{ tick counter }
               frm: byte;		{ frame counter }
               mfrm: byte;		{ maximum frame number }
-	      width, fade_tmp,
+	      width,
+	      fade_tmp,
 	      fadein: word;		{ 16*width..0 }
 	      END;
 
@@ -261,6 +263,8 @@ const
 	enemies_ofs2 = enemies_ofs1 + 384*32;
 	enemies_ofs3 = enemies_ofs2 + 176*32;
 
+	explossion0 = enemies_ofs3 + 160*32;
+	explossion1 = explossion0 + 112*16;
 
 	minivaus_width = 20;
 	minivaus_height = 5;
