@@ -130,7 +130,7 @@ type
               x, y: byte;
 	      adx, ady: byte;
 	      adf: byte;		{ add frame }
-	      hit,
+	      hit: byte;
 	      ping,			{ ping_pong on/off }
 	      fade: Boolean;		{ enter to playfield }
               tic: byte;		{ tick counter }

@@ -1059,10 +1059,45 @@ var src: cardinal;
 begin
 
     { new x:y enemies }
+    
+    if enm0.hit > 0 then begin
+    
+     if enm0.hit = 1 then
+       enemy0.src_step_y:=112
+     else
+       inc(enm0.hit);
+     
+     if enm0.hit = 8 then enm0.y := MAXENEMYY;
+    
+    end else
+     enemy_update(enm0);
+     
 
-    enemy_update(enm0);
-    enemy_update(enm1);
-    enemy_update(enm2);
+    if enm1.hit > 0 then begin
+    
+     if enm1.hit = 1 then
+       enemy1.src_step_y:=112
+     else
+       inc(enm1.hit);
+
+     if enm1.hit = 8 then enm1.y := MAXENEMYY;
+    
+    end else
+     enemy_update(enm1);
+     
+
+    if enm2.hit > 0 then begin
+    
+     if enm2.hit = 1 then
+       enemy2.src_step_y:=112
+     else
+       inc(enm2.hit);
+
+     if enm2.hit = 8 then enm2.y := MAXENEMYY;
+    
+    end else
+     enemy_update(enm2);
+
 
     yes := FALSE;
 
@@ -1071,7 +1106,11 @@ begin
     end;
 
 
-     if enm0.y < MAXENEMYY then begin
+     //if enm0.y < MAXENEMYY then begin
+     
+     if enm0.hit > 0 then    
+       src := explossion0 + mul16[enm0.hit-1]
+     else
        src := enemies_adr + mul16[enm0.frm] + enm0.fadein;
 
        enemy0.src_adr.byte2:=src shr 16;
@@ -1084,10 +1123,14 @@ begin
        enemy0.dst_adr.byte0:=hlp;
        
        yes := TRUE;
-     end;
+     //end;
 
 
-     if enm1.y < MAXENEMYY then begin
+     //if enm1.y < MAXENEMYY then begin
+
+     if enm1.hit > 0 then
+       src := explossion0 + mul16[enm1.hit-1]
+     else
        src := enemies_adr + mul16[enm1.frm] + enm1.fadein;
 
        enemy1.src_adr.byte2:=src shr 16;
@@ -1100,10 +1143,14 @@ begin
        enemy1.dst_adr.byte0:=hlp;
 
        yes := TRUE;
-     end;
+     //end;
 
 
-     if enm2.y < MAXENEMYY then begin
+     //if enm2.y < MAXENEMYY then begin
+
+     if enm2.hit > 0 then
+       src := explossion0 + mul16[enm2.hit-1]
+     else
        src := enemies_adr + mul16[enm2.frm] + enm2.fadein;
 
        enemy2.src_adr.byte2:=src shr 16;
@@ -1116,7 +1163,7 @@ begin
        enemy2.dst_adr.byte0:=hlp;
 
        yes := TRUE;
-     end;
+     //end;
 
 
      asm
@@ -1140,16 +1187,16 @@ procedure move_ball(var ball : BALLTYPE);
 var b0,b1,b2: Boolean;
 
 
-  function hitBox(var A: ENEMYTYPE): Boolean;
+  procedure hitBox(var enm: ENEMYTYPE);
   begin
+  
+   if enm.hit > 0 then exit;
 
-   Result:=true;
+   if ( byte(ball.x - enm.x+2 + 5 - 1 - BALLSPOT) >= byte(16-4 + 5 - 1) ) then exit;
 
-   if ( byte(ball.x - A.x+2 + 5 - 1 - BALLSPOT) >= byte(16-4 + 5 - 1) ) then exit(false);
+   if ( byte(ball.y - enm.y+2 + 5 - 1 - BALLSPOT) >= byte(16-4 + 5 - 1) ) then exit;
 
-   if ( byte(ball.y - A.y+2 + 5 - 1 - BALLSPOT) >= byte(16-4 + 5 - 1) ) then exit(false);
-
-   while true do;
+   enm.hit := 1;
    
   end;
 
@@ -2029,6 +2076,10 @@ begin
   enm0.adx:=0;
   enm1.adx:=0;
   enm2.adx:=0;
+
+  enm0.hit:=0;
+  enm1.hit:=0;
+  enm2.hit:=0;
 
   enm0.ady:=1;
   enm1.ady:=1;
